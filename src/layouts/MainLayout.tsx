@@ -1,7 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import Navbar from '@/components/common/Navbar';
-import Sidebar from '@/components/common/Sidebar';
+import { useAuth } from '../hooks/useAuth';
+import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
 
 const MainLayout = () => {
     const { user, isLoading } = useAuth();

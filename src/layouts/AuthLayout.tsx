@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const AuthLayout = () => {
     const { user } = useAuth();
@@ -9,7 +9,7 @@ const AuthLayout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-linear-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
             <Outlet />
         </div>
     );

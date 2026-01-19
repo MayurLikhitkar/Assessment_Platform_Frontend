@@ -2,17 +2,11 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    Button,
-    Input,
-    Label,
-} from '@/components/ui';
+import { useAuth } from '../../hooks/useAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import FormInput from '../../components/ui/FormInput';
 
 const RegisterSchema = Yup.object().shape({
     firstName: Yup.string()
@@ -41,8 +35,7 @@ const Register: React.FC = () => {
 
     const formik = useFormik({
         initialValues: {
-            firstName: '',
-            lastName: '',
+            fullName: '',
             email: '',
             password: '',
             confirmPassword: '',
@@ -74,86 +67,60 @@ const Register: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={formik.handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="firstName">First Name</Label>
-                                <Input
-                                    id="firstName"
-                                    name="firstName"
-                                    placeholder="John"
-                                    value={formik.values.firstName}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.firstName && formik.errors.firstName}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="lastName">Last Name</Label>
-                                <Input
-                                    id="lastName"
-                                    name="lastName"
-                                    placeholder="Doe"
-                                    value={formik.values.lastName}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.lastName && formik.errors.lastName}
-                                />
-                            </div>
-                        </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
+                            <FormInput
+                                id="fullName"
+                                name="fullName"
+                                label="Full Name"
+                                type="text"
+                                placeholder="Enter your full name"
+                                formik={formik}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <FormInput
                                 id="email"
                                 name="email"
+                                label="Email"
                                 type="email"
-                                placeholder="john@example.com"
-                                value={formik.values.email}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={formik.touched.email && formik.errors.email}
+                                placeholder="Enter your email"
+                                formik={formik}
+                                required
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone (Optional)</Label>
-                            <Input
+                            <FormInput
                                 id="phone"
                                 name="phone"
+                                label="Phone"
                                 type="tel"
-                                placeholder="+1234567890"
-                                value={formik.values.phone}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={formik.touched.phone && formik.errors.phone}
+                                placeholder="Enter your phone number"
+                                formik={formik}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
+                            <FormInput
                                 id="password"
                                 name="password"
+                                label="Password"
                                 type="password"
-                                placeholder="••••••••"
-                                value={formik.values.password}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={formik.touched.password && formik.errors.password}
+                                placeholder="Enter your password"
+                                formik={formik}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <Input
+                            <FormInput
                                 id="confirmPassword"
                                 name="confirmPassword"
+                                label="Confirm Password"
                                 type="password"
-                                placeholder="••••••••"
-                                value={formik.values.confirmPassword}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                                placeholder="Confirm your password"
+                                formik={formik}
                             />
                         </div>
 
