@@ -9,8 +9,10 @@ const AuthLayout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
+        <div className="min-h-screen max-w-screen bg-background-light">
+            {/* <Container> */}
             <Outlet />
+            {/* </Container> */}
         </div>
     );
 };

@@ -4,10 +4,13 @@ import Login from './pages/auth/Login';
 import AuthLayout from './layouts/AuthLayout';
 import Register from './pages/auth/Register';
 import { AuthProvider } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast';
+import { TOASTER_PROPS } from './utils/config';
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster {...TOASTER_PROPS} />
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}

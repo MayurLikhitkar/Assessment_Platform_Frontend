@@ -4,30 +4,53 @@ import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
+import { FaUsers, FaShieldAlt, FaAward } from "react-icons/fa";
+import { MdOutlineTrendingUp } from "react-icons/md";
 
-const RegisterSchema = Yup.object().shape({
-    firstName: Yup.string()
-        .required('First name is required')
-        .min(2, 'First name must be at least 2 characters'),
-    lastName: Yup.string()
-        .required('Last name is required')
-        .min(2, 'Last name must be at least 2 characters'),
+const registerSchema = Yup.object().shape({
+    fullName: Yup.string()
+        .required('You fullname is required')
+        .min(2, 'your full name must be at least 2 characters'),
     email: Yup.string()
-        .email('Invalid email')
+        .email('Invalid email address')
         .required('Email is required'),
     password: Yup.string()
-        .min(6, 'Password must be at least 6 characters')
+        .min(8, 'Password must be at least 8 characters')
+        .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+        .matches(/\d/, 'Password must contain at least one number')
         .required('Password is required'),
     confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password'), null], 'Passwords must match')
+        .oneOf([Yup.ref('password')], 'Passwords must match')
         .required('Please confirm your password'),
     phone: Yup.string()
         .matches(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number')
         .optional(),
 });
+
+const features = [
+    {
+        icon: FaAward, // Represents achievement or quality
+        stat: '98%',
+        title: "Candidate Satisfaction",
+    },
+    {
+        icon: MdOutlineTrendingUp, // Represents growth or improvement
+        stat: '75%',
+        title: "Reduction in Hiring Time",
+    },
+    {
+        icon: FaShieldAlt, // Represents security
+        stat: '100%',
+        title: "Secure & Private",
+    },
+    {
+        icon: FaUsers, // Represents collaboration or scale
+        stat: '100+',
+        title: "Enterprise Clients",
+    },
+]
 
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -41,124 +64,178 @@ const Register: React.FC = () => {
             confirmPassword: '',
             phone: '',
         },
-        validationSchema: RegisterSchema,
+        validationSchema: registerSchema,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                const { confirmPassword, ...registerData } = values;
-                await register(registerData);
+                console.log(values)
+
+                // await register(registerData);
                 toast.success('Account created successfully!');
-                navigate('/dashboard');
-            } catch (error: any) {
+            } catch (error) {
                 toast.error(error.response?.data?.message || 'Registration failed');
-            } finally {
-                setSubmitting(false);
             }
         },
     });
 
     return (
-        <div className="w-full max-w-md">
-            <Card className="shadow-lg">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-2xl font-bold text-gray-900">
-                        Create Account
-                    </CardTitle>
-                    <p className="text-gray-600 mt-2">Get started with your free account</p>
-                </CardHeader>
-                <CardContent>
+        <div className="min-h-screen flex-col lg:flex-row flex">
+            {/* LEFT SIDE: Branding & Benefits (Hidden on mobile) */}
+            <div className="w-full lg:w-1/2 bg-background-inverse relative overflow-hidden flex flex-col justify-between p-8 sm:p-12 text-text-inverse">
+                {/* Abstract Background Pattern */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-10">
+                    <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary-main rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-secondary-main rounded-full blur-3xl"></div>
+                </div>
+                <div>
+                    {/* Logo */}
+                    <div className="relative z-10 flex items-center gap-2 mb-10">
+                        <span className="w-10 h-10 bg-primary-main/70 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
+                            A
+                        </span>
+                        <span className="text-2xl font-bold tracking-tight">AssessPro</span>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="relative z-10 max-w-lg space-y-10">
+                        <h1 className="text-2xl font-semibold sm:text-4xl leading-tight font-rubik">
+                            Start your journey to <br /><span className="text-secondary-light">Smarter Hiring</span>
+                        </h1>
+                        <p className="text-text-inverse/80 sm:text-lg">
+                            Join leading companies who trust AssessPro to identify and evaluate top talent through data-driven assessments.
+                        </p>
+
+                        {/* Benefits Grid */}
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-10">
+                            {features.map(feature => (
+                                <div key={feature.stat} className="flex gap-4">
+                                    <div className="p-3 bg-background-main backdrop-blur-sm rounded-lg flex items-center justify-center border border-background-light/20">
+                                        <feature.icon className="w-8 h-8 text-secondary-dark" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-2xl">{feature.stat}</h3>
+                                        <p className="text-sm text-text-inverse/80">{feature.title}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer/Copyright */}
+                <div className="lg:block hidden relative z-10 text-sm text-text-inverse/60">
+                    © {new Date().getFullYear()} AssessPro Platform. All rights reserved.
+                </div>
+            </div>
+
+            {/* RIGHT SIDE: Registration Form */}
+            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 bg-background-main text-text-main">
+                <div className="max-w-md sm:p-8 p-6 rounded-2xl shadow-xl border border-border-light bg-background-light">
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold">Create Your Account</h2>
+                        <p className="mt-2 text-sm">
+                            Start evaluating candidates in minutes
+                        </p>
+                    </div>
+
                     <form onSubmit={formik.handleSubmit} className="space-y-4">
+                        <FormInput
+                            id="fullName"
+                            name="fullName"
+                            label="Full Name"
+                            type="text"
+                            placeholder="John Doe"
+                            formik={formik}
+                        />
 
-                        <div className="space-y-2">
-                            <FormInput
-                                id="fullName"
-                                name="fullName"
-                                label="Full Name"
-                                type="text"
-                                placeholder="Enter your full name"
-                                formik={formik}
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <FormInput
-                                id="email"
-                                name="email"
-                                label="Email"
-                                type="email"
-                                placeholder="Enter your email"
-                                formik={formik}
-                                required
-                            />
-                        </div>
+                        <FormInput
+                            id="email"
+                            name="email"
+                            label="Work Email"
+                            type="email"
+                            placeholder="john.doe@company.com"
+                            formik={formik}
+                        />
 
-                        <div className="space-y-2">
-                            <FormInput
-                                id="phone"
-                                name="phone"
-                                label="Phone"
-                                type="tel"
-                                placeholder="Enter your phone number"
-                                formik={formik}
-                            />
-                        </div>
+                        <FormInput
+                            id="phone"
+                            name="phone"
+                            label="Phone Number (Optional)"
+                            type="tel"
+                            placeholder="+1 (555) 000-0000"
+                            formik={formik}
+                        />
 
-                        <div className="space-y-2">
-                            <FormInput
-                                id="password"
-                                name="password"
-                                label="Password"
-                                type="password"
-                                placeholder="Enter your password"
-                                formik={formik}
-                            />
-                        </div>
+                        <FormInput
+                            id="password"
+                            name="password"
+                            label="Password"
+                            type="password"
+                            placeholder="••••••••"
+                            formik={formik}
+                        />
 
-                        <div className="space-y-2">
-                            <FormInput
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                label="Confirm Password"
-                                type="password"
-                                placeholder="Confirm your password"
-                                formik={formik}
-                            />
+                        <FormInput
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            label="Confirm Password"
+                            type="password"
+                            placeholder="••••••••"
+                            formik={formik}
+                        />
+
+                        {/* Password Requirements */}
+                        <div className="bg-secondary-light/10 border border-secondary-main/20 rounded-lg p-3">
+                            <p className="text-xs text-secondary-dark font-medium mb-1">Password must contain:</p>
+                            <ul className="text-xs text-text-main space-y-0.5 list-disc list-inside">
+                                <li>At least 8 characters</li>
+                                <li>One uppercase letter</li>
+                                <li>One number</li>
+                            </ul>
                         </div>
 
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            loading={formik.isSubmitting}
-                        >
-                            Create Account
-                        </Button>
-
-                        <div className="mt-4">
-                            <p className="text-xs text-gray-500">
-                                By creating an account, you agree to our{' '}
-                                <Link to="/terms" className="text-primary-600 hover:underline">
-                                    Terms of Service
-                                </Link>{' '}
-                                and{' '}
-                                <Link to="/privacy" className="text-primary-600 hover:underline">
-                                    Privacy Policy
-                                </Link>
-                            </p>
+                        <div className="pt-2">
+                            <Button
+                                type="submit"
+                                className="w-full shadow-lg shadow-primary-main/20 py-2.5"
+                                loading={formik.isSubmitting}
+                                variant="primary"
+                                size="md"
+                            >
+                                Create Account
+                            </Button>
                         </div>
+
+                        {/* Terms & Privacy */}
+                        <p className="text-xs text-center text-text-light pt-2">
+                            By signing up, you agree to our{' '}
+                            <Link to="/terms" className="text-primary-dark hover:text-primary-main font-medium transition-colors">
+                                Terms of Service
+                            </Link>{' '}
+                            and{' '}
+                            <Link to="/privacy" className="text-primary-dark hover:text-primary-main font-medium transition-colors">
+                                Privacy Policy
+                            </Link>
+                        </p>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-gray-600">
+                    <div className="mt-6 pt-6 border-t border-border-main text-center">
+                        <p className="text-sm text-text-light">
                             Already have an account?{' '}
                             <Link
                                 to="/login"
-                                className="text-primary-600 hover:text-primary-700 font-medium"
+                                className="text-primary-dark hover:text-primary-main font-semibold transition-colors"
                             >
                                 Sign in
                             </Link>
                         </p>
                     </div>
-                </CardContent>
-            </Card>
+
+                </div>
+                {/* Footer/Copyright */}
+                <div className="lg:hidden relative z-10 text-sm text-text-light mt-15">
+                    © {new Date().getFullYear()} AssessPro Platform. All rights reserved.
+                </div>
+            </div>
         </div>
     );
 };
