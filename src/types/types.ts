@@ -1,9 +1,8 @@
 // User Types
 export interface User {
-    userId: number;
+    id: number;
     email: string;
-    firstName: string;
-    lastName: string;
+    fullName: string;
     role: 'user' | 'admin' | 'evaluator' | 'super_admin';
     status: 'active' | 'inactive' | 'suspended';
     profilePicture?: string;
@@ -14,12 +13,6 @@ export interface User {
     requireMicrophone: boolean;
     createdAt: string;
     updatedAt: string;
-}
-
-export interface AuthResponse {
-    accessToken: string;
-    refreshToken: string;
-    user: User;
 }
 
 // Category Types
@@ -136,4 +129,11 @@ export interface PaginatedResponse<T> {
     page: number;
     limit: number;
     totalPages: number;
+}
+
+export interface ApiError {
+    success: boolean;
+    message: string;
+    statusCode: number;
+    details?: Record<string, string[]>;
 }

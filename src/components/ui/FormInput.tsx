@@ -43,6 +43,7 @@ const FormInput = <T,>({
                 id={id}
                 name={name}
                 {...props}
+                autoComplete='postal-code new-password name given-name family-name username mobile tel email webauthn country'
                 value={inputValue}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}

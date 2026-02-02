@@ -1,97 +1,177 @@
-import React, { createContext, useState, useEffect } from 'react';
-import type { User } from '../types/types';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import type { ApiError, User } from '../types/types';
 import api from '../services/api';
+import type { AuthContextType, AuthResponse, AuthState, LoginRequest, RegisterRequest } from '../types/authTypes';
+import { clearTokens, getAccessToken, getStoredUser, setStoredUser, setTokens } from '../services/tokenService';
 
-interface AuthContextType {
-    user: User | null;
-    isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    register: (userData: RegisterData) => Promise<void>;
-    logout: () => void;
-    updateUser: (userData: Partial<User>) => void;
-}
+const AUTH_EVENTS = {
+    LOGOUT: 'auth:logout',
+} as const;
 
-interface RegisterData {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    phone?: string;
-}
+const initialState: AuthState = {
+    user: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null,
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [state, setState] = useState<AuthState>(initialState);
 
     useEffect(() => {
-        const initAuth = async () => {
-            const token = localStorage.getItem('accessToken');
-            const storedUser = localStorage.getItem('user');
+        const initializeAuth = async () => {
+            try {
+                const storedUser = getStoredUser<User>();
+                const accessToken = getAccessToken();
 
-            if (token && storedUser) {
-                try {
-                    setUser(JSON.parse(storedUser));
-                } catch (error) {
-                    console.error('Failed to parse stored user:', error);
-                    localStorage.clear();
+                if (storedUser && accessToken) {
+                    setState({
+                        user: storedUser,
+                        isLoading: false,
+                        isAuthenticated: true,
+                        error: null,
+                    });
+                } else {
+                    setState((prev) => ({ ...prev, isLoading: false }));
                 }
+            } catch (error) {
+                console.error('Auth initialization failed:', error);
+                clearTokens();
+                setState({
+                    user: null,
+                    isLoading: false,
+                    isAuthenticated: false,
+                    error: null,
+                });
             }
-            setIsLoading(false);
         };
 
-        initAuth();
+        initializeAuth();
     }, []);
 
-    const login = async (email: string, password: string) => {
-        try {
-            const response = await api.post('/auth/login', { email, password });
-            const { accessToken, refreshToken, user } = response;
+    // Listen for forced logout events from API
+    useEffect(() => {
+        const handleForcedLogout = () => {
+            setState({
+                user: null,
+                isLoading: false,
+                isAuthenticated: false,
+                error: null,
+            });
+            globalThis.location.href = '/login';
+        };
+        globalThis.addEventListener(AUTH_EVENTS.LOGOUT, handleForcedLogout);
+        return () => {
+            globalThis.removeEventListener(AUTH_EVENTS.LOGOUT, handleForcedLogout);
+        };
+    }, []);
 
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
-            localStorage.setItem('user', JSON.stringify(user));
+    const handleAuthSuccess = useCallback((response: AuthResponse) => {
+        const { accessToken, refreshToken, user } = response;
+        setTokens(accessToken, refreshToken);
+        setStoredUser(user);
+        setState({
+            user,
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+        });
+    }, []);
 
-            setUser(user);
-        } catch (error) {
-            console.error('Login failed:', error);
-            throw error;
-        }
-    };
+    const login = useCallback(
+        async (credentials: LoginRequest): Promise<void> => {
+            setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    const register = async (userData: RegisterData) => {
-        try {
-            const response = await api.post('/auth/register', userData);
-            const { accessToken, refreshToken, user } = response;
+            try {
+                const response = await api.post<AuthResponse>(
+                    '/auth/login',
+                    credentials
+                );
+                handleAuthSuccess(response.data);
+            } catch (error) {
+                const apiError = error as ApiError;
+                setState((prev) => ({
+                    ...prev,
+                    isLoading: false,
+                    error: apiError,
+                }));
+                throw apiError;
+            }
+        },
+        [handleAuthSuccess]
+    );
 
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
-            localStorage.setItem('user', JSON.stringify(user));
+    const register = useCallback(
+        async (userData: RegisterRequest): Promise<void> => {
+            setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-            setUser(user);
-        } catch (error) {
-            console.error('Register failed:', error);
-            throw error;
-        }
-    };
+            try {
+                await api.post<AuthResponse>(
+                    '/auth/register',
+                    userData
+                );
+            } catch (error) {
+                const apiError = error as ApiError;
+                setState((prev) => ({
+                    ...prev,
+                    isLoading: false,
+                    error: apiError,
+                }));
+                throw apiError;
+            }
+        },
+        [handleAuthSuccess]
+    );
 
-    const logout = () => {
-        localStorage.clear();
-        setUser(null);
-        window.location.href = '/login';
-    };
+    const logout = useCallback(() => {
+        // Notify backend (fire and forget)
+        api.post('/auth/logout').catch(() => {
+            // Ignore logout API errors
+        });
 
-    const updateUser = (userData: Partial<User>) => {
-        if (user) {
-            const updatedUser = { ...user, ...userData };
-            setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
-    };
+        clearTokens();
+
+        setState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false,
+            error: null,
+        });
+
+        globalThis.location.href = '/login';
+    }, []);
+
+    const updateUser = useCallback((userData: Partial<User>) => {
+        setState((prev) => {
+            if (!prev.user) return prev;
+
+            const updatedUser = { ...prev.user, ...userData };
+            setStoredUser(updatedUser);
+
+            return { ...prev, user: updatedUser };
+        });
+    }, []);
+
+    const clearError = useCallback(() => {
+        setState((prev) => ({ ...prev, error: null }));
+    }, []);
+
+    const contextValue = useMemo<AuthContextType>(
+        () => ({
+            ...state,
+            login,
+            register,
+            logout,
+            updateUser,
+            clearError,
+        }),
+        [state, login, register, logout, updateUser, clearError]
+    );
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUser }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

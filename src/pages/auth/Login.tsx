@@ -2,11 +2,12 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-// import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
 import { Menu } from '@mui/icons-material';
+import { useAuth } from '../../hooks/useAuth';
+import type { ApiError } from '../../types/types';
 
 const LoginSchema = Yup.object().shape({
     email: Yup.string()
@@ -19,7 +20,7 @@ const LoginSchema = Yup.object().shape({
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
-    // const { login } = useAuth();
+    const { login } = useAuth();
 
     const formik = useFormik({
         initialValues: {
@@ -29,15 +30,12 @@ const Login: React.FC = () => {
         validationSchema: LoginSchema,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                // await login(values.email, values.password);
-
-                // Simulating network delay for UI demo
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                toast.success('Logged in successfully!');
+                await login(values);
                 navigate('/dashboard');
+                toast.success('Login successful!');
             } catch (error) {
-                toast.error(String(error) || 'Login failed');
+                const apiError = error as ApiError;
+                toast.error(apiError.message || 'Login failed');
             } finally {
                 setSubmitting(false);
             }

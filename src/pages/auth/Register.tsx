@@ -8,6 +8,8 @@ import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
 import { FaUsers, FaShieldAlt, FaAward } from "react-icons/fa";
 import { MdOutlineTrendingUp } from "react-icons/md";
+import type { ApiError } from '../../types/types';
+import { GoDot, GoDotFill } from "react-icons/go";
 
 const registerSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -18,8 +20,10 @@ const registerSchema = Yup.object().shape({
         .required('Email is required'),
     password: Yup.string()
         .min(8, 'Password must be at least 8 characters')
+        .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
         .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
         .matches(/\d/, 'Password must contain at least one number')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
         .required('Password is required'),
     confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
@@ -67,15 +71,41 @@ const Register: React.FC = () => {
         validationSchema: registerSchema,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                console.log(values)
-
-                // await register(registerData);
+                await register(values);
                 toast.success('Account created successfully!');
+                navigate('/login');
             } catch (error) {
-                toast.error(error.response?.data?.message || 'Registration failed');
+                const apiError = error as ApiError;
+                toast.error(apiError.message || 'Registration failed');
+            } finally {
+                setSubmitting(false);
             }
         },
     });
+
+    const getPasswordStrength = (password: string) => {
+        let score = 0;
+        if (!password) return 0;
+        if (password.length >= 8) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/\d/.test(password)) score++;
+        return score;
+    };
+
+    const strength = getPasswordStrength(formik.values.password);
+
+    const getStrengthColor = (score: number) => {
+        if (score <= 2) return 'bg-error-main';
+        if (score <= 4) return 'bg-warn-main';
+        return 'bg-success-main';
+    };
+
+    const getStrengthTextColor = (score: number) => {
+        if (score <= 2) return 'text-error-main';
+        if (score <= 4) return 'text-warn-main';
+        return 'text-success-main';
+    };
 
     return (
         <div className="min-h-screen flex-col lg:flex-row flex">
@@ -145,6 +175,7 @@ const Register: React.FC = () => {
                             type="text"
                             placeholder="John Doe"
                             formik={formik}
+                            required
                         />
 
                         <FormInput
@@ -154,14 +185,15 @@ const Register: React.FC = () => {
                             type="email"
                             placeholder="john.doe@company.com"
                             formik={formik}
+                            required
                         />
 
                         <FormInput
                             id="phone"
                             name="phone"
-                            label="Phone Number (Optional)"
+                            label="Phone Number"
                             type="tel"
-                            placeholder="+1 (555) 000-0000"
+                            placeholder="123-456-7890"
                             formik={formik}
                         />
 
@@ -172,6 +204,7 @@ const Register: React.FC = () => {
                             type="password"
                             placeholder="••••••••"
                             formik={formik}
+                            required
                         />
 
                         <FormInput
@@ -181,16 +214,46 @@ const Register: React.FC = () => {
                             type="password"
                             placeholder="••••••••"
                             formik={formik}
+                            required
                         />
 
-                        {/* Password Requirements */}
-                        <div className="bg-secondary-light/10 border border-secondary-main/20 rounded-lg p-3">
-                            <p className="text-xs text-secondary-dark font-medium mb-1">Password must contain:</p>
-                            <ul className="text-xs text-text-main space-y-0.5 list-disc list-inside">
-                                <li>At least 8 characters</li>
-                                <li>One uppercase letter</li>
-                                <li>One number</li>
-                            </ul>
+                        {/* Password Strength & Requirements */}
+                        <div className="space-y-3">
+                            {/* Strength Meter */}
+                            {formik.values.password && (
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-text-light">Password Strength</span>
+                                        <span className={`font-medium ${getStrengthTextColor(strength)}`}>
+                                            {strength <= 2 ? 'Weak' : strength <= 4 ? 'Medium' : 'Strong'}
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-300 ${getStrengthColor(strength)}`}
+                                            style={{ width: `${(strength / 5) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-secondary-light/10 border border-secondary-main/20 rounded-lg p-3">
+                                <p className="text-xs text-secondary-dark font-medium mb-1">Password must contain:</p>
+                                <ul className="text-xs text-text-main space-y-0.5">
+                                    <li className={`flex items-center gap-2 ${formik.values.password.length >= 8 ? 'text-green-600' : 'text-text-light'}`}>
+                                        <span className="">{formik.values.password.length >= 8 ? <GoDotFill /> : <GoDot />}</span> At least 8 characters
+                                    </li>
+                                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(formik.values.password) ? 'text-green-600' : 'text-text-light'}`}>
+                                        <span className="">{/[A-Z]/.test(formik.values.password) ? <GoDotFill /> : <GoDot />}</span> One uppercase letter
+                                    </li>
+                                    <li className={`flex items-center gap-2 ${/[a-z]/.test(formik.values.password) ? 'text-green-600' : 'text-text-light'}`}>
+                                        <span className="">{/[a-z]/.test(formik.values.password) ? <GoDotFill /> : <GoDot />}</span> One lowercase letter
+                                    </li>
+                                    <li className={`flex items-center gap-2 ${/\d/.test(formik.values.password) ? 'text-green-600' : 'text-text-light'}`}>
+                                        <span className="">{/\d/.test(formik.values.password) ? <GoDotFill /> : <GoDot />}</span> One number
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div className="pt-2">

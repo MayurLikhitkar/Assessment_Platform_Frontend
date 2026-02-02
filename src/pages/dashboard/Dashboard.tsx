@@ -26,14 +26,14 @@ const Dashboard: React.FC = () => {
     // Fetch user assessments
     const { data: assessments, isLoading } = useQuery({
         queryKey: ['userAssessments'],
-        queryFn: () => api.get(`/assessments/user/${user?.userId}`),
+        queryFn: () => api.get(`/assessments/user/${user?.id}`),
         enabled: !!user,
     });
 
     // Fetch stats
     const { data: stats } = useQuery({
         queryKey: ['userStats'],
-        queryFn: () => api.get(`/users/${user?.userId}/stats`),
+        queryFn: () => api.get(`/users/${user?.id}/stats`),
         enabled: !!user,
     });
 
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
             {/* Welcome Header */}
             <div>
                 <Typography variant="h4" className="font-bold text-gray-900">
-                    Welcome back, {user?.firstName}!
+                    Welcome back, {user?.fullName}!
                 </Typography>
                 <Typography variant="body1" className="text-gray-600 mt-2">
                     Here's what's happening with your assessments today.
