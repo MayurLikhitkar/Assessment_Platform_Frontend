@@ -3,6 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
+import Container from '../components/common/Container';
 
 const MainLayout = () => {
     const { user, isLoading } = useAuth();
@@ -25,8 +26,10 @@ const MainLayout = () => {
             <Navbar onMenuClick={() => setMobileOpen(!mobileOpen)} />
             <div className="flex">
                 <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-                <main className="flex-1 p-6">
-                    <Outlet />
+                <main className='lg:w-[80%] w-full'>
+                    <Container>
+                        <Outlet />
+                    </Container>
                 </main>
             </div>
         </div>

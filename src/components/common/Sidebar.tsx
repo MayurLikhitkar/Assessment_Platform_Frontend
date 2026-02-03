@@ -64,33 +64,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
                         </NavLink>
                     ))}
                 </nav>
-
-                {/* User info */}
-                <div className="mt-8 pt-6 border-t border-border-light">
-                    <div className="px-4">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center">
-                                    <span className="text-primary-main font-bold">
-                                        {user?.firstName?.[0]}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm font-medium text-text-main">
-                                    {user?.firstName} {user?.lastName}
-                                </p>
-                                <p className="text-xs text-text-light capitalize">{user?.role}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );
 
     return (
-        <>
+        <aside className='hidden lg:block w-[20%]'>
             {/* Mobile Drawer */}
             <Drawer
                 variant="temporary"
@@ -101,17 +80,17 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
                 }}
                 sx={{
                     display: { xs: 'block', lg: 'none' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 256 },
+                    '& .MuiDrawer-paper': { boxSizing: 'border-box' },
                 }}
             >
                 {drawerContent}
             </Drawer>
 
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block w-64 bg-background-light border-r border-border-light">
+            <div className="h-full! bg-background-light border-r border-border-light">
                 {drawerContent}
             </div>
-        </>
+        </aside>
     );
 };
 

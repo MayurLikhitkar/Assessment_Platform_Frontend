@@ -10,6 +10,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import { QueryClientProvider } from '@tanstack/react-query';
 import queryClient from './services/queryClient';
 import MainLayout from './layouts/MainLayout';
+import Assessments from './pages/user/Assessments';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route element={<MainLayout />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/assessments" element={<Assessments />} />
               {/* <Route path="/profile" element={<Profile />} />
               <Route path="/assessments" element={<Assessments />} />
               <Route path="/assessments/:id" element={<AssessmentDetail />} /> */}

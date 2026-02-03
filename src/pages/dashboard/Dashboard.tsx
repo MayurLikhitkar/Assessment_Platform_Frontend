@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
                                     {assessments?.length || 0}
                                 </Typography>
                                 <Typography variant="body2" className="text-gray-500">
-                                    Total Assessments
+                                    Total
                                 </Typography>
                             </div>
                         </CardContent>
