@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { ApiError, User } from '../types/types';
-import api from '../services/api';
-import type { AuthContextType, AuthResponse, AuthState, LoginRequest, RegisterRequest } from '../types/authTypes';
+import type { ApiResponse, UserInterface } from '../types/types';
+import api from '../services/axios/api';
+import type { AuthContextType, AuthState, LoginRequest, LoginResponse, RegisterRequest } from '../types/authTypes';
 import { clearTokens, getAccessToken, getStoredUser, setStoredUser, setTokens } from '../services/tokenService';
 
 const AUTH_EVENTS = {
@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-                const storedUser = getStoredUser<User>();
+                const storedUser = getStoredUser<UserInterface>();
                 const accessToken = getAccessToken();
 
                 if (storedUser && accessToken) {
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
-    const handleAuthSuccess = useCallback((response: AuthResponse) => {
+    const handleAuthSuccess = useCallback((response: LoginResponse) => {
         const { accessToken, refreshToken, user } = response;
         setTokens(accessToken, refreshToken);
         setStoredUser(user);
@@ -85,13 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
             try {
-                const response = await api.post<AuthResponse>(
-                    '/auth/login',
-                    credentials
-                );
-                handleAuthSuccess(response.data);
+                const response = await api.post<ApiResponse<LoginResponse>>('/auth/login', credentials);
+                if (response.data.success && response.data.data) {
+                    handleAuthSuccess(response.data.data);
+                }
             } catch (error) {
-                const apiError = error as ApiError;
+                const apiError = error as ApiResponse<null>;
                 setState((prev) => ({
                     ...prev,
                     isLoading: false,
@@ -108,12 +107,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
             try {
-                await api.post<AuthResponse>(
+                await api.post<ApiResponse<null>>(
                     '/auth/register',
                     userData
                 );
             } catch (error) {
-                const apiError = error as ApiError;
+                const apiError = error as ApiResponse<null>;
                 setState((prev) => ({
                     ...prev,
                     isLoading: false,
@@ -143,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         globalThis.location.href = '/login';
     }, []);
 
-    const updateUser = useCallback((userData: Partial<User>) => {
+    const updateUser = useCallback((userData: Partial<UserInterface>) => {
         setState((prev) => {
             if (!prev.user) return prev;
 

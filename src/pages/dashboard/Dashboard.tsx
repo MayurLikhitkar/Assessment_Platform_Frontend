@@ -18,7 +18,7 @@ import {
     TrendingUp,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/api';
+import api from '../../services/axios/api';
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth();

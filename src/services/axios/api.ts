@@ -1,7 +1,8 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { BASE_API_URL } from '../config/envConfig';
-import { clearTokens, getAccessToken, getRefreshToken, setAccessToken } from './tokenService';
-import type { ApiError, AuthResponse } from '../types/authTypes';
+import { BASE_API_URL } from '../../config/envConfig';
+import { clearTokens, getAccessToken, getRefreshToken, setAccessToken } from '../tokenService';
+import type { LoginResponse } from '../../types/authTypes';
+import type { ApiResponse } from '../../types/types';
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
@@ -23,11 +24,11 @@ export const AUTH_EVENTS = {
 
 // Process queued requests
 const processQueue = (error: Error | null, token: string | null): void => {
-    failedQueue.forEach((promise) => {
+    failedQueue.forEach(({ resolve, reject }) => {
         if (error) {
-            promise.reject(error);
+            reject(error);
         } else {
-            promise.resolve(token);
+            resolve(token);
         }
     });
     failedQueue = [];
@@ -40,45 +41,26 @@ const handleAuthFailure = (): void => {
     globalThis.dispatchEvent(new CustomEvent(AUTH_EVENTS.LOGOUT));
 };
 
-// Type guard to check if error response has expected shape
-const isApiErrorResponse = (data: unknown): data is ApiError => {
-    return (
-        typeof data === 'object' &&
-        data !== null &&
-        'message' in data &&
-        typeof (data as ApiError).message === 'string'
-    );
-};
+const normalizeError = (error: AxiosError): ApiResponse<null> => {
 
-const normalizeError = (error: AxiosError): ApiError => {
-
-    if (error.response) {
-        const responseData = error.response.data;
-
-        if (isApiErrorResponse(responseData)) {
-            return {
-                message: responseData.message,
-                statusCode: error.response.status,
-                details: responseData.details,
-            };
-        }
-
-        return {
-            message: error.message || 'An error occurred',
-            statusCode: error.response.status,
-        };
+    if (error.response?.data) {
+        return error.response.data as ApiResponse<null>;
     }
 
     if (error.request) {
         return {
-            message: 'No response received from server',
-            statusCode: 0,
+            success: false,
+            responseMessage: 'Unable to connect to server',
+            errorMessage: 'No response received from server',
+            error
         };
     }
 
     return {
-        message: error.message || 'An error occurred',
-        statusCode: 500,
+        success: false,
+        responseMessage: 'An error occurred',
+        errorMessage: error.message || 'An error occurred',
+        error
     };
 };
 
@@ -98,7 +80,7 @@ const handle401Error = async (
                 }
                 return api(originalRequest);
             })
-            .catch((err) => Promise.reject(err));
+            .catch((err) => Promise.reject(normalizeError(err)));
     }
 
     originalRequest._retry = true;
@@ -111,7 +93,7 @@ const handle401Error = async (
             throw new Error('No refresh token available');
         }
 
-        const response = await axios.post<AuthResponse>(
+        const response = await axios.post<LoginResponse>(
             `${BASE_API_URL}/auth/refresh`,
             { refreshToken: refreshTokenValue },
             { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
@@ -127,13 +109,14 @@ const handle401Error = async (
 
         return api(originalRequest);
     } catch (refreshError) {
-        const error =
-            refreshError instanceof Error
+        const error = refreshError instanceof AxiosError
+            ? refreshError
+            : refreshError instanceof Error
                 ? refreshError
                 : new Error('Token refresh failed');
         processQueue(error, null);
         handleAuthFailure();
-        return Promise.reject(error);
+        return Promise.reject(normalizeError(error));
     } finally {
         isRefreshing = false;
     }
@@ -151,8 +134,10 @@ const handleRateLimitError = async (
 
     originalRequest._retryCount = retryCount + 1;
 
-    const retryAfter =
-        parseInt(error.response?.headers['retry-after'] || '1', 10) * 1000;
+    const retryAfter = Number.parseInt(
+        (error.response?.headers as Record<string, string>)['retry-after'] || '1',
+        10
+    ) * 1000;
     const delay = Math.min(retryAfter, 2 ** retryCount * 1000, 30000);
 
     await sleep(delay);
@@ -160,23 +145,23 @@ const handleRateLimitError = async (
 };
 
 const handleResponseError = async (error: AxiosError): Promise<unknown> => {
-    // const originalRequest = error.config as ExtendedAxiosRequestConfig;
+    const originalRequest = error.config as ExtendedAxiosRequestConfig ?? null;
     // console.log('first', error)
     // console.log('first', originalRequest)
-    // if (!originalRequest) {
-    //     throw normalizeError(error);
-    // }
+    if (!originalRequest) {
+        return Promise.reject(normalizeError(error));
+    }
 
-    // if (error.response?.status === 401 && !originalRequest._retry) {
-    //     return handle401Error(originalRequest);
-    // }
+    if (error.response?.status === 401 && !originalRequest._retry) {
+        return handle401Error(originalRequest);
+    }
 
+    // Uncomment if rate limiting is needed
     // if (error.response?.status === 429) {
-    //     return handleRateLimitError(originalRequest, error);
+    //   return handleRateLimitError(originalRequest, error);
     // }
 
-    // return Promise.reject(normalizeError(error));
-    throw normalizeError(error);
+    return Promise.reject(normalizeError(error));
 };
 
 const api = axios.create({
@@ -199,7 +184,7 @@ api.interceptors.request.use(
         return config;
     },
     (error: AxiosError) => {
-        throw normalizeError(error);
+        return Promise.reject(normalizeError(error));
     }
 );
 

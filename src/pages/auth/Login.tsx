@@ -7,7 +7,7 @@ import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
 import { Menu } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import type { ApiError } from '../../types/types';
+import type { ApiResponse } from '../../types/types';
 
 const LoginSchema = Yup.object().shape({
     email: Yup.string()
@@ -21,7 +21,6 @@ const LoginSchema = Yup.object().shape({
 const Login: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
-
     const formik = useFormik({
         initialValues: {
             email: '',
@@ -34,8 +33,8 @@ const Login: React.FC = () => {
                 navigate('/dashboard');
                 toast.success('Login successful!');
             } catch (error) {
-                const apiError = error as ApiError;
-                toast.error(apiError.message || 'Login failed');
+                const apiError = error as ApiResponse<null>;
+                toast.error(apiError.responseMessage || 'Login failed');
             } finally {
                 setSubmitting(false);
             }

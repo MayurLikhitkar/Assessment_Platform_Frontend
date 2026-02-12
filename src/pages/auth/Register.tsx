@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
 import { FaUsers, FaShieldAlt, FaAward } from "react-icons/fa";
 import { MdOutlineTrendingUp } from "react-icons/md";
-import type { ApiError } from '../../types/types';
+import type { ApiResponse } from '../../types/types';
 import { GoDot, GoDotFill } from "react-icons/go";
 
 const registerSchema = Yup.object().shape({
@@ -23,7 +23,6 @@ const registerSchema = Yup.object().shape({
         .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
         .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
         .matches(/\d/, 'Password must contain at least one number')
-        .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
         .required('Password is required'),
     confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
@@ -75,8 +74,8 @@ const Register: React.FC = () => {
                 toast.success('Account created successfully!');
                 navigate('/login');
             } catch (error) {
-                const apiError = error as ApiError;
-                toast.error(apiError.message || 'Registration failed');
+                const apiError = error as ApiResponse<null>;
+                toast.error(apiError.responseMessage || 'Registration failed');
             } finally {
                 setSubmitting(false);
             }

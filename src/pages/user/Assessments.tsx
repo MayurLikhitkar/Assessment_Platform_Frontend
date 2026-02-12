@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/api';
+import api from '../../services/axios/api';
 
 const Assessments: React.FC = () => {
     const navigate = useNavigate();

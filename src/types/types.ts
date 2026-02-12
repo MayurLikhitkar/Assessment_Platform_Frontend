@@ -1,18 +1,41 @@
 // User Types
-export interface User {
+export enum UserRole {
+    USER = 'user',
+    EVALUATOR = 'evaluator',
+    ADMIN = 'admin',
+    SUPER_ADMIN = 'super_admin',
+    PROCTOR = 'proctor', // important for live proctoring
+}
+
+export enum UserStatus {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    SUSPENDED = 'suspended',
+    BANNED = 'banned',
+}
+export interface UserInterface {
     id: number;
-    email: string;
     fullName: string;
-    role: 'user' | 'admin' | 'evaluator' | 'super_admin';
-    status: 'active' | 'inactive' | 'suspended';
+    email: string;
+    role: UserRole;
+    status: UserStatus;
     profilePicture?: string;
+    city?: string;
+    state?: string;
+    country?: string;
     phone?: string;
+    dateOfBirth?: Date;
     skills: string[];
     experience?: number;
+    isEmailVerified: boolean;
+    isPhoneVerified: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    lastLogin?: Date;
+    resetPasswordToken: string | null;
+    resetPasswordExpires: Date | null;
     requireWebcam: boolean;
     requireMicrophone: boolean;
-    createdAt: string;
-    updatedAt: string;
 }
 
 // Category Types
@@ -118,9 +141,16 @@ export interface Assessment {
 // API Response Types
 export interface ApiResponse<T> {
     success: boolean;
+    responseMessage: string;
+    errorMessage?: string;
+    error?: unknown;
     data?: T;
-    message?: string;
-    errors?: Record<string, string[]>;
+}
+export interface ApiError {
+    success: boolean;
+    responseMessage: string;
+    errorMessage?: string;
+    error?: unknown;
 }
 
 export interface PaginatedResponse<T> {
@@ -129,11 +159,4 @@ export interface PaginatedResponse<T> {
     page: number;
     limit: number;
     totalPages: number;
-}
-
-export interface ApiError {
-    success: boolean;
-    message: string;
-    statusCode: number;
-    details?: Record<string, string[]>;
 }

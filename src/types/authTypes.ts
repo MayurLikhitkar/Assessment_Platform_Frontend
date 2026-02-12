@@ -1,18 +1,18 @@
-import type { ApiError, User } from "./types";
+import type { UserInterface } from "./types";
 
 
 export interface AuthState {
-    user: User | null;
+    user: UserInterface | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    error: ApiError | null;
+    error: unknown;
 }
 
 export interface AuthContextType extends AuthState {
     login: (credentials: LoginRequest) => Promise<void>;
     register: (userData: RegisterRequest) => Promise<void>;
     logout: () => void;
-    updateUser: (userData: Partial<User>) => void;
+    updateUser: (userData: Partial<UserInterface>) => void;
     clearError: () => void;
 }
 
@@ -34,10 +34,35 @@ export interface RegisterRequest {
     phone?: string;
 }
 
-export interface AuthResponse {
+export interface LoginResponse {
     accessToken: string;
     refreshToken: string;
-    user: User;
-    success: boolean;
-    message: string;
+    user: UserInterface;
+}
+
+export interface GetProfileResponse {
+    data: UserInterface;
+}
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
+export interface UpdateUserRequest {
+    fullName?: string;
+    phone?: string;
+    skills?: string[];
+    experience?: number;
 }
