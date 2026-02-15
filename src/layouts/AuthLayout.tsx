@@ -10,9 +10,7 @@ const AuthLayout = () => {
 
     return (
         <div className="min-h-screen max-w-screen bg-background-light">
-            {/* <Container> */}
             <Outlet />
-            {/* </Container> */}
         </div>
     );
 };

@@ -43,7 +43,7 @@ const FormSelect = <T,>({
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 disabled={disabled}
-                className={error ? '!border-error-main !focus:ring-error-main !focus:border-error-main' : ''}
+                className={error ? 'focus:ring-error-main!' : ''}
             />
             {error && (
                 <div className="text-sm text-error-main mt-1">{helperText}</div>

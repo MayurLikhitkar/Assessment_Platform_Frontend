@@ -3,11 +3,11 @@ import Input from './Input';
 import type { FormikProps } from 'formik';
 import { twMerge } from 'tailwind-merge';
 
-interface FormInputProps<T> extends Omit<InputHTMLAttributes<HTMLInputElement>, 'name' | 'value' | 'onChange' | 'onBlur'> {
+interface FormInputProps<T> extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
     name: keyof T & string; // Strongly typed name based on Formik values
     formik: FormikProps<T>;
-    id: string; // We keep ID mandatory for accessibility (label linking)
+    id: keyof T & string; // We keep ID mandatory for accessibility (label linking)
     withLabel?: boolean;
 }
 
@@ -42,12 +42,12 @@ const FormInput = <T,>({
             <Input
                 id={id}
                 name={name}
-                {...props}
                 autoComplete='postal-code new-password name given-name family-name username mobile tel email webauthn country'
                 value={inputValue}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={hasError ? 'border-error-main! !focus:ring-error-main !focus:border-error-main' : ''}
+                className={hasError ? 'ring-error-main!' : ''}
+                {...props}
             />
             {hasError && (
                 <div className="text-sm text-error-main mt-1">{errorMessage}</div>

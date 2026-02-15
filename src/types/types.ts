@@ -144,7 +144,7 @@ export interface ApiResponse<T> {
     responseMessage: string;
     errorMessage?: string;
     error?: unknown;
-    data?: T;
+    data: T;
 }
 export interface ApiError {
     success: boolean;

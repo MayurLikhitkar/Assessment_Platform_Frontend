@@ -1,24 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-    Box,
-    Grid,
-    Card,
-    CardContent,
-    Typography,
-    Chip,
-    Button,
-    LinearProgress,
-    Alert,
-} from '@mui/material';
-import {
-    Schedule,
-    PlayArrow,
-    Visibility,
-} from '@mui/icons-material';
+import { Schedule, PlayArrow, Visibility } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/axios/api';
+import DataLoader from '../../components/common/DataLoader';
 
 const Assessments: React.FC = () => {
     const navigate = useNavigate();
@@ -41,201 +27,183 @@ const Assessments: React.FC = () => {
 
     if (isLoading) {
         return (
-            <Box className="flex justify-center py-8">
-                <LinearProgress className="w-64" />
-            </Box>
+            <div className="py-8">
+                <DataLoader />
+            </div>
         );
     }
 
     return (
-        <Box className="space-y-6">
+        <div className="space-y-6">
             {/* Header */}
-            <Box>
-                <Typography variant="h4" className="font-bold">
+            <div>
+                <h1 className="text-3xl font-bold text-text-primary">
                     My Assessments
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
+                </h1>
+                <p className="text-text-secondary mt-1">
                     Manage and take your assigned assessments
-                </Typography>
-            </Box>
+                </p>
+            </div>
 
             {/* Upcoming Assessments */}
-            <Box>
-                <Box className="flex justify-between items-center mb-4">
-                    <Typography variant="h6" className="font-bold">
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-text-primary">
                         Upcoming Assessments
-                    </Typography>
-                    <Chip
-                        label={`${upcomingAssessments?.length || 0} assigned`}
-                        color="primary"
-                    />
-                </Box>
+                    </h2>
+                    <span className="px-3 py-1 rounded-full text-sm bg-action-hover text-text-primary">
+                        {upcomingAssessments?.length || 0} assigned
+                    </span>
+                </div>
 
                 {upcomingAssessments.length > 0 ? (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {upcomingAssessments.map((assessment: any) => (
-                            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={assessment.userAssessmentId}>
-                                <Card className="h-full hover:shadow-lg transition-shadow">
-                                    <CardContent className="space-y-4">
-                                        <Box className="flex justify-between items-start">
-                                            <Typography variant="h6" className="font-bold">
-                                                {assessment.assessment.title}
-                                            </Typography>
-                                            <Chip
-                                                label={assessment.status.replace('-', ' ')}
-                                                size="small"
-                                                color={
-                                                    assessment.status === 'in-progress' ? 'warning' : 'info'
+                            <div key={assessment.userAssessmentId} className="bg-background-paper rounded-lg shadow-md hover:shadow-lg transition-shadow h-full flex flex-col">
+                                <div className="p-4 space-y-4 flex-1">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-lg font-bold text-text-primary">
+                                            {assessment.assessment.title}
+                                        </h3>
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-xs font-medium ${assessment.status === 'in-progress'
+                                                ? 'bg-warning-light text-warning-dark'
+                                                : 'bg-info-light text-info-dark'
                                                 }
-                                            />
-                                        </Box>
-
-                                        <Typography variant="body2" color="textSecondary" noWrap>
-                                            {assessment.assessment.description}
-                                        </Typography>
-
-                                        <Box className="space-y-2">
-                                            <Box className="flex justify-between">
-                                                <Typography variant="caption" color="textSecondary">
-                                                    Duration:
-                                                </Typography>
-                                                <Typography variant="caption" className="font-medium">
-                                                    {assessment.assessment.duration} mins
-                                                </Typography>
-                                            </Box>
-                                            <Box className="flex justify-between">
-                                                <Typography variant="caption" color="textSecondary">
-                                                    Questions:
-                                                </Typography>
-                                                <Typography variant="caption" className="font-medium">
-                                                    {assessment.assessment.questions?.length || 0}
-                                                </Typography>
-                                            </Box>
-                                            <Box className="flex justify-between">
-                                                <Typography variant="caption" color="textSecondary">
-                                                    Total Marks:
-                                                </Typography>
-                                                <Typography variant="caption" className="font-medium">
-                                                    {assessment.assessment.totalMarks}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-
-                                        <Button
-                                            fullWidth
-                                            variant="contained"
-                                            startIcon={
-                                                assessment.status === 'in-progress' ? (
-                                                    <PlayArrow />
-                                                ) : (
-                                                    <Schedule />
-                                                )
-                                            }
-                                            onClick={() => navigate(`/assessment/${assessment.assessmentId}/take`)}
+                                            `}
                                         >
-                                            {assessment.status === 'in-progress'
-                                                ? 'Continue Assessment'
-                                                : 'Start Assessment'}
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                                            {assessment.status.replace('-', ' ')}
+                                        </span>
+                                    </div>
+
+                                    <p className="text-sm text-text-secondary line-clamp-2">
+                                        {assessment.assessment.description}
+                                    </p>
+
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-text-secondary">Duration:</span>
+                                            <span className="font-medium text-text-primary">
+                                                {assessment.assessment.duration} mins
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-text-secondary">Questions:</span>
+                                            <span className="font-medium text-text-primary">
+                                                {assessment.assessment.questions?.length || 0}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-text-secondary">Total Marks:</span>
+                                            <span className="font-medium text-text-primary">
+                                                {assessment.assessment.totalMarks}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="w-full mt-4 py-2 px-4 rounded bg-primary-main text-white hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 font-medium"
+                                        onClick={() => navigate(`/assessment/${assessment.assessmentId}/take`)}
+                                    >
+                                        {assessment.status === 'in-progress' ? <PlayArrow fontSize="small" /> : <Schedule fontSize="small" />}
+                                        {assessment.status === 'in-progress'
+                                            ? 'Continue Assessment'
+                                            : 'Start Assessment'}
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
+                    </div>
                 ) : (
-                    <Alert severity="info">
+                    <div className="p-4 rounded bg-info-light text-info-dark border border-info-main/20">
                         No upcoming assessments assigned. Check back later or contact your administrator.
-                    </Alert>
+                    </div>
                 )}
-            </Box>
+            </div>
 
             {/* Completed Assessments */}
-            <Box>
-                <Box className="flex justify-between items-center mb-4">
-                    <Typography variant="h6" className="font-bold">
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-text-primary">
                         Completed Assessments
-                    </Typography>
-                    <Chip
-                        label={`${completedAssessments?.length || 0} completed`}
-                        color="success"
-                    />
-                </Box>
+                    </h2>
+                    <span className="px-3 py-1 rounded-full text-sm bg-success-light text-success-dark">
+                        {completedAssessments?.length || 0} completed
+                    </span>
+                </div>
 
                 {completedAssessments.length > 0 ? (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {completedAssessments.slice(0, 6).map((assessment: any) => (
-                            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={assessment.userAssessmentId}>
-                                <Card className="h-full">
-                                    <CardContent className="space-y-4">
-                                        <Box className="flex justify-between items-start">
-                                            <Typography variant="h6" className="font-bold">
-                                                {assessment.assessment.title}
-                                            </Typography>
-                                            <Chip
-                                                label={assessment.isPassed ? 'Passed' : 'Failed'}
-                                                color={assessment.isPassed ? 'success' : 'error'}
-                                                size="small"
-                                            />
-                                        </Box>
-
-                                        <Box className="space-y-2">
-                                            <Box className="flex justify-between">
-                                                <Typography variant="caption" color="textSecondary">
-                                                    Score:
-                                                </Typography>
-                                                <Typography variant="caption" className="font-medium">
-                                                    {assessment.score || 0}/{assessment.totalMarks}
-                                                </Typography>
-                                            </Box>
-                                            <Box className="flex justify-between">
-                                                <Typography variant="caption" color="textSecondary">
-                                                    Completed:
-                                                </Typography>
-                                                <Typography variant="caption" className="font-medium">
-                                                    {new Date(assessment.completedAt).toLocaleDateString()}
-                                                </Typography>
-                                            </Box>
-                                            <Box className="flex justify-between">
-                                                <Typography variant="caption" color="textSecondary">
-                                                    Time Spent:
-                                                </Typography>
-                                                <Typography variant="caption" className="font-medium">
-                                                    {Math.floor(assessment.timeSpent / 60)}m {assessment.timeSpent % 60}s
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-
-                                        <Button
-                                            fullWidth
-                                            variant="outlined"
-                                            startIcon={<Visibility />}
-                                            onClick={() => navigate(`/results/${assessment.userAssessmentId}`)}
+                            <div key={assessment.userAssessmentId} className="bg-background-paper rounded-lg shadow-md h-full flex flex-col">
+                                <div className="p-4 space-y-4 flex-1">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-lg font-bold text-text-primary">
+                                            {assessment.assessment.title}
+                                        </h3>
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-xs font-medium ${assessment.isPassed
+                                                ? 'bg-success-light text-success-dark'
+                                                : 'bg-error-light text-error-dark'
+                                                }
+                                            `}
                                         >
-                                            View Results
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                                            {assessment.isPassed ? 'Passed' : 'Failed'}
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-text-secondary">Score:</span>
+                                            <span className="font-medium text-text-primary">
+                                                {assessment.score || 0}/{assessment.totalMarks}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-text-secondary">Completed:</span>
+                                            <span className="font-medium text-text-primary">
+                                                {new Date(assessment.completedAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-text-secondary">Time Spent:</span>
+                                            <span className="font-medium text-text-primary">
+                                                {Math.floor(assessment.timeSpent / 60)}m {assessment.timeSpent % 60}s
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="w-full mt-4 py-2 px-4 rounded border border-primary-main text-primary-main hover:bg-primary-light/10 transition-colors flex items-center justify-center gap-2 font-medium"
+                                        onClick={() => navigate(`/results/${assessment.userAssessmentId}`)}
+                                    >
+                                        <Visibility fontSize="small" />
+                                        View Results
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
+                    </div>
                 ) : (
-                    <Alert severity="info">No completed assessments yet.</Alert>
+                    <div className="p-4 rounded bg-info-light text-info-dark border border-info-main/20">
+                        No completed assessments yet.
+                    </div>
                 )}
 
                 {completedAssessments.length > 6 && (
-                    <Box className="text-center mt-4">
-                        <Button
-                            variant="text"
+                    <div className="text-center mt-4">
+                        <button
+                            className="text-primary-main hover:underline font-medium"
                             onClick={() => {
                                 // Navigate to full history page
                             }}
                         >
                             View All ({completedAssessments.length})
-                        </Button>
-                    </Box>
+                        </button>
+                    </div>
                 )}
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 };
 

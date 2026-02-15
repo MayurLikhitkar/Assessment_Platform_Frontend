@@ -1,52 +1,53 @@
 import type { FormikProps } from 'formik';
 import TextArea from './TextArea';
+import type { TextareaHTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-interface FormTextAreaProps<T> {
-    label: string
-    name: keyof T & string,
-    id: string,
-    placeholder: string,
-    formik: FormikProps<T>,
-    rows?: number
-    required?: boolean
-    className?: string
-    disabled?: boolean;
-    withLabel?: boolean
+interface FormTextAreaProps<T> extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+    label: string;
+    name: keyof T & string; // Strongly typed name based on Formik values
+    formik: FormikProps<T>;
+    id: keyof T & string; // We keep ID mandatory for accessibility (label linking)
+    withLabel?: boolean;
 }
 
 const FormTextArea = <T,>({
     id,
-    placeholder,
     label,
     name,
     formik,
-    className,
-    rows = 2,
     withLabel = true,
-    required = false,
-    disabled = false
+    ...props
 }: FormTextAreaProps<T>) => {
-    const error = formik.touched[name] && Boolean(formik.errors[name]);
-    const helperText = formik.touched[name] && typeof formik.errors[name] === 'string'
-        ? formik.errors[name] : '';
+    const isTouched = formik.touched[name];
+    const error = formik.errors[name];
+    const hasError = isTouched && Boolean(error);
+    const errorMessage = hasError && typeof error === 'string' ? error : '';
 
+    const value = formik.values[name];
+    const inputValue = typeof value === 'string' || typeof value === 'number' ? value : '';
     return (
-        <div className={className}>
-            {withLabel && (<label className="w-full inline-block text-base font-medium text-text-main mb-2" htmlFor={id}>{label} {required ? <span className='text-error-main'>*</span> : <></>}</label>)}
+        <div className={twMerge('w-full', props.className)}>
+            {withLabel && (
+                <label
+                    htmlFor={id}
+                    className="mb-2 block text-base font-medium text-text-main"
+                >
+                    {label}
+                    {props.required && <span className="text-error-main ml-1">*</span>}
+                </label>
+            )}
             <TextArea
                 id={id}
                 name={name}
-                placeholder={placeholder}
-                required={required}
-                value={formik.values[name] as string | number | readonly string[]}
+                value={inputValue}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                disabled={disabled}
-                rows={rows}
-                className={error ? '!border-error-main !focus:ring-error-main !focus:border-error-main' : ''}
+                className={hasError ? 'ring-error-main!' : ''}
+                {...props}
             />
-            {error && (
-                <div className="text-sm text-error-main mt-1">{helperText}</div>
+            {hasError && (
+                <div className="text-sm text-error-main mt-1">{errorMessage}</div>
             )}
         </div>
     )

@@ -1,11 +1,12 @@
-import React from 'react';
+import { type SelectHTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 type Option = {
     label: string;
     value: string | number;
 };
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
     value: string | number;
     options: Option[];
     placeholder: string;
@@ -19,24 +20,22 @@ const Select: React.FC<SelectProps> = ({
     ...rest
 }) => {
     return (
-        <div>
-            <select
-                value={value}
-                {...rest}
-                className={`bg-background-dark p-2 rounded border border-dark-dark text-text-light py-2 w-full ${className || ''}`}
-            >
-                {placeholder && (
-                    <option value="" className='text-text-light bg-background-main' disabled>
-                        {placeholder}
-                    </option>
-                )}
-                {options.map((opt) => (
-                    <option key={opt.value} className='text-text-main bg-background-light' value={opt.value}>
-                        {opt.label}
-                    </option>
-                ))}
-            </select>
-        </div>
+        <select
+            value={value}
+            {...rest}
+            className={twMerge("p-2 w-full rounded-lg focus:outline-none focus:ring-2 ring ring-primary-light/60 text-text-main", className)}
+        >
+            {placeholder && (
+                <option value="" className='text-text-light bg-background-main' disabled>
+                    {placeholder}
+                </option>
+            )}
+            {options.map((opt) => (
+                <option key={opt.value} className='text-text-main bg-background-light' value={opt.value}>
+                    {opt.label}
+                </option>
+            ))}
+        </select>
     );
 };
 

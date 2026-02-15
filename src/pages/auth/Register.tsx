@@ -172,7 +172,7 @@ const Register: React.FC = () => {
                             name="fullName"
                             label="Full Name"
                             type="text"
-                            placeholder="John Doe"
+                            placeholder="John Doe"  
                             formik={formik}
                             required
                         />

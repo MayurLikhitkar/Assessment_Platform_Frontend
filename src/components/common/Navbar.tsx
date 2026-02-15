@@ -114,7 +114,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             >
                                 <Badge
                                     badgeContent={3}
-                                    color="error"
                                     variant="dot"
                                     sx={{
                                         '& .MuiBadge-badge': {

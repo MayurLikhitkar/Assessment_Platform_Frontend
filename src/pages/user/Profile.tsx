@@ -1,42 +1,24 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import {
-    Box,
-    Grid,
-    Card,
-    CardContent,
-    Typography,
-    TextField,
-    Button,
-    Avatar,
-    Divider,
-    Alert,
-    Tabs,
-    Tab,
-    Switch,
-    FormControlLabel,
-    Chip,
-    LinearProgress,
-} from '@mui/material';
-import {
-    Edit,
-    Save,
-    Cancel,
-    Person,
-    Security,
-    History,
-} from '@mui/icons-material';
+import { Person, Security, History } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/axios/api';
-import type { UserInterface } from '../../types/types';
-import { getProfile } from '../../services/axios/authApi';
+import type { ApiError, UserInterface } from '../../types/types';
+import { changePassword, getProfile, updateProfile } from '../../services/axios/authApi';
+import { MdCancel, MdEdit, MdSave } from 'react-icons/md';
+import Button from '../../components/ui/Button';
+import FormInput from '../../components/ui/FormInput';
+import Input from '../../components/ui/Input';
+import DataLoader from '../../components/common/DataLoader';
+import type { ChangePasswordRequest } from '../../types/authTypes';
+import TabButton from '../../components/ui/TabButton';
 
 const ProfileSchema = Yup.object().shape({
-    firstName: Yup.string().required('First name is required'),
-    lastName: Yup.string().required('Last name is required'),
+    fullName: Yup.string()
+        .required('You fullname is required')
+        .min(2, 'your full name must be at least 2 characters'),
     email: Yup.string().email('Invalid email').required('Email is required'),
     phone: Yup.string().matches(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
     skills: Yup.array().of(Yup.string()),
@@ -55,8 +37,9 @@ const PasswordSchema = Yup.object().shape({
 
 const Profile: React.FC = () => {
     const { user, updateUser } = useAuth();
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useState(1);
     const [editMode, setEditMode] = useState(false);
+    const [newSkill, setNewSkill] = useState('');
 
     // Fetch user profile data
     const { data: profileData, refetch } = useQuery({
@@ -67,433 +50,430 @@ const Profile: React.FC = () => {
 
     // Update profile mutation
     const updateMutation = useMutation({
-        mutationFn: (data: Partial<UserInterface>) => api.put('/auth/profile', data),
+        mutationFn: (data: Partial<UserInterface>) => updateProfile(data),
         onSuccess: (data) => {
-            updateUser(data);
-            toast.success('Profile updated successfully');
-            setEditMode(false);
-            refetch();
+            if (data?.success) {
+                updateUser(data.data);
+                toast.success(data.responseMessage);
+                setEditMode(false);
+                refetch();
+            }
         },
-        onError: (error) => {
-            toast.error(error.response?.data?.message || 'Failed to update profile');
+        onError: (error: ApiError) => {
+            toast.error(error.responseMessage || 'Failed to update profile');
         },
     });
 
-    // Change password mutation
     const changePasswordMutation = useMutation({
-        mutationFn: (data: any) => api.put('/auth/change-password', data),
-        onSuccess: () => {
-            toast.success('Password changed successfully');
-            passwordFormik.resetForm();
+        mutationFn: (data: ChangePasswordRequest) => changePassword(data),
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success(data.responseMessage);
+                passwordFormik.resetForm();
+            }
         },
-        onError: (error) => {
-            toast.error(error.response?.data?.message || 'Failed to change password');
+        onError: (error: ApiError) => {
+            toast.error(error.responseMessage || 'Failed to change password');
         },
     });
 
     // Profile form
     const profileFormik = useFormik<Partial<UserInterface>>({
         initialValues: {
-            fullName: user?.fullName || '',
-            email: user?.email || '',
-            phone: user?.phone || '',
-            skills: user?.skills || [],
-            experience: user?.experience || 0,
-            requireWebcam: user?.requireWebcam ?? true,
-            requireMicrophone: user?.requireMicrophone ?? true,
+            fullName: profileData?.data.fullName || '',
+            email: profileData?.data.email || '',
+            phone: profileData?.data.phone || '',
+            skills: profileData?.data.skills || [],
+            experience: profileData?.data.experience || 0,
+            requireWebcam: profileData?.data.requireWebcam ?? true,
+            requireMicrophone: profileData?.data.requireMicrophone ?? true,
         },
         validationSchema: ProfileSchema,
-        onSubmit: (values) => {
-            updateMutation.mutate(values);
+        onSubmit: async (values) => {
+            try {
+                await updateMutation.mutateAsync(values);
+            } catch (error) {
+                console.error('Error updating profile:', error);
+            }
         },
         enableReinitialize: true,
     });
 
     // Password form
-    const passwordFormik = useFormik({
+    const passwordFormik = useFormik<ChangePasswordRequest>({
         initialValues: {
             currentPassword: '',
             newPassword: '',
             confirmPassword: '',
         },
         validationSchema: PasswordSchema,
-        onSubmit: (values) => {
-            changePasswordMutation.mutate(values);
+        onSubmit: async (values) => {
+            try {
+                await changePasswordMutation.mutateAsync(values);
+            } catch (error) {
+                console.error('Error changing password:', error);
+            }
         },
     });
 
     // Handle skills input
-    const handleSkillsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const skills = event.target.value.split(',').map(s => s.trim()).filter(s => s);
-        profileFormik.setFieldValue('skills', skills);
+    const handleAddSkill = () => {
+        const trimmedSkill = newSkill.trim();
+        if (trimmedSkill && !profileFormik.values.skills?.includes(trimmedSkill)) {
+            profileFormik.setFieldValue('skills', [...(profileFormik.values.skills || []), trimmedSkill]);
+            setNewSkill('');
+        }
     };
 
-    if (!user) {
+    const handleRemoveSkill = (skillToRemove: string) => {
+        profileFormik.setFieldValue(
+            'skills',
+            profileFormik.values.skills?.filter((skill) => skill !== skillToRemove)
+        );
+    };
+
+    const handleNewSkillKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleAddSkill();
+        }
+    };
+
+    if (!profileData) {
         return (
-            <Box className="flex justify-center py-8">
-                <LinearProgress className="w-64" />
-            </Box>
+            <DataLoader />
         );
     }
 
     return (
-        <Box className="space-y-6">
+        <div className="space-y-6">
             {/* Header */}
-            <Box className="flex justify-between items-center">
-                <Typography variant="h4" className="font-bold">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-text-primary">
                     Profile Settings
-                </Typography>
+                </h1>
                 {!editMode && activeTab === 0 && (
-                    <Button
-                        variant="outlined"
-                        startIcon={<Edit />}
+                    <Button variant='outline' className='text-primary-main border-primary-light'
                         onClick={() => setEditMode(true)}
                     >
-                        Edit Profile
+                        <MdEdit />
+                        Edit
                     </Button>
                 )}
-            </Box>
+            </div>
 
-            <Grid container spacing={3}>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Left Column - Profile Info */}
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Card>
-                        <CardContent className="text-center">
-                            {/* Profile Image */}
-                            <Box className="relative inline-block mb-4">
-                                <Avatar
-                                    src={user.profilePicture}
-                                    className="w-32 h-32 text-4xl"
+                <div className="md:col-span-4 space-y-4">
+                    <div className="bg-background-light rounded-lg shadow-md p-6 text-center">
+                        <h2 className="text-xl font-bold text-text-primary">
+                            {profileData.data.fullName}
+                        </h2>
+                        <p className="text-text-secondary mb-2">
+                            {profileData.data.email}
+                        </p>
+
+                        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-main text-white mb-4">
+                            {profileData.data.role.toUpperCase()}
+                        </span>
+
+                        <hr className="my-4 border-divider" />
+
+                        {/* Account Stats */}
+                        <div className="space-y-3 text-left">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-text-secondary">
+                                    Member Since:
+                                </span>
+                                <span className="font-medium text-text-primary">
+                                    {new Date(profileData.data.createdAt).toLocaleDateString()}
+                                </span>
+                            </div>
+
+                            <div className="flex justify-between text-sm">
+                                <span className="text-text-secondary">
+                                    Last Login:
+                                </span>
+                                <span className="font-medium text-text-primary">
+                                    {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
+                                </span>
+                            </div>
+
+                            <div className="flex justify-between text-sm items-center">
+                                <span className="text-text-secondary">
+                                    Account Status:
+                                </span>
+                                <span
+                                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${profileData.data.status === 'active' ? 'bg-success-light text-success-dark' : 'bg-error-light text-error-dark'
+                                        }`}
                                 >
-                                    {user.fullName}
-                                </Avatar>
-                            </Box>
-
-                            <Typography variant="h5" className="font-bold">
-                                {user.fullName}
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary" className="mb-2">
-                                {user.email}
-                            </Typography>
-
-                            <Chip
-                                label={user.role.toUpperCase()}
-                                color="primary"
-                                size="small"
-                                className="mb-4"
-                            />
-
-                            <Divider className="my-4" />
-
-                            {/* Account Stats */}
-                            <Box className="space-y-3 text-left">
-                                <Box className="flex justify-between">
-                                    <Typography variant="body2" color="textSecondary">
-                                        Member Since:
-                                    </Typography>
-                                    <Typography variant="body2" className="font-medium">
-                                        {new Date(user.createdAt).toLocaleDateString()}
-                                    </Typography>
-                                </Box>
-
-                                <Box className="flex justify-between">
-                                    <Typography variant="body2" color="textSecondary">
-                                        Last Login:
-                                    </Typography>
-                                    <Typography variant="body2" className="font-medium">
-                                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
-                                    </Typography>
-                                </Box>
-
-                                <Box className="flex justify-between">
-                                    <Typography variant="body2" color="textSecondary">
-                                        Account Status:
-                                    </Typography>
-                                    <Chip
-                                        label={user.status.toUpperCase()}
-                                        size="small"
-                                        color={user.status === 'active' ? 'success' : 'error'}
-                                    />
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
+                                    {profileData.data.status.toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Proctoring Settings Card */}
-                    <Card className="mt-4">
-                        <CardContent>
-                            <Typography variant="h6" className="font-bold mb-3">
-                                <Security className="mr-2" />
-                                Proctoring Settings
-                            </Typography>
+                    <div className="bg-background-light rounded-lg shadow-md p-6">
+                        <h3 className="text-lg font-bold text-text-primary mb-3 flex items-center gap-2">
+                            <Security fontSize="small" />
+                            Proctoring Settings
+                        </h3>
 
-                            <Box className="space-y-3">
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={profileFormik.values.requireWebcam}
-                                            onChange={profileFormik.handleChange}
-                                            name="requireWebcam"
-                                            disabled={!editMode}
-                                        />
-                                    }
-                                    label="Require Webcam"
-                                />
+                        <div className="space-y-3">
+                            <label className="flex items-center justify-between cursor-pointer">
+                                <span className="text-text-primary">Require Webcam</span>
+                                <div className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        name="requireWebcam"
+                                        checked={profileFormik.values.requireWebcam}
+                                        onChange={profileFormik.handleChange}
+                                        disabled={!editMode}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
+                                </div>
+                            </label>
 
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={profileFormik.values.requireMicrophone}
-                                            onChange={profileFormik.handleChange}
-                                            name="requireMicrophone"
-                                            disabled={!editMode}
-                                        />
-                                    }
-                                    label="Require Microphone"
-                                />
+                            <label className="flex items-center justify-between cursor-pointer">
+                                <span className="text-text-primary">Require Microphone</span>
+                                <div className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        name="requireMicrophone"
+                                        checked={profileFormik.values.requireMicrophone}
+                                        onChange={profileFormik.handleChange}
+                                        disabled={!editMode}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
+                                </div>
+                            </label>
 
-                                <Typography variant="caption" color="textSecondary">
-                                    These settings apply to all your assessments unless overridden by specific assessment settings.
-                                </Typography>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
+                            <p className="text-xs text-text-secondary mt-2">
+                                These settings apply to all your assessments unless overridden by specific assessment settings.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Right Column - Forms */}
-                <Grid size={{ xs: 12, md: 8 }} >
-                    <Card>
-                        <CardContent>
-                            <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
-                                <Tab label="Personal Info" icon={<Person />} />
-                                <Tab label="Security" icon={<Security />} />
-                                <Tab label="Assessment History" icon={<History />} />
-                            </Tabs>
+                <div className="md:col-span-8">
+                    <div className="bg-background-light rounded-lg shadow-md p-6">
+                        {/* Tabs */}
+                        <div className="flex space-x-4">
+                            <TabButton
+                                label="Personal Info"
+                                icon={<Person fontSize="small" />}
+                                isActive={activeTab === 0}
+                                onClick={() => setActiveTab(0)}
+                            />
+                            <TabButton
+                                label="Security"
+                                icon={<Security fontSize="small" />}
+                                isActive={activeTab === 1}
+                                onClick={() => setActiveTab(1)}
+                            />
+                            <TabButton
+                                label="Assessment History"
+                                icon={<History fontSize="small" />}
+                                isActive={activeTab === 2}
+                                onClick={() => setActiveTab(2)}
+                            />
+                        </div>
 
-                            {/* Personal Info Tab */}
-                            {activeTab === 0 && (
-                                <Box className="mt-6">
-                                    <form onSubmit={profileFormik.handleSubmit}>
-                                        <Grid container spacing={3}>
-                                            <Grid size={{ xs: 12, md: 6 }} >
-                                                <TextField
-                                                    fullWidth
-                                                    label="Full Name"
-                                                    name="fullName"
-                                                    value={profileFormik.values.fullName}
-                                                    onChange={profileFormik.handleChange}
-                                                    onBlur={profileFormik.handleBlur}
-                                                    error={profileFormik.touched.fullName && Boolean(profileFormik.errors.fullName)}
-                                                    helperText={profileFormik.touched.fullName && profileFormik.errors.fullName}
+                        {/* Personal Info Tab */}
+                        {activeTab === 0 && (
+                            <div className="mt-6">
+                                <form onSubmit={profileFormik.handleSubmit}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <FormInput
+                                            id="fullName"
+                                            name="fullName"
+                                            label="Full Name"
+                                            type="text"
+                                            placeholder="John Doe"
+                                            formik={profileFormik}
+                                            disabled={!editMode}
+                                        />
+
+                                        <FormInput
+                                            id="email"
+                                            name="email"
+                                            label="Work Email"
+                                            type="email"
+                                            placeholder="john.doe@company.com"
+                                            formik={profileFormik}
+                                            disabled={!editMode}
+                                        />
+
+                                        <FormInput
+                                            id="phone"
+                                            name="phone"
+                                            label="Phone Number"
+                                            type="tel"
+                                            placeholder="123-456-7890"
+                                            formik={profileFormik}
+                                            disabled={!editMode}
+                                        />
+
+                                        <FormInput
+                                            id="experience"
+                                            name="experience"
+                                            label="Experience (years)"
+                                            type="number"
+                                            placeholder="1"
+                                            inputMode='text'
+                                            formik={profileFormik}
+                                            disabled={!editMode}
+                                        />
+
+                                        <div className="flex flex-col gap-1 md:col-span-2">
+                                            <label
+                                                htmlFor="newSkillInput"
+                                                className="mb-2 block text-base font-medium text-text-main"
+                                            >
+                                                Skills
+                                            </label>
+                                            <div className="flex gap-2 items-center">
+                                                <Input
+                                                    id="newSkillInput"
+                                                    name="newSkillInput"
+                                                    type="text"
+                                                    placeholder="Add a skill and press Enter or click Add"
+                                                    value={newSkill}
+                                                    onChange={(e) => setNewSkill(e.target.value)}
+                                                    onKeyDown={handleNewSkillKeyDown}
                                                     disabled={!editMode}
+                                                    className="grow"
                                                 />
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, md: 6 }} >
-                                                <TextField
-                                                    fullWidth
-                                                    label="Email"
-                                                    name="email"
-                                                    type="email"
-                                                    value={profileFormik.values.email}
-                                                    onChange={profileFormik.handleChange}
-                                                    onBlur={profileFormik.handleBlur}
-                                                    error={profileFormik.touched.email && Boolean(profileFormik.errors.email)}
-                                                    helperText={profileFormik.touched.email && profileFormik.errors.email}
-                                                    disabled={!editMode}
-                                                />
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="Phone"
-                                                    name="phone"
-                                                    value={profileFormik.values.phone}
-                                                    onChange={profileFormik.handleChange}
-                                                    onBlur={profileFormik.handleBlur}
-                                                    error={profileFormik.touched.phone && Boolean(profileFormik.errors.phone)}
-                                                    helperText={profileFormik.touched.phone && profileFormik.errors.phone}
-                                                    disabled={!editMode}
-                                                />
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="Skills (comma separated)"
-                                                    name="skills"
-                                                    value={profileFormik.values.skills.join(', ')}
-                                                    onChange={handleSkillsChange}
-                                                    onBlur={profileFormik.handleBlur}
-                                                    disabled={!editMode}
-                                                    helperText="e.g., JavaScript, React, Node.js"
-                                                />
-                                                <Box className="flex flex-wrap gap-1 mt-2">
-                                                    {profileFormik.values.skills.map((skill, index) => (
-                                                        <Chip key={index} label={skill} size="small" />
-                                                    ))}
-                                                </Box>
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="Experience (years)"
-                                                    name="experience"
-                                                    type="number"
-                                                    value={profileFormik.values.experience}
-                                                    onChange={profileFormik.handleChange}
-                                                    onBlur={profileFormik.handleBlur}
-                                                    error={profileFormik.touched.experience && Boolean(profileFormik.errors.experience)}
-                                                    helperText={profileFormik.touched.experience && profileFormik.errors.experience}
-                                                    disabled={!editMode}
-                                                />
-                                            </Grid>
-                                        </Grid>
-
-                                        {editMode && (
-                                            <Box className="flex justify-end space-x-2 mt-6">
-                                                <Button
-                                                    variant="outlined"
-                                                    startIcon={<Cancel />}
-                                                    onClick={() => {
-                                                        setEditMode(false);
-                                                        profileFormik.resetForm();
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    type="submit"
-                                                    variant="contained"
-                                                    startIcon={<Save />}
-                                                    disabled={profileFormik.isSubmitting || updateMutation.isPending}
-                                                >
-                                                    {profileFormik.isSubmitting ? 'Saving...' : 'Save Changes'}
-                                                </Button>
-                                            </Box>
-                                        )}
-                                    </form>
-                                </Box>
-                            )}
-
-                            {/* Security Tab */}
-                            {activeTab === 1 && (
-                                <Box className="mt-6">
-                                    <form onSubmit={passwordFormik.handleSubmit}>
-                                        <Grid container spacing={3}>
-                                            <Grid size={{ xs: 12 }}>
-                                                <Alert severity="info" className="mb-4">
-                                                    Change your password to keep your account secure.
-                                                </Alert>
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, }}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="Current Password"
-                                                    name="currentPassword"
-                                                    type="password"
-                                                    value={passwordFormik.values.currentPassword}
-                                                    onChange={passwordFormik.handleChange}
-                                                    onBlur={passwordFormik.handleBlur}
-                                                    error={passwordFormik.touched.currentPassword && Boolean(passwordFormik.errors.currentPassword)}
-                                                    helperText={passwordFormik.touched.currentPassword && passwordFormik.errors.currentPassword}
-                                                />
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="New Password"
-                                                    name="newPassword"
-                                                    type="password"
-                                                    value={passwordFormik.values.newPassword}
-                                                    onChange={passwordFormik.handleChange}
-                                                    onBlur={passwordFormik.handleBlur}
-                                                    error={passwordFormik.touched.newPassword && Boolean(passwordFormik.errors.newPassword)}
-                                                    helperText={passwordFormik.touched.newPassword && passwordFormik.errors.newPassword}
-                                                />
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="Confirm New Password"
-                                                    name="confirmPassword"
-                                                    type="password"
-                                                    value={passwordFormik.values.confirmPassword}
-                                                    onChange={passwordFormik.handleChange}
-                                                    onBlur={passwordFormik.handleBlur}
-                                                    error={passwordFormik.touched.confirmPassword && Boolean(passwordFormik.errors.confirmPassword)}
-                                                    helperText={passwordFormik.touched.confirmPassword && passwordFormik.errors.confirmPassword}
-                                                />
-                                            </Grid>
-
-                                            <Grid size={{ xs: 12, }}>
-                                                <Box className="flex justify-end">
+                                                {editMode && (
                                                     <Button
-                                                        type="submit"
-                                                        variant="contained"
-                                                        disabled={passwordFormik.isSubmitting || changePasswordMutation.isPending}
+                                                        type="button"
+                                                        onClick={handleAddSkill}
+                                                        variant="primary"
+                                                        size="md"
+                                                        disabled={!newSkill.trim()}
                                                     >
-                                                        {passwordFormik.isSubmitting ? 'Changing...' : 'Change Password'}
+                                                        Add
                                                     </Button>
-                                                </Box>
-                                            </Grid>
-                                        </Grid>
-                                    </form>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill, index) => (
+                                                    <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-background-main border border-primary-light/50 text-text-primary">
+                                                        {editMode && <MdCancel className="cursor-pointer text-error-main hover:text-error-dark" onClick={() => handleRemoveSkill(skill)} />}
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <Divider className="my-6" />
+                                    {editMode && (
+                                        <div className="flex justify-end space-x-2 mt-6">
+                                            <Button
+                                                type="button" variant='outline'
+                                                onClick={() => {
+                                                    setEditMode(false);
+                                                    profileFormik.resetForm();
+                                                }}
+                                            >
+                                                <MdCancel className='text-error-main' />
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                disabled={profileFormik.isSubmitting || !profileFormik.dirty || updateMutation.isPending}
+                                            >
+                                                <MdSave />
+                                                {profileFormik.isSubmitting ? 'Saving...' : 'Save Changes'}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </form>
+                            </div>
+                        )}
 
-                                    {/* Security Settings */}
-                                    <Typography variant="h6" className="font-bold mb-4">
-                                        Security Settings
-                                    </Typography>
+                        {/* Security Tab */}
+                        {activeTab === 1 && (
+                            <div className="mt-6">
+                                <form onSubmit={passwordFormik.handleSubmit}>
+                                    <div className="space-y-6">
+                                        <FormInput
+                                            id="currentPassword"
+                                            name="currentPassword"
+                                            label="Current Password"
+                                            type="password"
+                                            placeholder="*********"
+                                            formik={passwordFormik}
+                                        />
+                                        <FormInput
+                                            id="newPassword"
+                                            name="newPassword"
+                                            label="New Password"
+                                            type="password"
+                                            placeholder="*********"
+                                            formik={passwordFormik}
+                                        />
+                                        <FormInput
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            label="Current Password"
+                                            type="password"
+                                            placeholder="*********"
+                                            formik={passwordFormik}
+                                        />
 
-                                    <Box className="space-y-3">
-                                        <Button
-                                            variant="outlined"
-                                            color="primary"
-                                            onClick={() => {
-                                                // TODO: Implement two-factor authentication
-                                                toast('Two-factor authentication coming soon');
-                                            }}
-                                        >
-                                            Enable Two-Factor Authentication
-                                        </Button>
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="submit"
+                                                disabled={passwordFormik.isSubmitting || !passwordFormik.dirty || changePasswordMutation.isPending}
+                                            >
+                                                <MdSave />
+                                                {passwordFormik.isSubmitting ? 'Changing...' : 'Change Password'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </form>
 
-                                        <Button
-                                            variant="outlined"
-                                            color="error"
-                                            onClick={() => {
-                                                if (window.confirm('Are you sure you want to logout from all devices?')) {
-                                                    // TODO: Implement logout all devices
-                                                    toast('Logout from all devices feature coming soon');
-                                                }
-                                            }}
-                                        >
-                                            Logout from All Devices
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            )}
+                                <hr className="my-6 border-primary-light" />
 
-                            {/* Assessment History Tab */}
-                            {activeTab === 2 && (
-                                <Box className="mt-6">
-                                    <Typography variant="body1" className="mb-4">
-                                        Your assessment history and performance analytics will appear here.
-                                    </Typography>
-                                    {/* TODO: Implement assessment history table */}
-                                </Box>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-        </Box>
+                                {/* Security Settings */}
+                                <h3 className="text-lg font-bold text-text-primary mb-4">
+                                    Security Settings
+                                </h3>
+
+                                <div className="flex gap-3">
+                                    <Button
+                                        variant='secondary'
+                                        onClick={() => toast('Two-factor authentication coming soon')}
+                                    >
+                                        Enable Two-Factor Authentication
+                                    </Button>
+                                    <Button
+                                        variant='danger'
+                                        onClick={() => toast.success('Logged out successfully')}
+                                    >
+                                        Logout
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Assessment History Tab */}
+                        {activeTab === 2 && (
+                            <div className="mt-6">
+                                <p className="text-text-primary mb-4">
+                                    Your assessment history and performance analytics will appear here.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 

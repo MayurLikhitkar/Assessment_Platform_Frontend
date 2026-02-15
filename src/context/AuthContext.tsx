@@ -142,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         globalThis.location.href = '/login';
     }, []);
 
-    const updateUser = useCallback((userData: Partial<UserInterface>) => {
+    const updateUser = useCallback((userData: UserInterface) => {
         setState((prev) => {
             if (!prev.user) return prev;
 

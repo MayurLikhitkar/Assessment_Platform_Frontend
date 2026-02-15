@@ -4,17 +4,14 @@ import { useAuth } from '../hooks/useAuth';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
 import Container from '../components/common/Container';
+import PageLoader from '../components/common/PageLoader';
 
 const MainLayout = () => {
     const { user, isLoading } = useAuth();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background-main">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main"></div>
-            </div>
-        );
+        return <PageLoader text="Authenticating..." fullScreen />;
     }
 
     if (!user) {

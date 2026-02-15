@@ -1,16 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-    Grid,
-    Typography,
-    Box,
-    LinearProgress,
-    Chip,
-    Card,
-    CardContent,
-    CardActionArea,
-} from '@mui/material';
-import {
     Assessment as AssessmentIcon,
     CheckCircle,
     Pending,
@@ -19,6 +9,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/axios/api';
+import { LinearProgress } from '@mui/material';
+import DataLoader from '../../components/common/DataLoader';
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth();
@@ -49,187 +41,164 @@ const Dashboard: React.FC = () => {
         <div className="space-y-6">
             {/* Welcome Header */}
             <div>
-                <Typography variant="h4" className="font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-text-primary">
                     Welcome back, {user?.fullName}!
-                </Typography>
-                <Typography variant="body1" className="text-gray-600 mt-2">
+                </h1>
+                <p className="text-text-secondary mt-2">
                     Here's what's happening with your assessments today.
-                </Typography>
+                </p>
             </div>
 
             {/* Stats Cards */}
-            <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card>
-                        <CardContent className="flex items-center">
-                            <div className="mr-4 p-3 bg-blue-50 rounded-lg">
-                                <AssessmentIcon className="text-blue-600" />
-                            </div>
-                            <div>
-                                <Typography variant="h6" className="font-bold">
-                                    {assessments?.length || 0}
-                                </Typography>
-                                <Typography variant="body2" className="text-gray-500">
-                                    Total
-                                </Typography>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </Grid>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-background-light rounded-lg shadow-md p-4">
+                    <div className="flex items-center">
+                        <div className="mr-4 p-3 bg-info-light rounded-lg text-info-main">
+                            <AssessmentIcon />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-text-primary">
+                                {assessments?.length || 0}
+                            </h3>
+                            <p className="text-sm text-text-secondary">
+                                Total
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card>
-                        <CardContent className="flex items-center">
-                            <div className="mr-4 p-3 bg-green-50 rounded-lg">
-                                <CheckCircle className="text-green-600" />
-                            </div>
-                            <div>
-                                <Typography variant="h6" className="font-bold">
-                                    {completedAssessments?.length || 0}
-                                </Typography>
-                                <Typography variant="body2" className="text-gray-500">
-                                    Completed
-                                </Typography>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </Grid>
+                <div className="bg-background-light rounded-lg shadow-md p-4">
+                    <div className="flex items-center">
+                        <div className="mr-4 p-3 bg-success-light rounded-lg text-success-main">
+                            <CheckCircle />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-text-primary">
+                                {completedAssessments?.length || 0}
+                            </h3>
+                            <p className="text-sm text-text-secondary">
+                                Completed
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card>
-                        <CardContent className="flex items-center">
-                            <div className="mr-4 p-3 bg-yellow-50 rounded-lg">
-                                <Pending className="text-yellow-600" />
-                            </div>
-                            <div>
-                                <Typography variant="h6" className="font-bold">
-                                    {upcomingAssessments?.length || 0}
-                                </Typography>
-                                <Typography variant="body2" className="text-gray-500">
-                                    Pending
-                                </Typography>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </Grid>
+                <div className="bg-background-light rounded-lg shadow-md p-4">
+                    <div className="flex items-center">
+                        <div className="mr-4 p-3 bg-warning-light rounded-lg text-warning-main">
+                            <Pending />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-text-primary">
+                                {upcomingAssessments?.length || 0}
+                            </h3>
+                            <p className="text-sm text-text-secondary">
+                                Pending
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card>
-                        <CardContent className="flex items-center">
-                            <div className="mr-4 p-3 bg-purple-50 rounded-lg">
-                                <TrendingUp className="text-purple-600" />
-                            </div>
-                            <div>
-                                <Typography variant="h6" className="font-bold">
-                                    {stats?.averageScore || '0'}%
-                                </Typography>
-                                <Typography variant="body2" className="text-gray-500">
-                                    Avg. Score
-                                </Typography>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+                <div className="bg-background-light rounded-lg shadow-md p-4">
+                    <div className="flex items-center">
+                        <div className="mr-4 p-3 bg-secondary-light rounded-lg text-secondary-main">
+                            <TrendingUp />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-text-primary">
+                                {stats?.averageScore || '0'}%
+                            </h3>
+                            <p className="text-sm text-text-secondary">
+                                Avg. Score
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Upcoming Assessments */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-background-light rounded-xl shadow-sm p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <Typography variant="h6" className="font-bold">
+                    <h2 className="text-xl font-bold text-text-primary">
                         Upcoming Assessments
-                    </Typography>
-                    <Chip
-                        label={`${upcomingAssessments?.length || 0} total`}
-                        color="primary"
-                        size="small"
-                    />
+                    </h2>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-action-hover text-text-primary">
+                        {upcomingAssessments?.length || 0} total
+                    </span>
                 </div>
 
                 {isLoading ? (
-                    <LinearProgress />
+                    <DataLoader />
                 ) : upcomingAssessments?.length > 0 ? (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {upcomingAssessments.slice(0, 3).map((assessment: any) => (
-                            <Grid size={{ xs: 12, md: 4 }} key={assessment.id}>
-                                <Card>
-                                    <CardActionArea>
-                                        <CardContent>
-                                            <div className="flex justify-between items-start mb-4">
-                                                <Typography variant="h6" className="font-bold">
-                                                    {assessment.title}
-                                                </Typography>
-                                                <Chip
-                                                    label={assessment.difficulty}
-                                                    size="small"
-                                                    color={
-                                                        assessment.difficulty === 'easy'
-                                                            ? 'success'
-                                                            : assessment.difficulty === 'medium'
-                                                                ? 'warning'
-                                                                : 'error'
-                                                    }
-                                                />
-                                            </div>
-                                            <Typography
-                                                variant="body2"
-                                                className="text-gray-600 mb-4"
-                                                noWrap
-                                            >
-                                                {assessment.description}
-                                            </Typography>
-                                            <div className="flex justify-between items-center text-sm text-gray-500">
-                                                <div className="flex items-center">
-                                                    <Schedule className="mr-1" fontSize="small" />
-                                                    {assessment.duration} mins
-                                                </div>
-                                                <div>
-                                                    {assessment.totalMarks} marks
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
+                            <div key={assessment.id} className="bg-background-light border border-divider rounded-lg hover:shadow-md transition-shadow overflow-hidden">
+                                <div className="p-4 cursor-pointer hover:bg-action-hover transition-colors h-full">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h3 className="text-lg font-bold text-text-primary">
+                                            {assessment.title}
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-background-default text-text-secondary border border-divider">
+                                            {assessment.difficulty}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-text-secondary mb-4 line-clamp-1">
+                                        {assessment.description}
+                                    </p>
+                                    <div className="flex justify-between items-center text-sm text-text-secondary">
+                                        <div className="flex items-center">
+                                            <Schedule className="mr-1" fontSize="small" />
+                                            {assessment.duration} mins
+                                        </div>
+                                        <div>
+                                            {assessment.totalMarks} marks
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
+                    </div>
                 ) : (
-                    <Box className="text-center py-8">
-                        <AssessmentIcon className="text-gray-400 text-4xl mb-4" />
-                        <Typography variant="body1" className="text-gray-500">
+                    <div className="text-center py-8">
+                        <AssessmentIcon className="text-text-disabled text-4xl mb-4" />
+                        <p className="text-text-secondary">
                             No upcoming assessments
-                        </Typography>
-                    </Box>
+                        </p>
+                    </div>
                 )}
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <Typography variant="h6" className="font-bold mb-4">
+            <div className="bg-background-light rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-bold text-text-primary mb-4">
                     Recent Activity
-                </Typography>
+                </h2>
                 <div className="space-y-4">
                     {assessments?.slice(0, 5).map((assessment: any) => (
                         <div
                             key={assessment.id}
-                            className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                            className="flex items-center justify-between p-4 border border-divider rounded-lg hover:bg-action-hover transition-colors"
                         >
                             <div>
-                                <Typography variant="body1" className="font-medium">
+                                <p className="font-medium text-text-primary">
                                     {assessment.title}
-                                </Typography>
-                                <Typography variant="body2" className="text-gray-500">
+                                </p>
+                                <p className="text-sm text-text-secondary">
                                     Completed on {new Date(assessment.completedAt).toLocaleDateString()}
-                                </Typography>
+                                </p>
                             </div>
                             <div className="text-right">
-                                <Typography variant="h6" className="font-bold">
+                                <p className="font-bold text-text-primary">
                                     {assessment.score || '--'}/{assessment.totalMarks}
-                                </Typography>
-                                <Chip
-                                    label={assessment.isPassed ? 'Passed' : 'Failed'}
-                                    size="small"
-                                    color={assessment.isPassed ? 'success' : 'error'}
-                                />
+                                </p>
+                                <span
+                                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${assessment.isPassed
+                                        ? 'bg-success-light text-success-dark'
+                                        : 'bg-error-light text-error-dark'
+                                        }`}
+                                >
+                                    {assessment.isPassed ? 'Passed' : 'Failed'}
+                                </span>
                             </div>
                         </div>
                     ))}
