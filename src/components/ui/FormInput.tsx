@@ -2,6 +2,7 @@ import type { InputHTMLAttributes } from 'react';
 import Input from './Input';
 import type { FormikProps } from 'formik';
 import { twMerge } from 'tailwind-merge';
+import Label from './Label';
 
 interface FormInputProps<T> extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
@@ -31,13 +32,7 @@ const FormInput = <T,>({
     return (
         <div className={twMerge('w-full', props.className)}>
             {withLabel && (
-                <label
-                    htmlFor={id}
-                    className="mb-2 block text-base font-medium text-text-main"
-                >
-                    {label}
-                    {props.required && <span className="text-error-main ml-1">*</span>}
-                </label>
+                <Label htmlFor={id} label={label} required={props.required} />
             )}
             <Input
                 id={id}

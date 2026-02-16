@@ -2,6 +2,7 @@ import type { FormikProps } from 'formik';
 import TextArea from './TextArea';
 import type { TextareaHTMLAttributes } from 'react';
 import { twMerge } from 'tailwind-merge';
+import Label from './Label';
 
 interface FormTextAreaProps<T> extends TextareaHTMLAttributes<HTMLTextAreaElement> {
     label: string;
@@ -29,13 +30,7 @@ const FormTextArea = <T,>({
     return (
         <div className={twMerge('w-full', props.className)}>
             {withLabel && (
-                <label
-                    htmlFor={id}
-                    className="mb-2 block text-base font-medium text-text-main"
-                >
-                    {label}
-                    {props.required && <span className="text-error-main ml-1">*</span>}
-                </label>
+                <Label htmlFor={id} label={label} required={props.required} />
             )}
             <TextArea
                 id={id}

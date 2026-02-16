@@ -14,6 +14,10 @@ import Input from '../../components/ui/Input';
 import DataLoader from '../../components/common/DataLoader';
 import type { ChangePasswordRequest } from '../../types/authTypes';
 import TabButton from '../../components/ui/TabButton';
+import Confirmation from '../../components/modal/Confirmation';
+import { BsFillPatchQuestionFill } from "react-icons/bs";
+import InfoField from '../../components/ui/InfoField';
+import Label from '../../components/ui/Label';
 
 const ProfileSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -37,9 +41,10 @@ const PasswordSchema = Yup.object().shape({
 
 const Profile: React.FC = () => {
     const { user, updateUser } = useAuth();
-    const [activeTab, setActiveTab] = useState(1);
-    const [editMode, setEditMode] = useState(false);
+    const [activeTab, setActiveTab] = useState(0);
+    const [editMode, setEditMode] = useState(true);
     const [newSkill, setNewSkill] = useState('');
+    const [modal, setModal] = useState(false);
 
     // Fetch user profile data
     const { data: profileData, refetch } = useQuery({
@@ -287,100 +292,133 @@ const Profile: React.FC = () => {
                         {activeTab === 0 && (
                             <div className="mt-6">
                                 <form onSubmit={profileFormik.handleSubmit}>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <FormInput
-                                            id="fullName"
-                                            name="fullName"
-                                            label="Full Name"
-                                            type="text"
-                                            placeholder="John Doe"
-                                            formik={profileFormik}
-                                            disabled={!editMode}
-                                        />
+                                    {editMode ?
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormInput
+                                                id="fullName"
+                                                name="fullName"
+                                                label="Full Name"
+                                                type="text"
+                                                placeholder="John Doe"
+                                                formik={profileFormik}
+                                                disabled={!editMode}
+                                            />
 
-                                        <FormInput
-                                            id="email"
-                                            name="email"
-                                            label="Work Email"
-                                            type="email"
-                                            placeholder="john.doe@company.com"
-                                            formik={profileFormik}
-                                            disabled={!editMode}
-                                        />
+                                            <FormInput
+                                                id="email"
+                                                name="email"
+                                                label="Work Email"
+                                                type="email"
+                                                placeholder="john.doe@company.com"
+                                                formik={profileFormik}
+                                                disabled={!editMode}
+                                            />
 
-                                        <FormInput
-                                            id="phone"
-                                            name="phone"
-                                            label="Phone Number"
-                                            type="tel"
-                                            placeholder="123-456-7890"
-                                            formik={profileFormik}
-                                            disabled={!editMode}
-                                        />
+                                            <FormInput
+                                                id="phone"
+                                                name="phone"
+                                                label="Phone Number"
+                                                type="tel"
+                                                placeholder="123-456-7890"
+                                                formik={profileFormik}
+                                                disabled={!editMode}
+                                            />
 
-                                        <FormInput
-                                            id="experience"
-                                            name="experience"
-                                            label="Experience (years)"
-                                            type="number"
-                                            placeholder="1"
-                                            inputMode='text'
-                                            formik={profileFormik}
-                                            disabled={!editMode}
-                                        />
+                                            <FormInput
+                                                id="experience"
+                                                name="experience"
+                                                label="Experience (years)"
+                                                type="number"
+                                                placeholder="1"
+                                                inputMode='text'
+                                                formik={profileFormik}
+                                                disabled={!editMode}
+                                            />
 
-                                        <div className="flex flex-col gap-1 md:col-span-2">
-                                            <label
-                                                htmlFor="newSkillInput"
-                                                className="mb-2 block text-base font-medium text-text-main"
-                                            >
-                                                Skills
-                                            </label>
-                                            <div className="flex gap-2 items-center">
-                                                <Input
-                                                    id="newSkillInput"
-                                                    name="newSkillInput"
-                                                    type="text"
-                                                    placeholder="Add a skill and press Enter or click Add"
-                                                    value={newSkill}
-                                                    onChange={(e) => setNewSkill(e.target.value)}
-                                                    onKeyDown={handleNewSkillKeyDown}
-                                                    disabled={!editMode}
-                                                    className="grow"
-                                                />
-                                                {editMode && (
-                                                    <Button
-                                                        type="button"
-                                                        onClick={handleAddSkill}
-                                                        variant="primary"
-                                                        size="md"
-                                                        disabled={!newSkill.trim()}
-                                                    >
-                                                        Add
-                                                    </Button>
-                                                )}
+                                            <div className="flex flex-col gap-1 md:col-span-2">
+                                                <label
+                                                    htmlFor="newSkillInput"
+                                                    className="mb-2 block text-base font-medium text-text-main"
+                                                >
+                                                    Skills
+                                                </label>
+                                                <div className="flex gap-2 items-center">
+                                                    <Input
+                                                        id="newSkillInput"
+                                                        name="newSkillInput"
+                                                        type="text"
+                                                        placeholder="Add a skill and press Enter or click Add"
+                                                        value={newSkill}
+                                                        onChange={(e) => setNewSkill(e.target.value)}
+                                                        onKeyDown={handleNewSkillKeyDown}
+                                                        disabled={!editMode}
+                                                        className="grow"
+                                                    />
+                                                    {editMode && (
+                                                        <Button
+                                                            type="button"
+                                                            onClick={handleAddSkill}
+                                                            variant="primary"
+                                                            size="md"
+                                                            disabled={!newSkill.trim()}
+                                                        >
+                                                            Add
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill, index) => (
+                                                        <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium border border-primary-light/50 text-text-primary">
+                                                            <MdCancel className="cursor-pointer text-error-dark text-base hover:text-error-main" onClick={() => handleRemoveSkill(skill)} />
+                                                            {skill}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill, index) => (
-                                                    <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-background-main border border-primary-light/50 text-text-primary">
-                                                        {editMode && <MdCancel className="cursor-pointer text-error-main hover:text-error-dark" onClick={() => handleRemoveSkill(skill)} />}
-                                                        {skill}
-                                                    </span>
-                                                ))}
+                                        </div> :
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <InfoField
+                                                label="Full Name"
+                                                value={profileData.data.fullName}
+                                            />
+
+                                            <InfoField
+                                                label="Work Email"
+                                                value={profileData.data.email}
+                                            />
+
+                                            <InfoField
+                                                label="Phone Number"
+                                                value={profileData.data.phone || 'N/A'}
+                                            />
+
+                                            <InfoField
+                                                label="Experience (years)"
+                                                value={profileData.data.experience || 'N/A'}
+                                            />
+
+                                            <div className="mb-2">
+                                                <Label label='Skills' />
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {profileData.data.skills && profileData.data.skills.length > 0 && profileData.data.skills.map((skill, index) => (
+                                                        <span key={index + 1} className="px-2 rounded-md font-medium bg-primary-main border border-primary-light/50 text-text-inverse">
+                                                            {skill}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-
+                                    }
                                     {editMode && (
                                         <div className="flex justify-end space-x-2 mt-6">
                                             <Button
-                                                type="button" variant='outline'
+                                                variant='outline'
                                                 onClick={() => {
                                                     setEditMode(false);
                                                     profileFormik.resetForm();
                                                 }}
                                             >
-                                                <MdCancel className='text-error-main' />
+                                                <MdCancel className='text-error-main group-hover:text-error-dark text-lg' />
                                                 Cancel
                                             </Button>
                                             <Button
@@ -448,7 +486,8 @@ const Profile: React.FC = () => {
                                 <div className="flex gap-3">
                                     <Button
                                         variant='secondary'
-                                        onClick={() => toast('Two-factor authentication coming soon')}
+                                        // onClick={() => toast('Two-factor authentication coming soon')}
+                                        onClick={() => setModal(true)}
                                     >
                                         Enable Two-Factor Authentication
                                     </Button>
@@ -473,6 +512,13 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <Confirmation
+                open={modal}
+                onClose={() => setModal(false)}
+                icon={BsFillPatchQuestionFill}
+                message='Are you sure you want to enable Two-Factor Authentication? This will add an extra layer of security to your account by requiring a verification code in addition to your password.'
+                onConfirm={() => { setModal(false); toast.success('2FA Setup initiated'); }}
+            />
         </div>
     );
 };
