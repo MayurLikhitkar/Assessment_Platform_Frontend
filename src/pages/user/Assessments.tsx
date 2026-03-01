@@ -3,26 +3,27 @@ import { useQuery } from '@tanstack/react-query';
 import { Schedule, PlayArrow, Visibility } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/axios/api';
 import DataLoader from '../../components/common/DataLoader';
+import { getAssessments } from '../../services/axios/assessmentApi';
+import type { UserAssessmentInterface } from '../../types/types';
 
 const Assessments: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
     // Fetch user assessments
-    const { data: assessments, isLoading } = useQuery<any[]>({
+    const { data: assessments, isLoading } = useQuery({
         queryKey: ['userAssessments'],
-        queryFn: () => api.get(`/assessments/user/${user?.id}`),
+        queryFn: () => getAssessments(),
         enabled: !!user,
     });
-
-    const upcomingAssessments = assessments?.filter(
-        (a: any) => a.status === 'assigned' || a.status === 'in-progress'
+    console.log(assessments)
+    const upcomingAssessments: UserAssessmentInterface[] = assessments?.data?.filter(
+        (a) => a.status === 'assigned' || a.status === 'in-progress'
     ) || [];
 
-    const completedAssessments = assessments?.filter(
-        (a: any) => a.status === 'completed'
+    const completedAssessments: UserAssessmentInterface[] = assessments?.data?.filter(
+        (a) => a.status === 'completed'
     ) || [];
 
     if (isLoading) {
@@ -58,8 +59,8 @@ const Assessments: React.FC = () => {
 
                 {upcomingAssessments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {upcomingAssessments.map((assessment: any) => (
-                            <div key={assessment.userAssessmentId} className="bg-background-paper rounded-lg shadow-md hover:shadow-lg transition-shadow h-full flex flex-col">
+                        {upcomingAssessments.map((assessment: UserAssessmentInterface) => (
+                            <div key={assessment.userAssessmentId} className="bg-background-light rounded-lg shadow-md hover:shadow-lg transition-shadow h-full flex flex-col">
                                 <div className="p-4 space-y-4 flex-1">
                                     <div className="flex justify-between items-start">
                                         <h3 className="text-lg font-bold text-text-primary">
@@ -76,19 +77,19 @@ const Assessments: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    <p className="text-sm text-text-secondary line-clamp-2">
+                                    <p className="text-sm text-text-inverse line-clamp-2">
                                         {assessment.assessment.description}
                                     </p>
 
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-text-secondary">Duration:</span>
-                                            <span className="font-medium text-text-primary">
+                                            <span className="text-text-inverse">Duration:</span>
+                                            <span className="font-medium text-text-main">
                                                 {assessment.assessment.duration} mins
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-text-secondary">Questions:</span>
+                                            <span className="text-text-inverse">Questions:</span>
                                             <span className="font-medium text-text-primary">
                                                 {assessment.assessment.questions?.length || 0}
                                             </span>
@@ -134,7 +135,7 @@ const Assessments: React.FC = () => {
 
                 {completedAssessments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {completedAssessments.slice(0, 6).map((assessment: any) => (
+                        {completedAssessments.slice(0, 6).map((assessment: UserAssessmentInterface) => (
                             <div key={assessment.userAssessmentId} className="bg-background-paper rounded-lg shadow-md h-full flex flex-col">
                                 <div className="p-4 space-y-4 flex-1">
                                     <div className="flex justify-between items-start">
@@ -203,6 +204,8 @@ const Assessments: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* <CodeEditor language='' value='' onChange={() => console.log('first')} /> */}
         </div>
     );
 };

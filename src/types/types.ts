@@ -112,7 +112,7 @@ export interface Question {
 }
 
 // Assessment Types
-export interface Assessment {
+export interface AssessmentInterface {
     assessmentId: number;
     title: string;
     description: string;
@@ -136,6 +136,21 @@ export interface Assessment {
     allowFullscreenExit: boolean;
     maxFullscreenExits: number;
     enableRecording: boolean;
+}
+
+// User Assessment Types (join between a user and an AssessmentInterface)
+export type UserAssessmentStatus = 'assigned' | 'in-progress' | 'completed' | 'expired';
+
+export interface UserAssessmentInterface {
+    userAssessmentId: number;
+    assessmentId: number;
+    status: UserAssessmentStatus;
+    isPassed?: boolean;
+    score?: number;
+    totalMarks?: number;
+    completedAt?: string;
+    timeSpent?: number;
+    assessment: AssessmentInterface;
 }
 
 // API Response Types
