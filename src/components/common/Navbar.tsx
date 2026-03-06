@@ -15,13 +15,13 @@ import {
     ListItemIcon,
 } from '@mui/material';
 import {
-    Menu as MenuIcon,
-    NotificationsOutlined,
-    PersonOutline,
-    Logout,
-    SettingsOutlined,
-    Search as SearchIcon,
-} from '@mui/icons-material';
+    MdMenu,
+    MdNotificationsNone,
+    MdPersonOutline,
+    MdLogout,
+    MdSettingsApplications,
+    MdSearch,
+} from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 
 interface NavbarProps {
@@ -77,7 +77,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             onClick={onMenuClick}
                             aria-label="open drawer"
                         >
-                            <MenuIcon />
+                            <MdMenu className="text-2xl" />
                         </IconButton>
 
                         <Link to="/dashboard" className="flex items-center gap-3 group select-none">
@@ -94,7 +94,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                     <div className="hidden md:flex flex-1 max-w-md mx-8">
                         <div className="relative w-full group">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <SearchIcon className="text-text-light group-focus-within:text-primary-main transition-colors" fontSize="small" />
+                                <MdSearch className="text-lg text-text-light group-focus-within:text-primary-main transition-colors" />
                             </div>
                             <input
                                 type="text"
@@ -122,7 +122,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                                         }
                                     }}
                                 >
-                                    <NotificationsOutlined />
+                                    <MdNotificationsNone className="text-2xl" />
                                 </Badge>
                             </IconButton>
                         </Tooltip>
@@ -224,20 +224,20 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
                             <MenuItem onClick={handleProfile} className="py-2.5 px-4 text-sm text-text-main hover:bg-muted-light/50 mx-1 rounded-lg transition-colors">
                                 <ListItemIcon className="min-w-[36px]">
-                                    <PersonOutline fontSize="small" className="text-text-light" />
+                                    <MdPersonOutline className="text-lg text-text-light" />
                                 </ListItemIcon>
                                 Profile
                             </MenuItem>
                             <MenuItem onClick={handleMenuClose} className="py-2.5 px-4 text-sm text-text-main hover:bg-muted-light/50 mx-1 rounded-lg transition-colors">
                                 <ListItemIcon className="min-w-[36px]">
-                                    <SettingsOutlined fontSize="small" className="text-text-light" />
+                                    <MdSettingsApplications className="text-lg text-text-light" />
                                 </ListItemIcon>
                                 Settings
                             </MenuItem>
                             <Divider className="my-1" />
                             <MenuItem onClick={handleLogout} className="py-2.5 px-4 text-sm text-error-main hover:bg-error-light/10 mx-1 rounded-lg transition-colors">
                                 <ListItemIcon className="min-w-[36px]">
-                                    <Logout fontSize="small" className="text-error-main" />
+                                    <MdLogout className="text-lg text-error-main" />
                                 </ListItemIcon>
                                 Logout
                             </MenuItem>

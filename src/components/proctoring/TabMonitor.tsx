@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Alert, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
-import { Warning, Error } from '@mui/icons-material';
+import { MdWarning, MdError } from 'react-icons/md';
 
 interface TabMonitorProps {
     maxSwitches: number;
@@ -111,7 +111,7 @@ const TabMonitor: React.FC<TabMonitorProps> = ({
             {/* Warning Dialog */}
             <Dialog open={warningOpen} onClose={() => setWarningOpen(false)}>
                 <DialogTitle className="flex items-center text-yellow-600">
-                    <Warning className="mr-2" />
+                    <MdWarning className="mr-2" />
                     Final Warning
                 </DialogTitle>
                 <DialogContent>
@@ -133,7 +133,7 @@ const TabMonitor: React.FC<TabMonitorProps> = ({
             {/* Termination Dialog */}
             <Dialog open={terminateOpen} onClose={() => setTerminateOpen(false)}>
                 <DialogTitle className="flex items-center text-red-600">
-                    <Error className="mr-2" />
+                    <MdError className="mr-2" />
                     Assessment Terminated
                 </DialogTitle>
                 <DialogContent>
@@ -157,7 +157,7 @@ const TabMonitor: React.FC<TabMonitorProps> = ({
                     <Alert
                         severity="warning"
                         className="max-w-md"
-                        icon={<Warning fontSize="large" />}
+                        icon={<MdWarning className="text-2xl" />}
                     >
                         <Typography variant="h6" className="mb-2">
                             Return to Assessment

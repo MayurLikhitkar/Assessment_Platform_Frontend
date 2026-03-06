@@ -4,7 +4,7 @@ import {
     Box, Select, MenuItem, FormControl, InputLabel,
     Button, Typography
 } from '@mui/material';
-import { PlayArrow, RestartAlt } from '@mui/icons-material';
+import { MdPlayArrow, MdRestartAlt } from 'react-icons/md';
 
 interface CodeEditorProps {
     language: string;
@@ -128,7 +128,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 <Box className="flex space-x-2">
                     <Button
                         variant="outlined"
-                        startIcon={<RestartAlt />}
+                        startIcon={<MdRestartAlt />}
                         onClick={resetCode}
                         disabled={readOnly}
                     >
@@ -136,7 +136,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     </Button>
                     <Button
                         variant="contained"
-                        startIcon={<PlayArrow />}
+                        startIcon={<MdPlayArrow />}
                         onClick={runCode}
                         disabled={isRunning || readOnly}
                     >

@@ -13,17 +13,21 @@ import { GoDot, GoDotFill } from "react-icons/go";
 
 const registerSchema = Yup.object().shape({
     fullName: Yup.string()
-        .required('You fullname is required')
-        .min(2, 'your full name must be at least 2 characters'),
+        .required('Full name is required')
+        .min(2, 'Full name must be at least 2 characters')
+        .max(100, 'Full name must be at most 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/, 'Full name contains invalid characters'),
     email: Yup.string()
         .email('Invalid email address')
+        .max(254, 'Email address is too long')
         .required('Email is required'),
     password: Yup.string()
+        .required('Password is required')
         .min(8, 'Password must be at least 8 characters')
+        .max(128, 'Password must be at most 128 characters')
         .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
         .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .matches(/\d/, 'Password must contain at least one number')
-        .required('Password is required'),
+        .matches(/\d/, 'Password must contain at least one number'),
     confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
         .required('Please confirm your password'),
@@ -172,7 +176,7 @@ const Register: React.FC = () => {
                             name="fullName"
                             label="Full Name"
                             type="text"
-                            placeholder="John Doe"  
+                            placeholder="John Doe"
                             formik={formik}
                             required
                         />

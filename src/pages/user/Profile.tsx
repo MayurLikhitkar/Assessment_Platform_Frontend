@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Person, Security, History } from '@mui/icons-material';
+import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave } from 'react-icons/md';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import type { ApiError, UserInterface } from '../../types/types';
 import { changePassword, getProfile, updateProfile } from '../../services/axios/authApi';
-import { MdCancel, MdEdit, MdSave } from 'react-icons/md';
 import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
 import Input from '../../components/ui/Input';
@@ -154,7 +153,7 @@ const Profile: React.FC = () => {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-text-primary">
+                <h1 className="text-3xl font-bold text-text-dark">
                     Profile Settings
                 </h1>
                 {!editMode && activeTab === 0 && (
@@ -171,10 +170,10 @@ const Profile: React.FC = () => {
                 {/* Left Column - Profile Info */}
                 <div className="md:col-span-4 space-y-4">
                     <div className="bg-background-light rounded-lg shadow-md p-6 text-center">
-                        <h2 className="text-xl font-bold text-text-primary">
+                        <h2 className="text-xl font-bold text-text-dark">
                             {profileData.data.fullName}
                         </h2>
-                        <p className="text-text-secondary mb-2">
+                        <p className="text-text-light mb-2">
                             {profileData.data.email}
                         </p>
 
@@ -182,30 +181,30 @@ const Profile: React.FC = () => {
                             {profileData.data.role.toUpperCase()}
                         </span>
 
-                        <hr className="my-4 border-divider" />
+                        <hr className="my-4 border-border-light" />
 
                         {/* Account Stats */}
                         <div className="space-y-3 text-left">
                             <div className="flex justify-between text-sm">
-                                <span className="text-text-secondary">
+                                <span className="text-text-light">
                                     Member Since:
                                 </span>
-                                <span className="font-medium text-text-primary">
+                                <span className="font-medium text-text-dark">
                                     {new Date(profileData.data.createdAt).toLocaleDateString()}
                                 </span>
                             </div>
 
                             <div className="flex justify-between text-sm">
-                                <span className="text-text-secondary">
+                                <span className="text-text-light">
                                     Last Login:
                                 </span>
-                                <span className="font-medium text-text-primary">
+                                <span className="font-medium text-text-dark">
                                     {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
                                 </span>
                             </div>
 
                             <div className="flex justify-between text-sm items-center">
-                                <span className="text-text-secondary">
+                                <span className="text-text-light">
                                     Account Status:
                                 </span>
                                 <span
@@ -220,14 +219,14 @@ const Profile: React.FC = () => {
 
                     {/* Proctoring Settings Card */}
                     <div className="bg-background-light rounded-lg shadow-md p-6">
-                        <h3 className="text-lg font-bold text-text-primary mb-3 flex items-center gap-2">
-                            <Security fontSize="small" />
+                        <h3 className="text-lg font-bold text-text-dark mb-3 flex items-center gap-2">
+                            <MdSecurity className="text-lg" />
                             Proctoring Settings
                         </h3>
 
                         <div className="space-y-3">
                             <label className="flex items-center justify-between cursor-pointer">
-                                <span className="text-text-primary">Require Webcam</span>
+                                <span className="text-text-dark">Require Webcam</span>
                                 <div className="relative inline-flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -242,7 +241,7 @@ const Profile: React.FC = () => {
                             </label>
 
                             <label className="flex items-center justify-between cursor-pointer">
-                                <span className="text-text-primary">Require Microphone</span>
+                                <span className="text-text-dark">Require Microphone</span>
                                 <div className="relative inline-flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -256,7 +255,7 @@ const Profile: React.FC = () => {
                                 </div>
                             </label>
 
-                            <p className="text-xs text-text-secondary mt-2">
+                            <p className="text-xs text-text-light mt-2">
                                 These settings apply to all your assessments unless overridden by specific assessment settings.
                             </p>
                         </div>
@@ -270,19 +269,19 @@ const Profile: React.FC = () => {
                         <div className="flex space-x-4">
                             <TabButton
                                 label="Personal Info"
-                                icon={<Person fontSize="small" />}
+                                icon={<MdPerson className="text-lg" />}
                                 isActive={activeTab === 0}
                                 onClick={() => setActiveTab(0)}
                             />
                             <TabButton
                                 label="Security"
-                                icon={<Security fontSize="small" />}
+                                icon={<MdSecurity className="text-lg" />}
                                 isActive={activeTab === 1}
                                 onClick={() => setActiveTab(1)}
                             />
                             <TabButton
                                 label="Assessment History"
-                                icon={<History fontSize="small" />}
+                                icon={<MdHistory className="text-lg" />}
                                 isActive={activeTab === 2}
                                 onClick={() => setActiveTab(2)}
                             />
@@ -368,7 +367,7 @@ const Profile: React.FC = () => {
                                                 </div>
                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                     {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill, index) => (
-                                                        <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium border border-primary-light/50 text-text-primary">
+                                                        <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium border border-primary-light/50 text-text-dark">
                                                             <MdCancel className="cursor-pointer text-error-dark text-base hover:text-error-main" onClick={() => handleRemoveSkill(skill)} />
                                                             {skill}
                                                         </span>
@@ -479,7 +478,7 @@ const Profile: React.FC = () => {
                                 <hr className="my-6 border-primary-light" />
 
                                 {/* Security Settings */}
-                                <h3 className="text-lg font-bold text-text-primary mb-4">
+                                <h3 className="text-lg font-bold text-text-dark mb-4">
                                     Security Settings
                                 </h3>
 
@@ -504,7 +503,7 @@ const Profile: React.FC = () => {
                         {/* Assessment History Tab */}
                         {activeTab === 2 && (
                             <div className="mt-6">
-                                <p className="text-text-primary mb-4">
+                                <p className="text-text-dark mb-4">
                                     Your assessment history and performance analytics will appear here.
                                 </p>
                             </div>

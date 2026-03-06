@@ -2,16 +2,15 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Drawer } from '@mui/material';
 import {
-    Home,
-    Assessment,
-    Code,
-    QueryStats,
-    Person,
-    AdminPanelSettings,
-    Category,
-    People,
-    Dashboard as DashboardIcon,
-} from '@mui/icons-material';
+    MdHome,
+    MdAssignment,
+    MdCode,
+    MdQueryStats,
+    MdPerson,
+    MdAdminPanelSettings,
+    MdPeople,
+    MdDashboard,
+} from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
@@ -23,20 +22,19 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     const { user } = useAuth();
 
     const userNavItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: <Home /> },
-        { path: '/assessments', label: 'My Assessments', icon: <Assessment /> },
-        { path: '/coding-practice', label: 'Coding Practice', icon: <Code /> },
-        { path: '/queries', label: 'SQL Practice', icon: <QueryStats /> },
-        { path: '/profile', label: 'Profile', icon: <Person /> },
+        { path: '/dashboard', label: 'Dashboard', icon: <MdHome className="text-xl" /> },
+        { path: '/assessments', label: 'My Assessments', icon: <MdAssignment className="text-xl" /> },
+        { path: '/coding-practice', label: 'Coding Practice', icon: <MdCode className="text-xl" /> },
+        { path: '/queries', label: 'SQL Practice', icon: <MdQueryStats className="text-xl" /> },
+        { path: '/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },
     ];
 
     const adminNavItems = [
-        { path: '/admin', label: 'Admin Dashboard', icon: <AdminPanelSettings /> },
-        { path: '/admin/users', label: 'User Management', icon: <People /> },
-        { path: '/admin/categories', label: 'Categories', icon: <Category /> },
-        { path: '/admin/assessments', label: 'Assessments', icon: <DashboardIcon /> },
-        { path: '/admin/questions', label: 'Question Bank', icon: <Code /> },
-        { path: '/admin/reports', label: 'Reports', icon: <QueryStats /> },
+        { path: '/admin', label: 'Admin Dashboard', icon: <MdAdminPanelSettings className="text-xl" /> },
+        { path: '/admin/users', label: 'User Management', icon: <MdPeople className="text-xl" /> },
+        { path: '/admin/assessments', label: 'Assessments', icon: <MdDashboard className="text-xl" /> },
+        { path: '/admin/questions', label: 'Question Bank', icon: <MdCode className="text-xl" /> },
+        { path: '/admin/reports', label: 'Reports', icon: <MdQueryStats className="text-xl" /> },
     ];
 
     const navItems = user?.role === 'admin' || user?.role === 'super_admin'

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Schedule, PlayArrow, Visibility } from '@mui/icons-material';
+import { MdSchedule, MdPlayArrow, MdVisibility } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import DataLoader from '../../components/common/DataLoader';
@@ -38,10 +38,10 @@ const Assessments: React.FC = () => {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-text-primary">
+                <h1 className="text-3xl font-bold text-text-dark">
                     My Assessments
                 </h1>
-                <p className="text-text-secondary mt-1">
+                <p className="text-text-light mt-1">
                     Manage and take your assigned assessments
                 </p>
             </div>
@@ -49,10 +49,10 @@ const Assessments: React.FC = () => {
             {/* Upcoming Assessments */}
             <div>
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-text-primary">
+                    <h2 className="text-xl font-bold text-text-dark">
                         Upcoming Assessments
                     </h2>
-                    <span className="px-3 py-1 rounded-full text-sm bg-action-hover text-text-primary">
+                    <span className="px-3 py-1 rounded-full text-sm bg-muted-light text-text-dark">
                         {upcomingAssessments?.length || 0} assigned
                     </span>
                 </div>
@@ -63,13 +63,13 @@ const Assessments: React.FC = () => {
                             <div key={assessment.userAssessmentId} className="bg-background-light rounded-lg shadow-md hover:shadow-lg transition-shadow h-full flex flex-col">
                                 <div className="p-4 space-y-4 flex-1">
                                     <div className="flex justify-between items-start">
-                                        <h3 className="text-lg font-bold text-text-primary">
+                                        <h3 className="text-lg font-bold text-text-dark">
                                             {assessment.assessment.title}
                                         </h3>
                                         <span
                                             className={`px-2 py-1 rounded-full text-xs font-medium ${assessment.status === 'in-progress'
-                                                ? 'bg-warning-light text-warning-dark'
-                                                : 'bg-info-light text-info-dark'
+                                                ? 'bg-warn-light/30 text-warn-dark'
+                                                : 'bg-secondary-light/20 text-secondary-dark'
                                                 }
                                             `}
                                         >
@@ -90,13 +90,13 @@ const Assessments: React.FC = () => {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-text-inverse">Questions:</span>
-                                            <span className="font-medium text-text-primary">
+                                            <span className="font-medium text-text-dark">
                                                 {assessment.assessment.questions?.length || 0}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-text-secondary">Total Marks:</span>
-                                            <span className="font-medium text-text-primary">
+                                            <span className="text-text-light">Total Marks:</span>
+                                            <span className="font-medium text-text-dark">
                                                 {assessment.assessment.totalMarks}
                                             </span>
                                         </div>
@@ -106,7 +106,7 @@ const Assessments: React.FC = () => {
                                         className="w-full mt-4 py-2 px-4 rounded bg-primary-main text-white hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 font-medium"
                                         onClick={() => navigate(`/assessment/${assessment.assessmentId}/take`)}
                                     >
-                                        {assessment.status === 'in-progress' ? <PlayArrow fontSize="small" /> : <Schedule fontSize="small" />}
+                                        {assessment.status === 'in-progress' ? <MdPlayArrow /> : <MdSchedule />}
                                         {assessment.status === 'in-progress'
                                             ? 'Continue Assessment'
                                             : 'Start Assessment'}
@@ -116,7 +116,7 @@ const Assessments: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="p-4 rounded bg-info-light text-info-dark border border-info-main/20">
+                    <div className="p-4 rounded bg-secondary-light/10 text-secondary-dark border border-secondary-light/20">
                         No upcoming assessments assigned. Check back later or contact your administrator.
                     </div>
                 )}
@@ -125,7 +125,7 @@ const Assessments: React.FC = () => {
             {/* Completed Assessments */}
             <div>
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-text-primary">
+                    <h2 className="text-xl font-bold text-text-dark">
                         Completed Assessments
                     </h2>
                     <span className="px-3 py-1 rounded-full text-sm bg-success-light text-success-dark">
@@ -136,10 +136,10 @@ const Assessments: React.FC = () => {
                 {completedAssessments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {completedAssessments.slice(0, 6).map((assessment: UserAssessmentInterface) => (
-                            <div key={assessment.userAssessmentId} className="bg-background-paper rounded-lg shadow-md h-full flex flex-col">
+                            <div key={assessment.userAssessmentId} className="bg-background-light rounded-lg shadow-md h-full flex flex-col">
                                 <div className="p-4 space-y-4 flex-1">
                                     <div className="flex justify-between items-start">
-                                        <h3 className="text-lg font-bold text-text-primary">
+                                        <h3 className="text-lg font-bold text-text-dark">
                                             {assessment.assessment.title}
                                         </h3>
                                         <span
@@ -155,20 +155,20 @@ const Assessments: React.FC = () => {
 
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-text-secondary">Score:</span>
-                                            <span className="font-medium text-text-primary">
+                                            <span className="text-text-light">Score:</span>
+                                            <span className="font-medium text-text-dark">
                                                 {assessment.score || 0}/{assessment.totalMarks}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-text-secondary">Completed:</span>
-                                            <span className="font-medium text-text-primary">
+                                            <span className="text-text-light">Completed:</span>
+                                            <span className="font-medium text-text-dark">
                                                 {new Date(assessment.completedAt).toLocaleDateString()}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-text-secondary">Time Spent:</span>
-                                            <span className="font-medium text-text-primary">
+                                            <span className="text-text-light">Time Spent:</span>
+                                            <span className="font-medium text-text-dark">
                                                 {Math.floor(assessment.timeSpent / 60)}m {assessment.timeSpent % 60}s
                                             </span>
                                         </div>
@@ -178,7 +178,7 @@ const Assessments: React.FC = () => {
                                         className="w-full mt-4 py-2 px-4 rounded border border-primary-main text-primary-main hover:bg-primary-light/10 transition-colors flex items-center justify-center gap-2 font-medium"
                                         onClick={() => navigate(`/results/${assessment.userAssessmentId}`)}
                                     >
-                                        <Visibility fontSize="small" />
+                                        <MdVisibility />
                                         View Results
                                     </button>
                                 </div>
@@ -186,7 +186,7 @@ const Assessments: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="p-4 rounded bg-info-light text-info-dark border border-info-main/20">
+                    <div className="p-4 rounded bg-secondary-light/10 text-secondary-dark border border-secondary-light/20">
                         No completed assessments yet.
                     </div>
                 )}

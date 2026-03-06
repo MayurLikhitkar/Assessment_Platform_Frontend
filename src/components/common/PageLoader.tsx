@@ -19,7 +19,7 @@ const PageLoader: React.FC<PageLoaderProps> = ({ text, fullScreen = false }) => 
                         A
                     </div>
                 </div>
-                {text && <p className="text-lg font-medium text-text-secondary mt-4">{text}</p>}
+                {text && <p className="text-lg font-medium text-text-light mt-4">{text}</p>}
             </div>
         </div>
     );

@@ -5,16 +5,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 import FormInput from '../../components/ui/FormInput';
-import { Menu } from '@mui/icons-material';
+import { MdMenu } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 import type { ApiResponse } from '../../types/types';
 
 const LoginSchema = Yup.object().shape({
     email: Yup.string()
         .email('Invalid email address')
+        .max(254, 'Email address is too long')
         .required('Email is required'),
     password: Yup.string()
-        .min(6, 'Password must be at least 6 characters')
+        .max(128, 'Password must be at most 128 characters')
         .required('Password is required'),
 });
 
@@ -71,15 +72,15 @@ const Login: React.FC = () => {
                         {/* Feature List */}
                         <div className="space-y-4 text-text-inverse/90">
                             <div className="flex items-center gap-3">
-                                <Menu className="w-5 h-5" />
+                                <MdMenu className="w-5 h-5" />
                                 <span className="">AI-Powered Proctoring</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <Menu className="w-5 h-5" />
+                                <MdMenu className="w-5 h-5" />
                                 <span className="">Deep Performance Analytics</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <Menu className="w-5 h-5" />
+                                <MdMenu className="w-5 h-5" />
                                 <span className="">Enterprise-Grade Security</span>
                             </div>
                         </div>

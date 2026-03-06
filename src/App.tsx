@@ -12,6 +12,9 @@ import queryClient from './services/queryClient';
 import MainLayout from './layouts/MainLayout';
 import Assessments from './pages/user/Assessments';
 import Profile from './pages/user/Profile';
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
 
 function App() {
   return (
@@ -37,11 +40,10 @@ function App() {
             </Route>
 
             {/* Admin Routes */}
-            {/* <Route element={<AdminLayout />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/categories" element={<AdminCategories />} />
-        </Route> */}
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+            </Route>
 
             {/* 404 Route */}
             <Route path="*" element={<Navigate to="/" replace />} />
