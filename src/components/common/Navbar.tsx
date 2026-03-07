@@ -23,6 +23,7 @@ import {
     MdSearch,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
+import { isAdmin, getHomePath } from '../../utils/roleUtils';
 
 interface NavbarProps {
     onMenuClick?: () => void;
@@ -61,6 +62,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
         handleMenuClose();
     };
 
+    const handleAdminPanel = () => {
+        navigate('/admin');
+        handleMenuClose();
+    };
+
     return (
         <AppBar
             position="sticky"
@@ -80,7 +86,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             <MdMenu className="text-2xl" />
                         </IconButton>
 
-                        <Link to="/dashboard" className="flex items-center gap-3 group select-none">
+                        <Link to={getHomePath(user?.role)} className="flex items-center gap-3 group select-none">
                             <div className="relative z-10 hidden sm:flex items-center gap-2">
                                 <span className="w-10 h-10 bg-primary-main/70 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
                                     A
@@ -144,7 +150,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             <div className="max-h-[300px] overflow-y-auto">
                                 <MenuItem onClick={handleNotificationClose} className="py-3 px-4 hover:bg-muted-light/50 border-b border-border-light/50">
                                     <Box className="flex gap-3">
-                                        <div className="w-2 h-2 mt-2 rounded-full bg-primary-main flex-shrink-0"></div>
+                                        <div className="w-2 h-2 mt-2 rounded-full bg-primary-main shrink-0"></div>
                                         <div>
                                             <Typography variant="body2" className="font-medium text-text-main">New assessment assigned</Typography>
                                             <Typography variant="caption" className="text-text-light">Just now</Typography>
@@ -153,7 +159,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                                 </MenuItem>
                                 <MenuItem onClick={handleNotificationClose} className="py-3 px-4 hover:bg-muted-light/50 border-b border-border-light/50">
                                     <Box className="flex gap-3">
-                                        <div className="w-2 h-2 mt-2 rounded-full bg-secondary-main flex-shrink-0"></div>
+                                        <div className="w-2 h-2 mt-2 rounded-full bg-secondary-main shrink-0"></div>
                                         <div>
                                             <Typography variant="body2" className="font-medium text-text-main">Assessment results available</Typography>
                                             <Typography variant="caption" className="text-text-light">2 hours ago</Typography>
@@ -162,7 +168,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                                 </MenuItem>
                                 <MenuItem onClick={handleNotificationClose} className="py-3 px-4 hover:bg-muted-light/50">
                                     <Box className="flex gap-3">
-                                        <div className="w-2 h-2 mt-2 rounded-full bg-warn-main flex-shrink-0"></div>
+                                        <div className="w-2 h-2 mt-2 rounded-full bg-warn-main shrink-0"></div>
                                         <div>
                                             <Typography variant="body2" className="font-medium text-text-main">System maintenance</Typography>
                                             <Typography variant="caption" className="text-text-light">Tomorrow at 12:00 PM</Typography>
@@ -177,7 +183,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             </Box>
                         </Menu>
 
-                        <div className="h-6 w-[1px] bg-border-light mx-1 hidden sm:block"></div>
+                        <div className="h-6 w-px bg-border-light mx-1 hidden sm:block"></div>
 
                         {/* User menu */}
                         <Tooltip title="Account settings">
@@ -222,12 +228,21 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             </Box>
                             <Divider className="md:hidden mb-1" />
 
-                            <MenuItem onClick={handleProfile} className="py-2.5 px-4 text-sm text-text-main hover:bg-muted-light/50 mx-1 rounded-lg transition-colors">
-                                <ListItemIcon className="min-w-[36px]">
-                                    <MdPersonOutline className="text-lg text-text-light" />
-                                </ListItemIcon>
-                                Profile
-                            </MenuItem>
+                            {isAdmin(user?.role) ? (
+                                <MenuItem onClick={handleAdminPanel} className="py-2.5 px-4 text-sm text-text-main hover:bg-muted-light/50 mx-1 rounded-lg transition-colors">
+                                    <ListItemIcon className="min-w-[36px]">
+                                        <MdSettingsApplications className="text-lg text-text-light" />
+                                    </ListItemIcon>
+                                    Admin Panel
+                                </MenuItem>
+                            ) : (
+                                <MenuItem onClick={handleProfile} className="py-2.5 px-4 text-sm text-text-main hover:bg-muted-light/50 mx-1 rounded-lg transition-colors">
+                                    <ListItemIcon className="min-w-[36px]">
+                                        <MdPersonOutline className="text-lg text-text-light" />
+                                    </ListItemIcon>
+                                    Profile
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={handleMenuClose} className="py-2.5 px-4 text-sm text-text-main hover:bg-muted-light/50 mx-1 rounded-lg transition-colors">
                                 <ListItemIcon className="min-w-[36px]">
                                     <MdSettingsApplications className="text-lg text-text-light" />

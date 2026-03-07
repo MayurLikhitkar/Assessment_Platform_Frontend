@@ -6,7 +6,6 @@ import Register from './pages/auth/Register';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import { TOASTER_PROPS } from './utils/config';
-import Dashboard from './pages/dashboard/Dashboard';
 import { QueryClientProvider } from '@tanstack/react-query';
 import queryClient from './services/queryClient';
 import MainLayout from './layouts/MainLayout';
@@ -15,6 +14,17 @@ import Profile from './pages/user/Profile';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminAssessments from './pages/admin/AdminAssessments';
+import AdminQuestions from './pages/admin/AdminQuestions';
+import Dashboard from './pages/user/Dashboard';
+import { getHomePath } from './utils/roleUtils';
+import { useAuth } from './hooks/useAuth';
+
+// Add a root redirect component to handle role-based routing
+const RootRedirect = () => {
+  const { user } = useAuth();
+  return <Navigate to={getHomePath(user?.role)} replace />;
+};
 
 function App() {
   return (
@@ -31,7 +41,7 @@ function App() {
 
             {/* User Routes */}
             <Route element={<MainLayout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/assessments" element={<Assessments />} />
               <Route path="/profile" element={<Profile />} />
@@ -43,6 +53,8 @@ function App() {
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/assessments" element={<AdminAssessments />} />
+              <Route path="/admin/questions" element={<AdminQuestions />} />
             </Route>
 
             {/* 404 Route */}

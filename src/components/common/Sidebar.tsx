@@ -12,6 +12,7 @@ import {
     MdDashboard,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
+import { isAdmin } from '../../utils/roleUtils';
 
 interface SidebarProps {
     mobileOpen?: boolean;
@@ -35,15 +36,20 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
         { path: '/admin/assessments', label: 'Assessments', icon: <MdDashboard className="text-xl" /> },
         { path: '/admin/questions', label: 'Question Bank', icon: <MdCode className="text-xl" /> },
         { path: '/admin/reports', label: 'Reports', icon: <MdQueryStats className="text-xl" /> },
+        { path: '/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },
     ];
 
-    const navItems = user?.role === 'admin' || user?.role === 'super_admin'
-        ? adminNavItems
-        : userNavItems;
+    const isUserAdmin = isAdmin(user?.role);
+    const navItems = isUserAdmin ? adminNavItems : userNavItems;
 
     const drawerContent = (
         <div className="h-full flex flex-col bg-background-light">
             <div className="p-4">
+                <div className="mb-4 px-2">
+                    <h3 className="text-xs font-bold text-text-light uppercase tracking-wider">
+                        {isUserAdmin ? 'Admin Panel' : 'User Menu'}
+                    </h3>
+                </div>
                 <nav className="space-y-1">
                     {navItems.map((item) => (
                         <NavLink

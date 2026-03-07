@@ -5,6 +5,7 @@ import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
 import Container from '../components/common/Container';
 import PageLoader from '../components/common/PageLoader';
+import { isAdmin, getHomePath } from '../utils/roleUtils';
 
 const MainLayout = () => {
     const { user, isLoading } = useAuth();
@@ -16,6 +17,11 @@ const MainLayout = () => {
 
     if (!user) {
         return <Navigate to="/login" replace />;
+    }
+
+    // Role guard: admins should not access user routes
+    if (isAdmin(user.role)) {
+        return <Navigate to={getHomePath(user.role)} replace />;
     }
 
     return (

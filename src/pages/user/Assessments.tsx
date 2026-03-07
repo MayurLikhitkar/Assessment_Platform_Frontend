@@ -17,7 +17,7 @@ const Assessments: React.FC = () => {
         queryFn: () => getAssessments(),
         enabled: !!user,
     });
-    console.log(assessments)
+
     const upcomingAssessments: UserAssessmentInterface[] = assessments?.data?.filter(
         (a) => a.status === 'assigned' || a.status === 'in-progress'
     ) || [];
@@ -77,19 +77,19 @@ const Assessments: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    <p className="text-sm text-text-inverse line-clamp-2">
+                                    <p className="text-sm text-text-light line-clamp-2">
                                         {assessment.assessment.description}
                                     </p>
 
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-text-inverse">Duration:</span>
+                                            <span className="text-text-light">Duration:</span>
                                             <span className="font-medium text-text-main">
                                                 {assessment.assessment.duration} mins
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-text-inverse">Questions:</span>
+                                            <span className="text-text-light">Questions:</span>
                                             <span className="font-medium text-text-dark">
                                                 {assessment.assessment.questions?.length || 0}
                                             </span>
@@ -163,13 +163,13 @@ const Assessments: React.FC = () => {
                                         <div className="flex justify-between">
                                             <span className="text-text-light">Completed:</span>
                                             <span className="font-medium text-text-dark">
-                                                {new Date(assessment.completedAt).toLocaleDateString()}
+                                                {assessment.completedAt ? new Date(assessment.completedAt).toLocaleDateString() : '—'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-text-light">Time Spent:</span>
                                             <span className="font-medium text-text-dark">
-                                                {Math.floor(assessment.timeSpent / 60)}m {assessment.timeSpent % 60}s
+                                                {assessment.timeSpent ? `${Math.floor(assessment.timeSpent / 60)}m ${assessment.timeSpent % 60}s` : '—'}
                                             </span>
                                         </div>
                                     </div>
