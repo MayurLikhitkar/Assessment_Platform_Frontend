@@ -114,7 +114,7 @@ const AdminDashboard: React.FC = () => {
                         <button
                             key={action.path}
                             onClick={() => navigate(action.path)}
-                            className="flex items-center gap-4 p-5 bg-background-light rounded-xl border border-border-light/30 hover:border-primary-light/50 hover:shadow-md transition-all text-left group"
+                            className="flex items-center gap-4 p-5 bg-background-light rounded-xl border border-border-light/30 hover:border-primary-light/50 hover:shadow-md transition-all text-left group cursor-pointer w-full"
                         >
                             <div className="p-3 rounded-xl bg-primary-light/10 text-primary-main group-hover:bg-primary-main group-hover:text-white transition-colors">
                                 {action.icon}

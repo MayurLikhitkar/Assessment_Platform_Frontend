@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Drawer } from '@mui/material';
 import {
     MdHome,
     MdAssignment,
@@ -75,20 +74,19 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     return (
         <aside className='hidden lg:block w-[20%]'>
             {/* Mobile Drawer */}
-            <Drawer
-                variant="temporary"
-                open={mobileOpen}
-                onClose={onClose}
-                ModalProps={{
-                    keepMounted: true, // Better open performance on mobile.
-                }}
-                sx={{
-                    display: { xs: 'block', lg: 'none' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box' },
-                }}
-            >
-                {drawerContent}
-            </Drawer>
+            {mobileOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                    <button
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 border-none cursor-default w-full h-full p-0 m-0"
+                        onClick={onClose}
+                        aria-label="Close menu"
+                        tabIndex={-1}
+                    ></button>
+                    <div className="fixed inset-y-0 left-0 w-64 bg-background-light shadow-2xl animate-in slide-in-from-left duration-300">
+                        {drawerContent}
+                    </div>
+                </div>
+            )}
 
             {/* Desktop Sidebar */}
             <div className="h-full! bg-background-light border-r border-border-light">

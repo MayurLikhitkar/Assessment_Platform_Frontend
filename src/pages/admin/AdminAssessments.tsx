@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { MdSearch, MdAdd, MdVisibility, MdEdit, MdAccessTime, MdAssignment } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import DataLoader from '../../components/common/DataLoader';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import { getAdminAssessments } from '../../services/axios/adminApi';
 import type { AssessmentInterface } from '../../types/types';
 
@@ -47,13 +49,14 @@ const AdminAssessments: React.FC = () => {
                     <h1 className="text-3xl font-bold text-text-dark">Assessments</h1>
                     <p className="text-text-light mt-1">Manage all assessments on the platform</p>
                 </div>
-                <button
-                    className="flex items-center gap-2 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
+                <Button
+                    variant="primary"
+                    className="flex items-center gap-2"
                     onClick={() => navigate('/admin/assessments/create')}
                 >
                     <MdAdd className="text-xl" />
                     Create Assessment
-                </button>
+                </Button>
             </div>
 
             {/* Stats */}
@@ -91,12 +94,12 @@ const AdminAssessments: React.FC = () => {
             <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4">
                 <div className="relative">
                     <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light text-xl" />
-                    <input
+                    <Input
                         type="text"
                         placeholder="Search assessments by title or description..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-border-light rounded-lg bg-background-main text-text-main placeholder-text-light/70 focus:outline-none focus:ring-2 focus:ring-primary-light/30 focus:border-primary-light transition-all"
+                        className="pl-10"
                     />
                 </div>
             </div>

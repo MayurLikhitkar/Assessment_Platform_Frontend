@@ -1,9 +1,9 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, type DialogProps } from '@mui/material';
 import React from 'react'
 import Button from '../ui/Button';
+import Modal from '../ui/Modal';
 import type { IconType } from 'react-icons/lib';
 
-interface ConfirmationProps extends DialogProps {
+interface ConfirmationProps {
     open: boolean
     onClose: () => void;
     onConfirm: () => void;
@@ -13,29 +13,24 @@ interface ConfirmationProps extends DialogProps {
     cancelText?: string
 }
 
-const Confirmation: React.FC<ConfirmationProps> = ({ open, onClose, onConfirm, message, icon: Icon, confirmText = 'Confirm', cancelText = 'Cancel', ...prps }) => {
-
+const Confirmation: React.FC<ConfirmationProps> = ({ open, onClose, onConfirm, message, icon: Icon, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth {...prps}>
-            <DialogTitle className="flex justify-center p-8!">
+        <Modal isOpen={open} onClose={onClose} title="Confirmation" maxWidth="sm">
+            <div className="flex flex-col items-center text-center space-y-4 pt-4">
                 {Icon && <Icon className="text-5xl text-primary-main" />}
-            </DialogTitle>
-            <DialogContent className='px-16! py-0!'>
-                {message}
-            </DialogContent>
-            <DialogActions className='p-8! justify-center! gap-3'>
-                <Button size='md'
-                    variant='success'
-                    onClick={onConfirm}>
-                    {confirmText}
-                </Button>
-                <Button size='md'
-                    variant='danger'
-                    onClick={onClose}>
-                    {cancelText}
-                </Button>
-            </DialogActions>
-        </Dialog>
+                <p className="text-text-main text-lg font-medium px-4">
+                    {message}
+                </p>
+                <div className="flex w-full justify-center gap-4 pt-6 mt-4">
+                    <Button size="md" variant="success" onClick={onConfirm}>
+                        {confirmText}
+                    </Button>
+                    <Button size="md" variant="danger" onClick={onClose}>
+                        {cancelText}
+                    </Button>
+                </div>
+            </div>
+        </Modal>
     )
 }
 

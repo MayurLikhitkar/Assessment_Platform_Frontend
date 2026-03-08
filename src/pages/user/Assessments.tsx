@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import DataLoader from '../../components/common/DataLoader';
 import { getAssessments } from '../../services/axios/assessmentApi';
 import type { UserAssessmentInterface } from '../../types/types';
+import Button from '../../components/ui/Button';
 
 const Assessments: React.FC = () => {
     const navigate = useNavigate();
@@ -102,15 +103,17 @@ const Assessments: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        className="w-full mt-4 py-2 px-4 rounded bg-primary-main text-white hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 font-medium"
+                                    <Button
+                                        variant="primary"
+                                        size="md"
+                                        className="w-full mt-4 flex items-center justify-center gap-2"
                                         onClick={() => navigate(`/assessment/${assessment.assessmentId}/take`)}
                                     >
                                         {assessment.status === 'in-progress' ? <MdPlayArrow /> : <MdSchedule />}
                                         {assessment.status === 'in-progress'
                                             ? 'Continue Assessment'
                                             : 'Start Assessment'}
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         ))}
@@ -174,13 +177,15 @@ const Assessments: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        className="w-full mt-4 py-2 px-4 rounded border border-primary-main text-primary-main hover:bg-primary-light/10 transition-colors flex items-center justify-center gap-2 font-medium"
+                                    <Button
+                                        variant="outline"
+                                        size="md"
+                                        className="w-full mt-4 flex items-center justify-center gap-2"
                                         onClick={() => navigate(`/results/${assessment.userAssessmentId}`)}
                                     >
                                         <MdVisibility />
                                         View Results
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         ))}

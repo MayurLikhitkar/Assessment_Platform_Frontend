@@ -11,6 +11,16 @@ export const getUsers = async () => {
     }
 }
 
+export const createUser = async (data: Partial<UserInterface> & { password?: string }) => {
+    try {
+        const response = await api.post<ApiResponse<UserInterface>>('/auth/register', data)
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+}
+
 export const getAdminStats = async () => {
     try {
         const [usersRes, assessmentsRes] = await Promise.all([

@@ -1,10 +1,18 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MdSearch, MdFilterList, MdMoreVert, MdPersonAdd } from 'react-icons/md';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import DataLoader from '../../components/common/DataLoader';
-import { getUsers } from '../../services/axios/adminApi';
-import type { UserInterface } from '../../types/types';
+import Modal from '../../components/ui/Modal';
+import FormInput from '../../components/ui/FormInput';
+import FormSelect from '../../components/ui/FormSelect';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import { getUsers, createUser } from '../../services/axios/adminApi';
+import type { UserInterface, ApiResponse } from '../../types/types';
 
 const roleBadgeStyles: Record<string, string> = {
     super_admin: 'bg-primary-light/20 text-primary-dark',
@@ -29,11 +37,48 @@ const getStatusDotColor = (status: string) => {
 
 const AdminUsers: React.FC = () => {
     const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const { data: usersResponse, isLoading } = useQuery({
         queryKey: ['adminUsers'],
         queryFn: getUsers,
         enabled: !!user,
+    });
+
+    const createMutation = useMutation({
+        mutationFn: (data: Partial<UserInterface> & { password?: string }) => createUser(data),
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success(data.responseMessage || 'User created successfully');
+                queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+                setIsCreateModalOpen(false);
+                formik.resetForm();
+            }
+        },
+        onError: (error: ApiResponse<null>) => {
+            toast.error(error.responseMessage || 'Failed to create user');
+        },
+    });
+
+    const formik = useFormik({
+        initialValues: {
+            fullName: '',
+            email: '',
+            password: '',
+            role: 'user',
+            phone: '',
+        },
+        validationSchema: Yup.object({
+            fullName: Yup.string().required('Full Name is required'),
+            email: Yup.string().email('Invalid email address').required('Email is required'),
+            password: Yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
+            role: Yup.string().required('Role is required'),
+            phone: Yup.string(),
+        }),
+        onSubmit: (values) => {
+            createMutation.mutate(values as Partial<UserInterface> & { password?: string });
+        },
     });
 
     const users: UserInterface[] = usersResponse?.data ?? [];
@@ -50,26 +95,30 @@ const AdminUsers: React.FC = () => {
                         Manage platform users and their roles
                     </p>
                 </div>
-                <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors font-medium text-sm shadow-sm">
+                <Button
+                    variant="primary"
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="flex items-center gap-2 shadow-sm"
+                >
                     <MdPersonAdd fontSize="small" />
                     Add User
-                </button>
+                </Button>
             </div>
 
             {/* Search & Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                     <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" fontSize="small" />
-                    <input
+                    <Input
                         type="text"
                         placeholder="Search users by name or email..."
-                        className="w-full bg-background-light border border-border-light/50 rounded-lg py-2.5 pl-10 pr-4 text-sm text-text-main placeholder-text-light focus:border-primary-light/50 focus:ring-2 focus:ring-primary-light/10 outline-none transition-all"
+                        className="pl-10"
                     />
                 </div>
-                <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-background-light border border-border-light/50 rounded-lg text-sm text-text-main hover:bg-muted-light transition-colors">
+                <Button variant="outline" className="flex items-center gap-2">
                     <MdFilterList fontSize="small" />
                     Filters
-                </button>
+                </Button>
             </div>
 
             {/* Users Table */}
@@ -149,6 +198,91 @@ const AdminUsers: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Create User Modal */}
+            <Modal
+                isOpen={isCreateModalOpen}
+                onClose={() => {
+                    setIsCreateModalOpen(false);
+                    formik.resetForm();
+                }}
+                title="Create New User"
+                maxWidth="md"
+            >
+                <form onSubmit={formik.handleSubmit} className="space-y-4 pt-2">
+                    <FormInput
+                        id="fullName"
+                        name="fullName"
+                        label="Full Name"
+                        type="text"
+                        placeholder="John Doe"
+                        formik={formik}
+                        required
+                    />
+                    <FormInput
+                        id="email"
+                        name="email"
+                        label="Email Address"
+                        type="email"
+                        placeholder="john.doe@example.com"
+                        formik={formik}
+                        required
+                    />
+                    <FormInput
+                        id="password"
+                        name="password"
+                        label="Temporary Password"
+                        type="password"
+                        placeholder="••••••••"
+                        formik={formik}
+                        required
+                    />
+                    <FormSelect
+                        id="role"
+                        name="role"
+                        label="Assign Role"
+                        placeholder="Select a role"
+                        formik={formik}
+                        options={[
+                            { label: 'User (Candidate)', value: 'user' },
+                            { label: 'Proctor', value: 'proctor' },
+                            { label: 'Evaluator', value: 'evaluator' },
+                            { label: 'Admin', value: 'admin' },
+                        ]}
+                        required
+                    />
+                    <FormInput
+                        id="phone"
+                        name="phone"
+                        label="Phone Number (Optional)"
+                        type="tel"
+                        placeholder="+1 234 567 8900"
+                        formik={formik}
+                    />
+
+                    <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-border-light/50">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="md"
+                            onClick={() => {
+                                setIsCreateModalOpen(false);
+                                formik.resetForm();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="md"
+                            loading={createMutation.isPending}
+                        >
+                            Create User
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

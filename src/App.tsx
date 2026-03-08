@@ -15,6 +15,7 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminAssessments from './pages/admin/AdminAssessments';
+import CreateAssessment from './pages/admin/CreateAssessment';
 import AdminQuestions from './pages/admin/AdminQuestions';
 import Dashboard from './pages/user/Dashboard';
 import { getHomePath } from './utils/roleUtils';
@@ -54,6 +55,7 @@ function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/assessments" element={<AdminAssessments />} />
+              <Route path="/admin/assessments/create" element={<CreateAssessment />} />
               <Route path="/admin/questions" element={<AdminQuestions />} />
             </Route>
 

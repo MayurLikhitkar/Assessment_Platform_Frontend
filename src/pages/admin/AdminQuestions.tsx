@@ -5,8 +5,15 @@ import {
     MdClose, MdQuestionAnswer
 } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
+import { useFormik } from 'formik';
 import DataLoader from '../../components/common/DataLoader';
 import Button from '../../components/ui/Button';
+import Modal from '../../components/ui/Modal';
+import FormInput from '../../components/ui/FormInput';
+import FormSelect from '../../components/ui/FormSelect';
+import FormTextArea from '../../components/ui/FormTextArea';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 import Confirmation from '../../components/modal/Confirmation';
 import { getQuestions, createQuestion, deleteQuestion } from '../../services/axios/adminApi';
 import type { Question, ApiResponse } from '../../types/types';
@@ -49,7 +56,6 @@ const AdminQuestions: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [formData, setFormData] = useState<Partial<Question>>(emptyQuestion);
     const [tagInput, setTagInput] = useState('');
     const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
 
@@ -69,7 +75,6 @@ const AdminQuestions: React.FC = () => {
                 toast.success(data.responseMessage || 'Question created successfully');
                 queryClient.invalidateQueries({ queryKey: ['adminQuestions'] });
                 setShowCreateForm(false);
-                setFormData(emptyQuestion);
             }
         },
         onError: (error: ApiResponse<null>) => {
@@ -100,59 +105,56 @@ const AdminQuestions: React.FC = () => {
         return matchesSearch && matchesType;
     });
 
-    // Form handlers
-    const handleFormChange = (field: string, value: unknown) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
+    const formik = useFormik<Partial<Question>>({
+        initialValues: emptyQuestion,
+        onSubmit: (values) => {
+            if (!values.question?.trim()) {
+                toast.error('Question text is required');
+                return;
+            }
+            if (values.type === 'mcq') {
+                const hasCorrect = values.options?.some(o => o.isCorrect);
+                if (!hasCorrect) {
+                    toast.error('At least one option must be marked as correct');
+                    return;
+                }
+                const hasEmpty = values.options?.some(o => !o.text.trim());
+                if (hasEmpty) {
+                    toast.error('All options must have text');
+                    return;
+                }
+            }
+            createMutation.mutate(values);
+        }
+    });
 
     const handleAddTag = () => {
         const tag = tagInput.trim();
-        if (tag && !formData.tags?.includes(tag)) {
-            setFormData(prev => ({ ...prev, tags: [...(prev.tags || []), tag] }));
+        if (tag && !formik.values.tags?.includes(tag)) {
+            formik.setFieldValue('tags', [...(formik.values.tags || []), tag]);
             setTagInput('');
         }
     };
 
     const handleRemoveTag = (tag: string) => {
-        setFormData(prev => ({ ...prev, tags: prev.tags?.filter(t => t !== tag) }));
+        formik.setFieldValue('tags', formik.values.tags?.filter(t => t !== tag));
     };
 
     const handleOptionChange = (index: number, field: keyof McqOption, value: string | boolean) => {
-        const options = [...(formData.options || [])];
-        options[index] = { ...options[index], [field]: value };
-        setFormData(prev => ({ ...prev, options }));
+        const options = [...(formik.values.options || [])];
+        options[index] = { ...options[index], [field]: value } as McqOption;
+        formik.setFieldValue('options', options);
     };
 
     const handleAddOption = () => {
-        const options = [...(formData.options || [])];
-        options.push({ id: options.length + 1, text: '', isCorrect: false });
-        setFormData(prev => ({ ...prev, options }));
+        const options = [...(formik.values.options || [])];
+        options.push({ id: options.length + 1 + Math.random(), text: '', isCorrect: false });
+        formik.setFieldValue('options', options);
     };
 
     const handleRemoveOption = (index: number) => {
-        const options = (formData.options || []).filter((_, i) => i !== index);
-        setFormData(prev => ({ ...prev, options }));
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formData.question?.trim()) {
-            toast.error('Question text is required');
-            return;
-        }
-        if (formData.type === 'mcq') {
-            const hasCorrect = formData.options?.some(o => o.isCorrect);
-            if (!hasCorrect) {
-                toast.error('At least one option must be marked as correct');
-                return;
-            }
-            const hasEmpty = formData.options?.some(o => !o.text.trim());
-            if (hasEmpty) {
-                toast.error('All options must have text');
-                return;
-            }
-        }
-        createMutation.mutate(formData);
+        const options = (formik.values.options || []).filter((_, i) => i !== index);
+        formik.setFieldValue('options', options);
     };
 
     return (
@@ -165,191 +167,185 @@ const AdminQuestions: React.FC = () => {
                 </div>
                 <button
                     className="flex items-center gap-2 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
-                    onClick={() => setShowCreateForm(!showCreateForm)}
+                    onClick={() => { setShowCreateForm(!showCreateForm); if (!showCreateForm) formik.resetForm(); }}
                 >
                     {showCreateForm ? <MdClose className="text-xl" /> : <MdAdd className="text-xl" />}
                     {showCreateForm ? 'Cancel' : 'Create Question'}
                 </button>
             </div>
 
-            {/* Create Question Form */}
-            {showCreateForm && (
-                <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-6">
-                    <h2 className="text-lg font-bold text-text-dark mb-4">New Question</h2>
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Row: Type + Difficulty + Marks */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <label htmlFor="question-type" className="block text-sm font-medium text-text-main mb-1">Type</label>
-                                <select
-                                    id="question-type"
-                                    value={formData.type}
-                                    onChange={(e) => handleFormChange('type', e.target.value)}
-                                    className="w-full px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-light/30"
-                                >
-                                    <option value="mcq">MCQ</option>
-                                    <option value="coding">Coding</option>
-                                    <option value="query">Query</option>
-                                    <option value="subjective">Subjective</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label htmlFor="question-difficulty" className="block text-sm font-medium text-text-main mb-1">Difficulty</label>
-                                <select
-                                    id="question-difficulty"
-                                    value={formData.difficulty}
-                                    onChange={(e) => handleFormChange('difficulty', e.target.value)}
-                                    className="w-full px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-light/30"
-                                >
-                                    <option value="easy">Easy</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="hard">Hard</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label htmlFor="question-marks" className="block text-sm font-medium text-text-main mb-1">Marks</label>
-                                <input
-                                    id="question-marks"
-                                    type="number"
-                                    min={1}
-                                    value={formData.marks}
-                                    onChange={(e) => handleFormChange('marks', Number.parseInt(e.target.value) || 1)}
-                                    className="w-full px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-light/30"
-                                />
-                            </div>
-                        </div>
+            {/* Create Question Modal */}
+            <Modal isOpen={showCreateForm} onClose={() => { setShowCreateForm(false); formik.resetForm(); }} title="New Question" maxWidth="2xl">
+                <form onSubmit={formik.handleSubmit} className="space-y-5 pt-2">
+                    {/* Row: Type + Difficulty + Marks */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <FormSelect
+                            id="type"
+                            name="type"
+                            label="Type"
+                            placeholder="Select Type"
+                            options={[
+                                { label: 'MCQ', value: 'mcq' },
+                                { label: 'Coding', value: 'coding' },
+                                { label: 'Query', value: 'query' },
+                                { label: 'Subjective', value: 'subjective' },
+                            ]}
+                            formik={formik}
+                            required
+                        />
+                        <FormSelect
+                            id="difficulty"
+                            name="difficulty"
+                            label="Difficulty"
+                            placeholder="Select Difficulty"
+                            options={[
+                                { label: 'Easy', value: 'easy' },
+                                { label: 'Medium', value: 'medium' },
+                                { label: 'Hard', value: 'hard' },
+                            ]}
+                            formik={formik}
+                            required
+                        />
+                        <FormInput
+                            id="marks"
+                            name="marks"
+                            label="Marks"
+                            type="number"
+                            min={1}
+                            formik={formik}
+                            required
+                        />
+                    </div>
 
-                        {/* Question Text */}
+                    {/* Question Text */}
+                    <FormTextArea
+                        id="question"
+                        name="question"
+                        label="Question text"
+                        placeholder="Enter your question here..."
+                        rows={3}
+                        formik={formik}
+                        required
+                    />
+
+                    {/* MCQ Options */}
+                    {formik.values.type === 'mcq' && (
                         <div>
-                            <label htmlFor="question-text" className="block text-sm font-medium text-text-main mb-1">Question</label>
-                            <textarea
-                                id="question-text"
-                                value={formData.question}
-                                onChange={(e) => handleFormChange('question', e.target.value)}
-                                rows={3}
-                                placeholder="Enter your question here..."
-                                className="w-full px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main placeholder-text-light/70 focus:outline-none focus:ring-2 focus:ring-primary-light/30 resize-none"
-                            />
-                        </div>
-
-                        {/* MCQ Options */}
-                        {formData.type === 'mcq' && (
-                            <div>
-                                <label htmlFor="mcq-options" className="block text-sm font-medium text-text-main mb-2">Options</label>
-                                <div className="space-y-2">
-                                    {formData.options?.map((option, index) => (
-                                        <div key={option.id} className="flex items-center gap-3">
-                                            <label className="flex items-center gap-2 cursor-pointer shrink-0">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={option.isCorrect}
-                                                    onChange={(e) => handleOptionChange(index, 'isCorrect', e.target.checked)}
-                                                    className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-light/30"
-                                                />
-                                                <span className="text-xs text-text-light">Correct</span>
-                                            </label>
+                            <label className="block text-sm font-medium text-text-main mb-2">Options</label>
+                            <div className="space-y-2">
+                                {formik.values.options?.map((option, index) => (
+                                    <div key={option.id} className="flex items-center gap-3">
+                                        <label className="flex items-center gap-2 cursor-pointer shrink-0">
                                             <input
-                                                type="text"
-                                                value={option.text}
-                                                onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
-                                                placeholder={`Option ${index + 1}`}
-                                                className="flex-1 px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main placeholder-text-light/70 focus:outline-none focus:ring-2 focus:ring-primary-light/30"
+                                                type="checkbox"
+                                                checked={option.isCorrect}
+                                                onChange={(e) => handleOptionChange(index, 'isCorrect', e.target.checked)}
+                                                className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-light/30"
                                             />
-                                            {(formData.options?.length || 0) > 2 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveOption(index)}
-                                                    className="p-1.5 text-error-main hover:bg-error-light/20 rounded-lg transition-colors"
-                                                >
-                                                    <MdClose className="text-lg" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleAddOption}
-                                    className="mt-2 text-sm text-primary-main hover:underline font-medium flex items-center gap-1"
-                                >
-                                    <MdAdd /> Add Option
-                                </button>
+                                            <span className="text-xs text-text-light">Correct</span>
+                                        </label>
+                                        <Input
+                                            type="text"
+                                            value={option.text}
+                                            onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
+                                            placeholder={`Option ${index + 1}`}
+                                        />
+                                        {(formik.values.options?.length || 0) > 2 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveOption(index)}
+                                                className="p-1.5 text-error-main hover:bg-error-light/20 rounded-lg transition-colors"
+                                            >
+                                                <MdClose className="text-lg" />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddOption}
+                                className="mt-2 text-sm text-primary-main hover:underline font-medium flex items-center gap-1"
+                            >
+                                <MdAdd /> Add Option
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Tags */}
+                    <div>
+                        <label htmlFor="tag-input" className="block text-sm font-medium text-text-main mb-1">Tags</label>
+                        <div className="flex gap-2 items-center">
+                            <Input
+                                id="tag-input"
+                                type="text"
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
+                                placeholder="Add a tag and press Enter"
+                            />
+                            <Button type="button" variant="primary" size="sm" onClick={handleAddTag} disabled={!tagInput.trim()}>
+                                Add
+                            </Button>
+                        </div>
+                        {formik.values.tags && formik.values.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {formik.values.tags.map((tag) => (
+                                    <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-dark">
+                                        {tag}
+                                        <MdClose className="cursor-pointer hover:text-error-main" onClick={() => handleRemoveTag(tag)} />
+                                    </span>
+                                ))}
                             </div>
                         )}
+                    </div>
 
-                        {/* Tags */}
-                        <div>
-                            <label htmlFor="tag-input" className="block text-sm font-medium text-text-main mb-1">Tags</label>
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    id="tag-input"
-                                    type="text"
-                                    value={tagInput}
-                                    onChange={(e) => setTagInput(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-                                    placeholder="Add a tag and press Enter"
-                                    className="flex-1 px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main placeholder-text-light/70 focus:outline-none focus:ring-2 focus:ring-primary-light/30"
-                                />
-                                <Button type="button" variant="primary" size="sm" onClick={handleAddTag} disabled={!tagInput.trim()}>
-                                    Add
-                                </Button>
-                            </div>
-                            {formData.tags && formData.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {formData.tags.map((tag) => (
-                                        <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-dark">
-                                            {tag}
-                                            <MdClose className="cursor-pointer hover:text-error-main" onClick={() => handleRemoveTag(tag)} />
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Submit */}
-                        <div className="flex justify-end gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="md"
-                                onClick={() => { setShowCreateForm(false); setFormData(emptyQuestion); }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" variant="primary" size="md" loading={createMutation.isPending}>
-                                Create Question
-                            </Button>
-                        </div>
-                    </form>
-                </div>
-            )}
+                    {/* Submit */}
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border-light/50">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="md"
+                            onClick={() => { setShowCreateForm(false); formik.resetForm(); }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" variant="primary" size="md" loading={createMutation.isPending}>
+                            Create Question
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Search + Filters */}
             <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4">
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-1">
                         <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light text-xl" />
-                        <input
+                        <Input
                             type="text"
                             placeholder="Search questions..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 border border-border-light rounded-lg bg-background-main text-text-main placeholder-text-light/70 focus:outline-none focus:ring-2 focus:ring-primary-light/30 focus:border-primary-light transition-all"
+                            className="pl-10"
                         />
                     </div>
                     <div className="flex items-center gap-2">
                         <MdFilterList className="text-text-light text-xl" />
-                        <select
+                        <Select
+                            id="typeFilter"
+                            name="typeFilter"
                             value={typeFilter}
+                            placeholder="All Types"
                             onChange={(e) => setTypeFilter(e.target.value)}
-                            className="px-3 py-2.5 border border-border-light rounded-lg bg-background-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-light/30"
-                        >
-                            <option value="all">All Types</option>
-                            <option value="mcq">MCQ</option>
-                            <option value="coding">Coding</option>
-                            <option value="query">Query</option>
-                            <option value="subjective">Subjective</option>
-                        </select>
+                            options={[
+                                { label: 'All Types', value: 'all' },
+                                { label: 'MCQ', value: 'mcq' },
+                                { label: 'Coding', value: 'coding' },
+                                { label: 'Query', value: 'query' },
+                                { label: 'Subjective', value: 'subjective' },
+                            ]}
+                        />
                     </div>
                 </div>
             </div>
