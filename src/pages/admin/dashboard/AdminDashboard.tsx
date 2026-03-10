@@ -8,9 +8,9 @@ import {
     MdPersonAdd,
     MdArrowForward,
 } from 'react-icons/md';
-import { useAuth } from '../../hooks/useAuth';
-import DataLoader from '../../components/common/DataLoader';
-import { getAdminStats } from '../../services/axios/adminApi';
+import { useAuth } from '../../../hooks/useAuth';
+import DataLoader from '../../../components/common/DataLoader';
+import { getAdminStats } from '../../../services/axios/adminApi';
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();

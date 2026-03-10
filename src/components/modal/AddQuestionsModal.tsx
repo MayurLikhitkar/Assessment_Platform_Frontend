@@ -4,7 +4,7 @@ import { MdSearch, MdFilterList, MdAdd } from 'react-icons/md';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import DataLoader from '../common/DataLoader';
+import Table from '../ui/Table';
 import { getQuestions } from '../../services/axios/adminApi';
 import type { Question } from '../../types/types';
 
@@ -93,70 +93,75 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
 
                 {/* Questions List */}
                 <div className="border border-border-light/50 rounded-lg overflow-hidden h-[50vh] flex flex-col">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center p-8 h-full">
-                            <DataLoader />
-                        </div>
-                    ) : filteredQuestions.length > 0 ? (
-                        <div className="overflow-y-auto custom-scrollbar flex-1 bg-background-light">
-                            <table className="w-full text-left">
-                                <thead className="bg-muted-light/50 sticky top-0 z-10 border-b border-border-light shadow-sm">
-                                    <tr>
-                                        <th className="px-4 py-3 w-12 text-center">
+                    <div className="overflow-y-auto custom-scrollbar flex-1 bg-background-light">
+                        <Table<Question>
+                            data={filteredQuestions}
+                            isLoading={isLoading}
+                            keyExtractor={(q) => q.questionId}
+                            emptyStateMessage="No available questions match your criteria"
+                            emptyStateSubMessage="Try adjusting your search or filters."
+                            onRowClick={(q) => toggleSelection(q.questionId)}
+                            columns={[
+                                {
+                                    header: (
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-main focus:ring-2"
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedIds(new Set(filteredQuestions.map(q => q.questionId)));
+                                                } else {
+                                                    setSelectedIds(new Set());
+                                                }
+                                            }}
+                                            checked={filteredQuestions.length > 0 && selectedIds.size === filteredQuestions.length}
+                                        />
+                                    ),
+                                    className: 'w-12 text-center',
+                                    render: (q) => (
+                                        <div className="flex justify-center">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-main focus:ring-2"
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedIds(new Set(filteredQuestions.map(q => q.questionId)));
-                                                    } else {
-                                                        setSelectedIds(new Set());
-                                                    }
-                                                }}
-                                                checked={filteredQuestions.length > 0 && selectedIds.size === filteredQuestions.length}
+                                                className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-main focus:ring-2 pointer-events-none"
+                                                checked={selectedIds.has(q.questionId)}
+                                                readOnly
                                             />
-                                        </th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-text-light uppercase tracking-wider">Question</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-text-light uppercase tracking-wider w-24">Type</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-text-light uppercase tracking-wider w-24">Marks</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border-light/50">
-                                    {filteredQuestions.map(q => (
-                                        <tr key={q.questionId} className={`hover:bg-muted-light/30 cursor-pointer transition-colors ${selectedIds.has(q.questionId) ? 'bg-primary-light/5' : ''}`} onClick={() => toggleSelection(q.questionId)}>
-                                            <td className="px-4 py-3 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-main focus:ring-2 pointer-events-none"
-                                                    checked={selectedIds.has(q.questionId)}
-                                                    readOnly
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <p className="text-sm font-medium text-text-dark line-clamp-2">{q.question}</p>
-                                                <div className="flex gap-1 mt-1">
-                                                    {q.tags?.slice(0, 2).map((tag) => (
-                                                        <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${typeColors[q.type] || 'bg-muted-light text-text-main'}`}>{q.type}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-sm text-text-main font-medium">
-                                                {q.marks}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center p-8 h-full bg-background-light text-center">
-                            <p className="text-text-main font-medium">No available questions match your criteria</p>
-                            <p className="text-sm text-text-light mt-1">Try adjusting your search or filters.</p>
-                        </div>
-                    )}
+                                        </div>
+                                    )
+                                },
+                                {
+                                    header: 'Question',
+                                    accessorKey: 'question',
+                                    render: (q) => (
+                                        <div>
+                                            <p className="text-sm font-medium text-text-dark line-clamp-2">{q.question}</p>
+                                            <div className="flex gap-1 mt-1">
+                                                {q.tags?.slice(0, 2).map((tag) => (
+                                                    <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                },
+                                {
+                                    header: 'Type',
+                                    accessorKey: 'type',
+                                    className: 'w-24',
+                                    render: (q) => (
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${typeColors[q.type] || 'bg-muted-light text-text-main'}`}>{q.type}</span>
+                                    )
+                                },
+                                {
+                                    header: 'Marks',
+                                    accessorKey: 'marks',
+                                    className: 'w-24',
+                                    render: (q) => (
+                                        <span className="text-sm text-text-main font-medium">{q.marks}</span>
+                                    )
+                                }
+                            ]}
+                        />
+                    </div>
                 </div>
 
                 {/* Actions */}

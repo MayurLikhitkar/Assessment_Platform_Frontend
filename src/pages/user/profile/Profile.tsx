@@ -4,19 +4,19 @@ import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave } from 'react
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
-import { useAuth } from '../../hooks/useAuth';
-import type { ApiError, UserInterface } from '../../types/types';
-import { changePassword, getProfile, updateProfile } from '../../services/axios/authApi';
-import Button from '../../components/ui/Button';
-import FormInput from '../../components/ui/FormInput';
-import Input from '../../components/ui/Input';
-import DataLoader from '../../components/common/DataLoader';
-import type { ChangePasswordRequest } from '../../types/authTypes';
-import TabButton from '../../components/ui/TabButton';
-import Confirmation from '../../components/modal/Confirmation';
+import { useAuth } from '../../../hooks/useAuth';
+import type { ApiError, UserInterface } from '../../../types/types';
+import { changePassword, getProfile, updateProfile } from '../../../services/axios/authApi';
+import Button from '../../../components/ui/Button';
+import FormInput from '../../../components/ui/FormInput';
+import Input from '../../../components/ui/Input';
+import DataLoader from '../../../components/common/DataLoader';
+import type { ChangePasswordRequest } from '../../../types/authTypes';
+import TabButton from '../../../components/ui/TabButton';
+import Confirmation from '../../../components/modal/Confirmation';
 import { BsFillPatchQuestionFill } from "react-icons/bs";
-import InfoField from '../../components/ui/InfoField';
-import Label from '../../components/ui/Label';
+import InfoField from '../../../components/ui/InfoField';
+import Label from '../../../components/ui/Label';
 
 const ProfileSchema = Yup.object().shape({
     fullName: Yup.string()

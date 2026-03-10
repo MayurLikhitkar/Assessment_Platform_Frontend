@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { MdClose } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
+import Button from './Button';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -73,13 +74,14 @@ const Modal: React.FC<ModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
                     <h2 className="text-xl font-semibold text-text-dark">{title}</h2>
-                    <button
+                    <Button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-text-light hover:text-error-main hover:bg-error-light/10 rounded-full transition-colors"
+                        variant="icon"
+                        // className="text-text-light hover:text-error-main hover:bg-error-light/10"
                         aria-label="Close modal"
                     >
                         <MdClose className="text-xl" />
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Content */}

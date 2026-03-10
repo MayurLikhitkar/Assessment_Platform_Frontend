@@ -7,9 +7,9 @@ import {
     MdSchedule,
     MdTrendingUp,
 } from 'react-icons/md';
-import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/axios/api';
-import DataLoader from '../../components/common/DataLoader';
+import { useAuth } from '../../../hooks/useAuth';
+import api from '../../../services/axios/api';
+import DataLoader from '../../../components/common/DataLoader';
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth();

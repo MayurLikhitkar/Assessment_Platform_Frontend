@@ -2,11 +2,11 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MdSchedule, MdPlayArrow, MdVisibility } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import DataLoader from '../../components/common/DataLoader';
-import { getAssessments } from '../../services/axios/assessmentApi';
-import type { UserAssessmentInterface } from '../../types/types';
-import Button from '../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
+import DataLoader from '../../../components/common/DataLoader';
+import { getAssessments } from '../../../services/axios/assessmentApi';
+import type { UserAssessmentInterface } from '../../../types/types';
+import Button from '../../../components/ui/Button';
 
 const Assessments: React.FC = () => {
     const navigate = useNavigate();

@@ -4,12 +4,12 @@ import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBack, MdAdd, MdClose } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
-import FormInput from '../../components/ui/FormInput';
-import FormSelect from '../../components/ui/FormSelect';
-import FormTextArea from '../../components/ui/FormTextArea';
-import Button from '../../components/ui/Button';
-import AddQuestionsModal from '../../components/modal/AddQuestionsModal';
-import type { Question } from '../../types/types';
+import FormInput from '../../../components/ui/FormInput';
+import FormSelect from '../../../components/ui/FormSelect';
+import FormTextArea from '../../../components/ui/FormTextArea';
+import Button from '../../../components/ui/Button';
+import AddQuestionsModal from '../../../components/modal/AddQuestionsModal';
+import type { Question } from '../../../types/types';
 
 // Validation Schema
 const assessmentSchema = Yup.object({
