@@ -117,7 +117,7 @@ const AdminAssessments: React.FC = () => {
                         {
                             header: 'Title',
                             accessorKey: 'title',
-                            render: (a) => (
+                            cellRenderer: (a) => (
                                 <div>
                                     <p className="font-medium text-text-dark text-sm">{a.title}</p>
                                     <p className="text-xs text-text-light mt-0.5 line-clamp-1 max-w-[250px]">{a.description}</p>
@@ -127,7 +127,7 @@ const AdminAssessments: React.FC = () => {
                         {
                             header: 'Type',
                             accessorKey: 'type',
-                            render: (a) => (
+                            cellRenderer: (a) => (
                                 <div className="flex flex-wrap gap-1">
                                     {a.type.map((t) => (
                                         <span key={t} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${typeColors[t] || 'bg-muted-light text-text-light'}`}>
@@ -140,7 +140,7 @@ const AdminAssessments: React.FC = () => {
                         {
                             header: 'Difficulty',
                             accessorKey: 'difficulty',
-                            render: (a) => (
+                            cellRenderer: (a) => (
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[a.difficulty] || 'bg-muted-light text-text-light'}`}>
                                     {a.difficulty}
                                 </span>
@@ -149,8 +149,8 @@ const AdminAssessments: React.FC = () => {
                         {
                             header: 'Duration',
                             accessorKey: 'duration',
-                            render: (a) => (
-                                <div className="flex items-center gap-1 text-sm text-text-main">
+                            cellRenderer: (a) => (
+                                <div className="flex items-center gap-1">
                                     <MdAccessTime className="text-text-light" />
                                     {a.duration} min
                                 </div>
@@ -159,20 +159,15 @@ const AdminAssessments: React.FC = () => {
                         {
                             header: 'Marks',
                             accessorKey: 'totalMarks',
-                            render: (a) => (
-                                <span className="text-sm font-medium text-text-dark">{a.totalMarks}</span>
-                            )
                         },
                         {
                             header: 'Questions',
-                            render: (a) => (
-                                <span className="text-sm text-text-main">{a.questions?.length || 0}</span>
-                            )
+                            valueGetter: (a) => a.questions?.length || 0,
                         },
                         {
                             header: 'Status',
                             accessorKey: 'isActive',
-                            render: (a) => (
+                            cellRenderer: (a) => (
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${a.isActive
                                     ? 'bg-success-light/40 text-success-dark'
                                     : 'bg-error-light/40 text-error-dark'
@@ -183,7 +178,7 @@ const AdminAssessments: React.FC = () => {
                         },
                         {
                             header: 'Actions',
-                            render: () => (
+                            cellRenderer: () => (
                                 <div className="flex items-center gap-2">
                                     <button
                                         className="p-1.5 rounded-lg hover:bg-secondary-light/20 text-secondary-main transition-colors"

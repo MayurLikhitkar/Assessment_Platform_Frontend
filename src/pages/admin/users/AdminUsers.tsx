@@ -93,7 +93,7 @@ const AdminUsers: React.FC = () => {
                         {
                             header: 'User',
                             accessorKey: 'fullName',
-                            render: (u) => (
+                            cellRenderer: (u) => (
                                 <div className="flex items-center gap-3">
                                     <div className="w-9 h-9 rounded-full bg-secondary-main/20 text-secondary-main flex items-center justify-center text-sm font-bold shrink-0">
                                         {u.fullName?.[0]?.toUpperCase() ?? '?'}
@@ -108,7 +108,7 @@ const AdminUsers: React.FC = () => {
                         {
                             header: 'Role',
                             accessorKey: 'role',
-                            render: (u) => (
+                            cellRenderer: (u) => (
                                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${roleBadgeStyles[u.role] ?? roleBadgeStyles.user}`}>
                                     {u.role?.replace('_', ' ')}
                                 </span>
@@ -117,7 +117,7 @@ const AdminUsers: React.FC = () => {
                         {
                             header: 'Status',
                             accessorKey: 'status',
-                            render: (u) => (
+                            cellRenderer: (u) => (
                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[u.status] ?? statusStyles.inactive}`}>
                                     <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(u.status)}`}></span>
                                     {u.status}
@@ -128,30 +128,24 @@ const AdminUsers: React.FC = () => {
                             header: 'Joined',
                             accessorKey: 'createdAt',
                             className: 'hidden md:table-cell',
-                            render: (u) => (
-                                <span className="text-sm text-text-light">
-                                    {u.createdAt
-                                        ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                        : '—'}
-                                </span>
-                            ),
+                            valueGetter: (u) =>
+                                u.createdAt
+                                    ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                    : '—',
                         },
                         {
                             header: 'Last Login',
                             accessorKey: 'lastLogin',
                             className: 'hidden lg:table-cell',
-                            render: (u) => (
-                                <span className="text-sm text-text-light">
-                                    {u.lastLogin
-                                        ? new Date(u.lastLogin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                        : 'Never'}
-                                </span>
-                            ),
+                            valueGetter: (u) =>
+                                u.lastLogin
+                                    ? new Date(u.lastLogin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                    : 'Never',
                         },
                         {
                             header: 'Actions',
                             className: 'text-right',
-                            render: () => (
+                            cellRenderer: () => (
                                 <div className="text-right">
                                     <button className="p-1.5 rounded-lg hover:bg-muted-light text-text-light hover:text-text-dark transition-colors">
                                         <MdMoreVert fontSize="small" />

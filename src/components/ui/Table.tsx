@@ -4,8 +4,9 @@ import DataLoader from '../common/DataLoader';
 
 export interface ColumnDef<T> {
     header: string | React.ReactNode;
-    accessorKey?: keyof T | string;
-    render?: (row: T) => React.ReactNode;
+    accessorKey?: keyof T | string; // Like AG Grid's `field` — direct property access
+    valueGetter?: (row: T) => string | number; // Like AG Grid's `valueGetter` — returns formatted value, Table displays it
+    cellRenderer?: (row: T) => React.ReactNode; // Like AG Grid's `cellRenderer` — full custom JSX
     className?: string; // Optional class for the th/td
     hidden?: boolean; // Can be a boolean or a condition based on screen size (handled via className conventionally)
 }
@@ -19,6 +20,26 @@ export interface TableProps<T> {
     emptyStateSubMessage?: string;
     emptyStateIcon?: React.ReactNode;
     onRowClick?: (row: T) => void;
+}
+
+/**
+ * Resolves cell content by priority: cellRenderer > valueGetter > accessorKey
+ */
+function resolveCell<T>(row: T, col: ColumnDef<T>): React.ReactNode {
+    // 1. Custom JSX (badges, avatars, action buttons)
+    if (col.cellRenderer) return col.cellRenderer(row);
+
+    // 2. Formatted value (dates, computed strings) — Table displays as text
+    if (col.valueGetter) return col.valueGetter(row);
+
+    // 3. Direct property access — Table displays as text
+    if (col.accessorKey) {
+        const val = (row as Record<string, unknown>)[col.accessorKey as string];
+        if (val === null || val === undefined) return '—';
+        return val as React.ReactNode;
+    }
+
+    return null;
 }
 
 function Table<T>({
@@ -74,12 +95,8 @@ function Table<T>({
                             onClick={() => onRowClick?.(row)}
                         >
                             {visibleColumns.map((col, index) => (
-                                <td key={index} className={`px-5 py-4 ${col.className || ''}`}>
-                                    {col.render
-                                        ? col.render(row)
-                                        : col.accessorKey
-                                            ? (row as any)[col.accessorKey]
-                                            : null}
+                                <td key={index} className={`px-5 py-4 text-sm text-text-main ${col.className || ''}`}>
+                                    {resolveCell(row, col)}
                                 </td>
                             ))}
                         </tr>

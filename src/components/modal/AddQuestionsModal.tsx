@@ -118,7 +118,7 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                                         />
                                     ),
                                     className: 'w-12 text-center',
-                                    render: (q) => (
+                                    cellRenderer: (q) => (
                                         <div className="flex justify-center">
                                             <input
                                                 type="checkbox"
@@ -132,7 +132,7 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                                 {
                                     header: 'Question',
                                     accessorKey: 'question',
-                                    render: (q) => (
+                                    cellRenderer: (q) => (
                                         <div>
                                             <p className="text-sm font-medium text-text-dark line-clamp-2">{q.question}</p>
                                             <div className="flex gap-1 mt-1">
@@ -147,7 +147,7 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                                     header: 'Type',
                                     accessorKey: 'type',
                                     className: 'w-24',
-                                    render: (q) => (
+                                    cellRenderer: (q) => (
                                         <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${typeColors[q.type] || 'bg-muted-light text-text-main'}`}>{q.type}</span>
                                     )
                                 },
@@ -155,9 +155,6 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                                     header: 'Marks',
                                     accessorKey: 'marks',
                                     className: 'w-24',
-                                    render: (q) => (
-                                        <span className="text-sm text-text-main font-medium">{q.marks}</span>
-                                    )
                                 }
                             ]}
                         />

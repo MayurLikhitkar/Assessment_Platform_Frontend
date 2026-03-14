@@ -133,16 +133,11 @@ const AdminQuestions: React.FC = () => {
                         {
                             header: 'Question',
                             accessorKey: 'question',
-                            render: (q) => (
-                                <p className="text-sm text-text-dark line-clamp-2 max-w-[350px]">
-                                    {q.question}
-                                </p>
-                            )
                         },
                         {
                             header: 'Type',
                             accessorKey: 'type',
-                            render: (q) => (
+                            cellRenderer: (q) => (
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase ${typeColors[q.type] || 'bg-muted-light text-text-light'}`}>
                                     {q.type}
                                 </span>
@@ -151,7 +146,7 @@ const AdminQuestions: React.FC = () => {
                         {
                             header: 'Difficulty',
                             accessorKey: 'difficulty',
-                            render: (q) => (
+                            cellRenderer: (q) => (
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[q.difficulty] || 'bg-muted-light text-text-light'}`}>
                                     {q.difficulty}
                                 </span>
@@ -160,16 +155,11 @@ const AdminQuestions: React.FC = () => {
                         {
                             header: 'Marks',
                             accessorKey: 'marks',
-                            render: (q) => (
-                                <span className="text-sm font-medium text-text-dark">
-                                    {q.marks}
-                                </span>
-                            )
                         },
                         {
                             header: 'Tags',
                             accessorKey: 'tags',
-                            render: (q) => (
+                            cellRenderer: (q) => (
                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
                                     {q.tags?.slice(0, 3).map((tag) => (
                                         <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-main">
@@ -186,7 +176,7 @@ const AdminQuestions: React.FC = () => {
                         },
                         {
                             header: 'Actions',
-                            render: (q) => (
+                            cellRenderer: (q) => (
                                 <button
                                     onClick={() => setDeleteTarget(q)}
                                     className="p-1.5 rounded-lg hover:bg-error-light/20 text-error-main transition-colors"
