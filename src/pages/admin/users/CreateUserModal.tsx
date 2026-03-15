@@ -6,7 +6,8 @@ import Button from '../../../components/ui/Button';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
-import type { ApiResponse, UserInterface } from '../../../types/types';
+import type { ApiResponse } from '../../../types/types';
+import { UserRole, type UserInterface } from '../../../types/authTypes';
 import { createUser } from '../../../services/axios/adminApi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -19,7 +20,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isCreateModalOpen, se
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
-        mutationFn: (data: Partial<UserInterface> & { password?: string }) => createUser(data),
+        mutationFn: createUser,
         onSuccess: (data) => {
             if (data?.success) {
                 toast.success(data.responseMessage || 'User created successfully');
@@ -33,23 +34,37 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isCreateModalOpen, se
         },
     });
 
-    const formik = useFormik({
+    const formik = useFormik<Partial<UserInterface>>({
         initialValues: {
             fullName: '',
             email: '',
             password: '',
-            role: 'user',
+            role: UserRole.USER,
             phone: '',
         },
         validationSchema: Yup.object({
-            fullName: Yup.string().required('Full Name is required'),
-            email: Yup.string().email('Invalid email address').required('Email is required'),
-            password: Yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
-            role: Yup.string().required('Role is required'),
-            phone: Yup.string(),
+            fullName: Yup.string()
+                .required('Full name is required')
+                .min(2, 'Full name must be at least 2 characters')
+                .max(100, 'Full name must be at most 100 characters')
+                .matches(/^[a-zA-Z\s'-]+$/, 'Full name contains invalid characters'),
+            email: Yup.string()
+                .email('Invalid email address')
+                .max(254, 'Email address is too long')
+                .required('Email is required'),
+            password: Yup.string()
+                .required('Password is required')
+                .min(8, 'Password must be at least 8 characters')
+                .max(128, 'Password must be at most 128 characters'),
+            role: Yup.string()
+                .required('Role is required')
+                .oneOf(Object.values(UserRole), 'Invalid role'),
+            phone: Yup.string()
+                .matches(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number')
+                .optional(),
         }),
         onSubmit: (values) => {
-            createMutation.mutate(values as Partial<UserInterface> & { password?: string });
+            createMutation.mutate(values);
         },
     });
 

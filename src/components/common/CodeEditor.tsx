@@ -27,7 +27,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     const [output, setOutput] = useState<string>('');
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const editorRef = useRef<any>(null);
+    const editorRef = useRef<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null);
 
     // Monaco language mapping
     const getMonacoLanguage = (lang: string): string => {
@@ -45,8 +45,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     // Handle language change
     const handleLanguageChange = (newLang: string) => {
         setSelectedLanguage(newLang);
-        if (starterCode && typeof starterCode === 'object') {
-            const newStarter = (starterCode as any)[newLang];
+        if (starterCode && typeof starterCode === 'object' && !Array.isArray(starterCode)) {
+            const newStarter = starterCode[newLang];
             if (newStarter && !value) {
                 onChange(newStarter);
             }
@@ -69,19 +69,18 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 'sql': 'Query executed successfully!\nRows returned: 10',
             };
             setOutput(mockOutputs[selectedLanguage] || 'Code executed successfully!');
-        } catch (err: any) {
-            setError(err.message || 'Failed to execute code');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to execute code');
         } finally {
             setIsRunning(false);
         }
     };
 
-    // Reset to starter code
     const resetCode = () => {
         if (starterCode) {
-            if (typeof starterCode === 'object') {
-                onChange((starterCode as any)[selectedLanguage] || '');
-            } else {
+            if (typeof starterCode === 'object' && !Array.isArray(starterCode)) {
+                onChange(starterCode[selectedLanguage] || '');
+            } else if (typeof starterCode === 'string') {
                 onChange(starterCode);
             }
         } else {
@@ -152,8 +151,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     language={getMonacoLanguage(selectedLanguage)}
                     theme="vs-dark"
                     value={value}
-                    onChange={onChange as any}
-                    onMount={(editor, monaco) => {
+                    onChange={(val) => onChange(val || '')}
+                    onMount={(editor) => {
                         editorRef.current = editor;
                     }}
                     options={editorOptions}

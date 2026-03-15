@@ -5,13 +5,13 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
-import type { ApiError, UserInterface } from '../../../types/types';
+import type { ApiError } from '../../../types/types';
+import type { UserInterface, ChangePasswordRequest } from '../../../types/authTypes';
 import { changePassword, getProfile, updateProfile } from '../../../services/axios/authApi';
 import Button from '../../../components/ui/Button';
 import FormInput from '../../../components/ui/FormInput';
 import Input from '../../../components/ui/Input';
 import DataLoader from '../../../components/common/DataLoader';
-import type { ChangePasswordRequest } from '../../../types/authTypes';
 import TabButton from '../../../components/ui/TabButton';
 import Confirmation from '../../../components/modal/Confirmation';
 import { BsFillPatchQuestionFill } from "react-icons/bs";
@@ -399,7 +399,7 @@ const Profile: React.FC = () => {
                                             <div className="mb-2">
                                                 <Label label='Skills' />
                                                 <div className="flex flex-wrap gap-2 mt-2">
-                                                    {profileData.data.skills && profileData.data.skills.length > 0 && profileData.data.skills.map((skill, index) => (
+                                                    {profileData.data.skills && profileData.data.skills.length > 0 && profileData.data.skills.map((skill: string, index: number) => (
                                                         <span key={index + 1} className="px-2 rounded-md font-medium bg-primary-main border border-primary-light/50 text-text-inverse">
                                                             {skill}
                                                         </span>

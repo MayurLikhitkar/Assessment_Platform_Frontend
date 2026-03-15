@@ -10,30 +10,35 @@ import {
 import { useAuth } from '../../../hooks/useAuth';
 import api from '../../../services/axios/api';
 import DataLoader from '../../../components/common/DataLoader';
+import type { UserAssessmentInterface } from '../../../types/types';
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth();
 
     // Fetch user assessments
-    const { data: assessments, isLoading } = useQuery({
+    const { data: assessmentsResponse, isLoading } = useQuery({
         queryKey: ['userAssessments'],
         queryFn: () => api.get(`/assessments/user/${user?.id}`),
         enabled: !!user,
     });
 
     // Fetch stats
-    const { data: stats } = useQuery({
+    const { data: statsResponse } = useQuery({
         queryKey: ['userStats'],
         queryFn: () => api.get(`/users/${user?.id}/stats`),
         enabled: !!user,
     });
 
+    // Type assertion for the data payload
+    const assessments = (assessmentsResponse?.data as unknown as { data: UserAssessmentInterface[] })?.data || [];
+    const stats = (statsResponse?.data as unknown as { data: any })?.data;
+
     const upcomingAssessments = assessments?.filter(
-        (a: any) => a.status === 'assigned' || a.status === 'in-progress'
+        (a: UserAssessmentInterface) => a.status === 'assigned' || a.status === 'in-progress'
     );
 
     const completedAssessments = assessments?.filter(
-        (a: any) => a.status === 'completed'
+        (a: UserAssessmentInterface) => a.status === 'completed'
     );
 
     return (
@@ -130,27 +135,27 @@ const Dashboard: React.FC = () => {
                     <DataLoader />
                 ) : upcomingAssessments?.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {upcomingAssessments.slice(0, 3).map((assessment: any) => (
-                            <div key={assessment.id} className="bg-background-light border border-border-light rounded-lg hover:shadow-md transition-shadow overflow-hidden">
+                        {upcomingAssessments.slice(0, 3).map((assessment: UserAssessmentInterface) => (
+                            <div key={assessment.userAssessmentId} className="bg-background-light border border-border-light rounded-lg hover:shadow-md transition-shadow overflow-hidden">
                                 <div className="p-4 cursor-pointer hover:bg-muted-light/50 transition-colors h-full">
                                     <div className="flex justify-between items-start mb-4">
                                         <h3 className="text-lg font-bold text-text-dark">
-                                            {assessment.title}
+                                            {assessment.assessment?.title || 'Unknown Title'}
                                         </h3>
-                                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted-light text-text-light border border-border-light">
-                                            {assessment.difficulty}
+                                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted-light text-text-light border border-border-light capitalize">
+                                            {assessment.assessment?.difficulty || 'Unknown'}
                                         </span>
                                     </div>
                                     <p className="text-sm text-text-light mb-4 line-clamp-1">
-                                        {assessment.description}
+                                        {assessment.assessment?.description || 'No description available.'}
                                     </p>
                                     <div className="flex justify-between items-center text-sm text-text-light">
                                         <div className="flex items-center">
                                             <MdSchedule className="mr-1" />
-                                            {assessment.duration} mins
+                                            {assessment.assessment?.durationInMinutes || 0} mins
                                         </div>
                                         <div>
-                                            {assessment.totalMarks} marks
+                                            {assessment.assessment?.totalMarks || 0} marks
                                         </div>
                                     </div>
                                 </div>
@@ -173,17 +178,17 @@ const Dashboard: React.FC = () => {
                     Recent Activity
                 </h2>
                 <div className="space-y-4">
-                    {assessments?.slice(0, 5).map((assessment: any) => (
+                    {assessments?.slice(0, 5).map((assessment: UserAssessmentInterface) => (
                         <div
-                            key={assessment.id}
+                            key={assessment.userAssessmentId}
                             className="flex items-center justify-between p-4 border border-border-light rounded-lg hover:bg-muted-light/50 transition-colors"
                         >
                             <div>
                                 <p className="font-medium text-text-dark">
-                                    {assessment.title}
+                                    {assessment.assessment?.title || 'Unknown Title'}
                                 </p>
                                 <p className="text-sm text-text-light">
-                                    Completed on {new Date(assessment.completedAt).toLocaleDateString()}
+                                    Completed on {assessment.completedAt ? new Date(assessment.completedAt).toLocaleDateString() : 'Unknown'}
                                 </p>
                             </div>
                             <div className="text-right">

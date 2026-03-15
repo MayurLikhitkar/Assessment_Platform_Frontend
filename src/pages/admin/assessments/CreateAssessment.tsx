@@ -2,54 +2,94 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
-import { MdArrowBack, MdAdd, MdClose } from 'react-icons/md';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { MdAdd, MdClose } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 import FormInput from '../../../components/ui/FormInput';
 import FormSelect from '../../../components/ui/FormSelect';
 import FormTextArea from '../../../components/ui/FormTextArea';
 import Button from '../../../components/ui/Button';
+import BackButton from '../../../components/common/BackButton';
 import AddQuestionsModal from '../../../components/modal/AddQuestionsModal';
-import type { Question } from '../../../types/types';
+import { createAssessment } from '../../../services/axios/adminApi';
+import type { ApiResponse } from '../../../types/types';
+import { AssessmentDifficulty, type AssessmentInterface } from '../../../types/assessmentTypes';
+import type { QuestionInterface } from '../../../types/questionTypes';
 
 // Validation Schema
 const assessmentSchema = Yup.object({
     title: Yup.string().required('Title is required'),
     description: Yup.string().required('Description is required'),
+    type: Yup.array()
+        .of(Yup.string().oneOf(['aptitude', 'coding', 'query', 'subjective', 'mcq']))
+        .min(1, 'Select at least one type')
+        .required('Type is required'),
     difficulty: Yup.string().required('Required'),
-    duration: Yup.number().min(5, 'Minimum 5 mins').required('Required'),
+    durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Required'),
     totalMarks: Yup.number().min(1).required('Required'),
     passingMarks: Yup.number().min(1).required('Required'),
 });
 
+const typeOptions = [
+    { label: 'Aptitude', value: 'aptitude' },
+    { label: 'MCQ', value: 'mcq' },
+    { label: 'Coding', value: 'coding' },
+    { label: 'Query', value: 'query' },
+    { label: 'Subjective', value: 'subjective' },
+];
+
 const CreateAssessment: React.FC = () => {
     const navigate = useNavigate();
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const queryClient = useQueryClient();
+    const [questions, setQuestions] = useState<QuestionInterface[]>([]);
     const [isAddQuestionsModalOpen, setIsAddQuestionsModalOpen] = useState(false);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
-    const handleAddQuestions = (selectedQuestions: Question[]) => {
+    const handleAddQuestions = (selectedQuestions: QuestionInterface[]) => {
         setQuestions(prev => [...prev, ...selectedQuestions]);
     };
 
-    const formik = useFormik({
+    const toggleType = (value: string) => {
+        setSelectedTypes(prev => {
+            const next = prev.includes(value)
+                ? prev.filter(t => t !== value)
+                : [...prev, value];
+            formik.setFieldValue('type', next);
+            return next;
+        });
+    };
+
+    const mutation = useMutation({
+        mutationFn: createAssessment,
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success(data.responseMessage || 'Assessment created successfully!');
+                queryClient.invalidateQueries({ queryKey: ['adminAssessments'] });
+                navigate('/admin/assessments');
+            }
+        },
+        onError: (error: ApiResponse<null>) => {
+            toast.error(error.responseMessage || 'Failed to create assessment');
+        },
+    });
+
+    const formik = useFormik<Partial<AssessmentInterface>>({
         initialValues: {
             title: '',
             description: '',
-            difficulty: 'beginner',
-            duration: 60,
+            type: [],
+            difficulty: AssessmentDifficulty.BEGINNER,
+            durationInMinutes: 60,
             totalMarks: 100,
             passingMarks: 50,
         },
         validationSchema: assessmentSchema,
         onSubmit: async (values) => {
-            try {
-                // Here we would call the actual API POST /assessments
-                console.log('Submitting assessment:', { ...values, questions });
-                toast.success('Assessment created safely! (Mock)');
-                navigate('/admin/assessments');
-            } catch (error) {
-                console.error(error);
-                toast.error('Failed to create assessment');
-            }
+            const payload = {
+                ...values,
+                questions: questions.map(q => q._id).filter(Boolean),
+            };
+            mutation.mutate(payload);
         },
     });
 
@@ -57,12 +97,7 @@ const CreateAssessment: React.FC = () => {
         <div className="space-y-6 max-w-5xl mx-auto pb-12">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <button
-                    onClick={() => navigate('/admin/assessments')}
-                    className="p-2 hover:bg-muted-light rounded-full text-text-light hover:text-text-dark transition-colors"
-                >
-                    <MdArrowBack className="text-xl" />
-                </button>
+                <BackButton />
                 <div>
                     <h1 className="text-3xl font-bold text-text-dark">Create Assessment</h1>
                     <p className="text-text-light mt-1">Configure details and add questions</p>
@@ -79,6 +114,32 @@ const CreateAssessment: React.FC = () => {
                         <form id="assessment-form" onSubmit={formik.handleSubmit} className="space-y-4">
                             <FormInput id="title" name="title" label="Title" type="text" formik={formik} required />
                             <FormTextArea id="description" name="description" label="Description" rows={3} formik={formik} required />
+
+                            {/* Assessment Type - multi-select chips */}
+                            <div>
+                                <label className="block text-sm font-medium text-text-main mb-1.5">
+                                    Type <span className="text-error-main">*</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {typeOptions.map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => toggleType(opt.value)}
+                                            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${selectedTypes.includes(opt.value)
+                                                ? 'bg-primary-main text-white border-primary-main'
+                                                : 'bg-background-main text-text-main border-border-light hover:border-primary-main/50'
+                                                }`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {formik.touched.type && formik.errors.type && (
+                                    <p className="text-xs text-error-main mt-1">{formik.errors.type as string}</p>
+                                )}
+                            </div>
+
                             <FormSelect
                                 id="difficulty"
                                 name="difficulty"
@@ -94,7 +155,7 @@ const CreateAssessment: React.FC = () => {
                                 required
                             />
                             <div className="grid grid-cols-2 gap-4">
-                                <FormInput id="duration" name="duration" label="Duration (min)" type="number" formik={formik} required />
+                                <FormInput id="durationInMinutes" name="durationInMinutes" label="Duration (min)" type="number" formik={formik} required />
                                 <FormInput id="totalMarks" name="totalMarks" label="Total Marks" type="number" formik={formik} required />
                                 <FormInput id="passingMarks" name="passingMarks" label="Passing Marks" type="number" formik={formik} required />
                             </div>
@@ -105,7 +166,6 @@ const CreateAssessment: React.FC = () => {
                         <h2 className="text-lg font-semibold text-text-dark mb-4 border-b border-border-light/50 pb-2">
                             Proctoring Settings
                         </h2>
-                        {/* Placeholder for proctoring toggles */}
                         <p className="text-sm text-text-light">Advanced proctoring options will go here.</p>
                     </div>
                 </div>
@@ -120,7 +180,7 @@ const CreateAssessment: React.FC = () => {
                                 variant="primary"
                                 size="sm"
                                 className="flex items-center gap-1"
-                                onClick={() => { toast("Add Questions modal to be implemented", { icon: '🚧' }) }}
+                                onClick={() => setIsAddQuestionsModalOpen(true)}
                             >
                                 <MdAdd /> Add Questions
                             </Button>
@@ -134,7 +194,7 @@ const CreateAssessment: React.FC = () => {
                         ) : (
                             <div className="space-y-3">
                                 {questions.map((q, idx) => (
-                                    <div key={q.questionId} className="flex justify-between items-center bg-background-main border border-border-light rounded-lg p-3">
+                                    <div key={q._id} className="flex justify-between items-center bg-background-main border border-border-light rounded-lg p-3">
                                         <div className="flex-1 mr-4">
                                             <div className="flex items-start">
                                                 <span className="font-semibold text-text-dark text-sm mr-2 mt-0.5">{idx + 1}.</span>
@@ -150,7 +210,7 @@ const CreateAssessment: React.FC = () => {
                                         <button
                                             type="button"
                                             className="p-1.5 text-error-main hover:bg-error-light/20 rounded-lg transition-colors shrink-0"
-                                            onClick={() => setQuestions(prev => prev.filter(pq => pq.questionId !== q.questionId))}
+                                            onClick={() => setQuestions(prev => prev.filter(pq => pq._id !== q._id))}
                                         >
                                             <MdClose />
                                         </button>
@@ -167,7 +227,14 @@ const CreateAssessment: React.FC = () => {
                 <Button type="button" variant="outline" size="md" onClick={() => navigate('/admin/assessments')}>
                     Cancel
                 </Button>
-                <Button type="submit" form="assessment-form" variant="primary" size="md">
+                <Button
+                    type="submit"
+                    form="assessment-form"
+                    variant="primary"
+                    size="md"
+                    loading={mutation.isPending}
+                    loadingText="Creating..."
+                >
                     Create Assessment
                 </Button>
             </div>
@@ -176,7 +243,7 @@ const CreateAssessment: React.FC = () => {
                 isOpen={isAddQuestionsModalOpen}
                 onClose={() => setIsAddQuestionsModalOpen(false)}
                 onAddSelected={handleAddQuestions}
-                existingQuestionIds={questions.map(q => q.questionId)}
+                existingQuestionIds={questions.map(q => q._id)}
             />
         </div>
     );

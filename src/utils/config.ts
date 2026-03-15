@@ -6,3 +6,5 @@ export const TOASTER_PROPS: ToasterProps = {
         duration: 4000,
     }
 }
+
+export const paginationOptions = [10, 20, 50, 100, "All"];

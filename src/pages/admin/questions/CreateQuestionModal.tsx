@@ -10,29 +10,25 @@ import FormTextArea from '../../../components/ui/FormTextArea';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { createQuestion } from '../../../services/axios/adminApi';
-import type { Question, ApiResponse } from '../../../types/types';
+import type { ApiResponse } from '../../../types/types';
+import { QuestionType, Difficulty } from '../../../types/questionTypes';
+import type { QuestionInterface, Option } from '../../../types/questionTypes';
 
 interface CreateQuestionModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-interface McqOption {
-    id: number;
-    text: string;
-    isCorrect: boolean;
-}
 
-const emptyQuestion: Partial<Question> = {
-    type: 'mcq',
+const emptyQuestion: Partial<QuestionInterface> = {
+    type: QuestionType.MCQ,
     question: '',
     marks: 1,
-    difficulty: 'easy',
-    categoryId: 1,
+    difficulty: Difficulty.EASY,
     tags: [],
     options: [
-        { id: 1, text: '', isCorrect: false },
-        { id: 2, text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
     ],
 };
 
@@ -41,7 +37,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
     const [tagInput, setTagInput] = useState('');
 
     const createMutation = useMutation({
-        mutationFn: (data: Partial<Question>) => createQuestion(data),
+        mutationFn: (data: Partial<QuestionInterface>) => createQuestion(data),
         onSuccess: (data) => {
             if (data?.success) {
                 toast.success(data.responseMessage || 'Question created successfully');
@@ -54,7 +50,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
         },
     });
 
-    const formik = useFormik<Partial<Question>>({
+    const formik = useFormik<Partial<QuestionInterface>>({
         initialValues: emptyQuestion,
         onSubmit: (values) => {
             if (!values.question?.trim()) {
@@ -95,15 +91,15 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
         formik.setFieldValue('tags', formik.values.tags?.filter(t => t !== tag));
     };
 
-    const handleOptionChange = (index: number, field: keyof McqOption, value: string | boolean) => {
+    const handleOptionChange = (index: number, field: keyof Option, value: string | boolean) => {
         const options = [...(formik.values.options || [])];
-        options[index] = { ...options[index], [field]: value } as McqOption;
+        options[index] = { ...options[index], [field]: value } as Option;
         formik.setFieldValue('options', options);
     };
 
     const handleAddOption = () => {
         const options = [...(formik.values.options || [])];
-        options.push({ id: options.length + 1 + Math.random(), text: '', isCorrect: false });
+        options.push({ text: '', isCorrect: false });
         formik.setFieldValue('options', options);
     };
 
@@ -172,7 +168,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                         <label className="block text-sm font-medium text-text-main mb-2">Options</label>
                         <div className="space-y-2">
                             {formik.values.options?.map((option, index) => (
-                                <div key={option.id} className="flex items-center gap-3">
+                                <div key={index} className="flex items-center gap-3">
                                     <label className="flex items-center gap-2 cursor-pointer shrink-0">
                                         <input
                                             type="checkbox"

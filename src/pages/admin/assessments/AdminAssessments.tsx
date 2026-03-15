@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MdSearch, MdAdd, MdVisibility, MdEdit, MdAccessTime, MdAssignment } from 'react-icons/md';
+import { MdAdd, MdVisibility, MdEdit, MdAssignment } from 'react-icons/md';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import Table from '../../../components/ui/Table';
 import Button from '../../../components/ui/Button';
-import Input from '../../../components/ui/Input';
 import { getAdminAssessments } from '../../../services/axios/adminApi';
-import type { AssessmentInterface } from '../../../types/types';
+import type { AssessmentInterface } from '../../../types/assessmentTypes';
+import AgGridTable from '../../../components/common/AgGridTable';
 
 const difficultyColors: Record<string, string> = {
     beginner: 'bg-success-light/40 text-success-dark',
@@ -24,22 +24,134 @@ const typeColors: Record<string, string> = {
 
 const AdminAssessments: React.FC = () => {
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = useState('');
 
-    const { data: assessmentsData, isLoading } = useQuery({
+
+    const { data: assessmentsData } = useQuery({
         queryKey: ['adminAssessments'],
         queryFn: getAdminAssessments,
     });
 
     const assessments = assessmentsData?.data || [];
 
-    const filteredAssessments = assessments.filter((a: AssessmentInterface) =>
-        a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
     const activeCount = assessments.filter((a: AssessmentInterface) => a.isActive).length;
     const inactiveCount = assessments.filter((a: AssessmentInterface) => !a.isActive).length;
+
+    const columnDefs = useMemo<ColDef<AssessmentInterface>[]>(() => [
+        {
+            headerName: 'Title',
+            field: 'title',
+            minWidth: 220,
+            flex: 2,
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data) return null;
+                return (
+                    <div className="py-1">
+                        <p className="font-medium text-text-dark text-sm">{params.data.title}</p>
+                        <p className="text-xs text-text-light mt-0.5 line-clamp-1">{params.data.description}</p>
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: 'Type',
+            field: 'type',
+            minWidth: 150,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data) return null;
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {params.data.type.map((t) => (
+                            <span key={t} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${typeColors[t] || 'bg-muted-light text-text-light'}`}>
+                                {t}
+                            </span>
+                        ))}
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: 'Difficulty',
+            field: 'difficulty',
+            minWidth: 120,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data) return null;
+                const diff = params.data.difficulty;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[diff] || 'bg-muted-light text-text-light'}`}>
+                        {diff}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Duration',
+            field: 'durationInMinutes',
+            minWidth: 100,
+            flex: 0.7,
+            valueGetter: (params) => {
+                if (!params.data) return '';
+                return <span>{params.data.durationInMinutes} mins</span>;
+            },
+        },
+        {
+            headerName: 'Marks',
+            field: 'totalMarks',
+            minWidth: 80,
+            flex: 0.5,
+        },
+        {
+            headerName: 'Questions',
+            minWidth: 100,
+            flex: 0.7,
+            valueGetter: (params) => {
+                if (!params.data) return 0;
+                return params.data.questions?.length || 0;
+            },
+        },
+        {
+            headerName: 'Status',
+            field: 'isActive',
+            minWidth: 100,
+            flex: 0.7,
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data) return null;
+                const isActive = params.data.isActive;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isActive
+                        ? 'bg-success-light/40 text-success-dark'
+                        : 'bg-error-light/40 text-error-dark'
+                        }`}>
+                        {isActive ? 'Active' : 'Inactive'}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Actions',
+            minWidth: 100,
+            maxWidth: 100,
+            filter: false,
+            sortable: false,
+            cellRenderer: () => (
+                <div className="flex items-center gap-2">
+                    <button
+                        className="p-1.5 rounded-lg hover:bg-secondary-light/20 text-secondary-main transition-colors"
+                        title="View Details"
+                    >
+                        <MdVisibility className="text-lg" />
+                    </button>
+                    <button
+                        className="p-1.5 rounded-lg hover:bg-primary-light/10 text-primary-main transition-colors"
+                        title="Edit"
+                    >
+                        <MdEdit className="text-lg" />
+                    </button>
+                </div>
+            ),
+        },
+    ], []);
 
     return (
         <div className="space-y-6">
@@ -90,114 +202,11 @@ const AdminAssessments: React.FC = () => {
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4">
-                <div className="relative">
-                    <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light text-xl" />
-                    <Input
-                        type="text"
-                        placeholder="Search assessments by title or description..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                    />
-                </div>
-            </div>
-
             {/* Table */}
-            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 overflow-hidden">
-                <Table<AssessmentInterface>
-                    data={filteredAssessments}
-                    isLoading={isLoading}
-                    keyExtractor={(a) => a.assessmentId}
-                    emptyStateMessage={searchQuery ? 'No assessments match your search' : 'No assessments found'}
-                    emptyStateSubMessage={searchQuery ? 'Try a different search term' : 'Create your first assessment to get started'}
-                    emptyStateIcon={<MdAssignment className="text-5xl text-muted-dark mx-auto mb-3" />}
-                    columns={[
-                        {
-                            header: 'Title',
-                            accessorKey: 'title',
-                            cellRenderer: (a) => (
-                                <div>
-                                    <p className="font-medium text-text-dark text-sm">{a.title}</p>
-                                    <p className="text-xs text-text-light mt-0.5 line-clamp-1 max-w-[250px]">{a.description}</p>
-                                </div>
-                            )
-                        },
-                        {
-                            header: 'Type',
-                            accessorKey: 'type',
-                            cellRenderer: (a) => (
-                                <div className="flex flex-wrap gap-1">
-                                    {a.type.map((t) => (
-                                        <span key={t} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${typeColors[t] || 'bg-muted-light text-text-light'}`}>
-                                            {t}
-                                        </span>
-                                    ))}
-                                </div>
-                            )
-                        },
-                        {
-                            header: 'Difficulty',
-                            accessorKey: 'difficulty',
-                            cellRenderer: (a) => (
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[a.difficulty] || 'bg-muted-light text-text-light'}`}>
-                                    {a.difficulty}
-                                </span>
-                            )
-                        },
-                        {
-                            header: 'Duration',
-                            accessorKey: 'duration',
-                            cellRenderer: (a) => (
-                                <div className="flex items-center gap-1">
-                                    <MdAccessTime className="text-text-light" />
-                                    {a.duration} min
-                                </div>
-                            )
-                        },
-                        {
-                            header: 'Marks',
-                            accessorKey: 'totalMarks',
-                        },
-                        {
-                            header: 'Questions',
-                            valueGetter: (a) => a.questions?.length || 0,
-                        },
-                        {
-                            header: 'Status',
-                            accessorKey: 'isActive',
-                            cellRenderer: (a) => (
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${a.isActive
-                                    ? 'bg-success-light/40 text-success-dark'
-                                    : 'bg-error-light/40 text-error-dark'
-                                    }`}>
-                                    {a.isActive ? 'Active' : 'Inactive'}
-                                </span>
-                            )
-                        },
-                        {
-                            header: 'Actions',
-                            cellRenderer: () => (
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        className="p-1.5 rounded-lg hover:bg-secondary-light/20 text-secondary-main transition-colors"
-                                        title="View Details"
-                                    >
-                                        <MdVisibility className="text-lg" />
-                                    </button>
-                                    <button
-                                        className="p-1.5 rounded-lg hover:bg-primary-light/10 text-primary-main transition-colors"
-                                        title="Edit"
-                                    >
-                                        <MdEdit className="text-lg" />
-                                    </button>
-                                </div>
-                            )
-                        }
-                    ]}
-                />
-            </div>
+            <AgGridTable<AssessmentInterface>
+                rowData={assessments}
+                columnDefs={columnDefs}
+            />
         </div>
     );
 };

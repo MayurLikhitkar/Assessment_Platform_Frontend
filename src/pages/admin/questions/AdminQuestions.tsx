@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-    MdSearch, MdAdd, MdDelete, MdFilterList,
-    MdClose, MdQuestionAnswer
-} from 'react-icons/md';
+import { MdAdd, MdDelete, MdClose } from 'react-icons/md';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { toast } from 'react-hot-toast';
-import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select';
 import Confirmation from '../../../components/modal/Confirmation';
 import { getQuestions, deleteQuestion } from '../../../services/axios/adminApi';
-import type { Question, ApiResponse } from '../../../types/types';
+import type { ApiResponse } from '../../../types/types';
+import type { QuestionInterface } from '../../../types/questionTypes';
 import { BsFillPatchQuestionFill } from 'react-icons/bs';
-import Table from '../../../components/ui/Table';
+import AgGridTable from '../../../components/common/AgGridTable';
 import CreateQuestionModal from './CreateQuestionModal';
 
 const typeColors: Record<string, string> = {
@@ -29,18 +26,16 @@ const difficultyColors: Record<string, string> = {
 
 const AdminQuestions: React.FC = () => {
     const queryClient = useQueryClient();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [typeFilter, setTypeFilter] = useState<string>('all');
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<QuestionInterface | null>(null);
 
     // Fetch questions
-    const { data: questionsData, isLoading } = useQuery({
+    const { data: questionsData } = useQuery({
         queryKey: ['adminQuestions'],
         queryFn: getQuestions,
     });
 
-    const questions = questionsData?.data || [];
+    const questions: QuestionInterface[] = questionsData?.data || [];
 
     // Delete mutation
     const deleteMutation = useMutation({
@@ -58,12 +53,93 @@ const AdminQuestions: React.FC = () => {
         },
     });
 
-    // Filter questions
-    const filteredQuestions = questions.filter((q: Question) => {
-        const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesType = typeFilter === 'all' || q.type === typeFilter;
-        return matchesSearch && matchesType;
-    });
+    const columnDefs = useMemo<ColDef<QuestionInterface>[]>(() => [
+        {
+            headerName: 'Question',
+            field: 'question',
+            minWidth: 250,
+            flex: 3,
+        },
+        {
+            headerName: 'Type',
+            field: 'type',
+            minWidth: 110,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const type = params.data.type;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase ${typeColors[type] || 'bg-muted-light text-text-light'}`}>
+                        {type}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Difficulty',
+            field: 'difficulty',
+            minWidth: 120,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const diff = params.data.difficulty;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[diff] || 'bg-muted-light text-text-light'}`}>
+                        {diff}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Marks',
+            field: 'marks',
+            minWidth: 80,
+            flex: 0.5,
+        },
+        {
+            headerName: 'Tags',
+            field: 'tags',
+            minWidth: 180,
+            flex: 2,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const tags = params.data.tags;
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {tags?.slice(0, 3).map((tag) => (
+                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-main">
+                                {tag}
+                            </span>
+                        ))}
+                        {(tags?.length || 0) > 3 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-light">
+                                +{(tags?.length || 0) - 3}
+                            </span>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: 'Actions',
+            minWidth: 80,
+            maxWidth: 80,
+            filter: false,
+            sortable: false,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                return (
+                    <button
+                        onClick={() => setDeleteTarget(params.data!)}
+                        className="p-1.5 rounded-lg hover:bg-error-light/20 text-error-main transition-colors"
+                        title="Delete"
+                    >
+                        <MdDelete className="text-lg" />
+                    </button>
+                );
+            },
+        },
+    ], []);
 
     return (
         <div className="space-y-6">
@@ -87,108 +163,11 @@ const AdminQuestions: React.FC = () => {
                 onClose={() => setShowCreateForm(false)}
             />
 
-            {/* Search + Filters */}
-            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                        <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light text-xl" />
-                        <Input
-                            type="text"
-                            placeholder="Search questions..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <MdFilterList className="text-text-light text-xl" />
-                        <Select
-                            id="typeFilter"
-                            name="typeFilter"
-                            value={typeFilter}
-                            placeholder="All Types"
-                            onChange={(e) => setTypeFilter(e.target.value)}
-                            options={[
-                                { label: 'All Types', value: 'all' },
-                                { label: 'MCQ', value: 'mcq' },
-                                { label: 'Coding', value: 'coding' },
-                                { label: 'Query', value: 'query' },
-                                { label: 'Subjective', value: 'subjective' },
-                            ]}
-                        />
-                    </div>
-                </div>
-            </div>
-
             {/* Questions Table */}
-            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 overflow-hidden">
-                <Table<Question>
-                    data={filteredQuestions}
-                    isLoading={isLoading}
-                    keyExtractor={(q) => q.questionId}
-                    emptyStateMessage={searchQuery || typeFilter !== 'all' ? 'No questions match your filters' : 'No questions found'}
-                    emptyStateSubMessage={searchQuery || typeFilter !== 'all' ? 'Try different search or filter' : 'Create your first question to get started'}
-                    emptyStateIcon={<MdQuestionAnswer className="text-5xl text-muted-dark mx-auto mb-3" />}
-                    columns={[
-                        {
-                            header: 'Question',
-                            accessorKey: 'question',
-                        },
-                        {
-                            header: 'Type',
-                            accessorKey: 'type',
-                            cellRenderer: (q) => (
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase ${typeColors[q.type] || 'bg-muted-light text-text-light'}`}>
-                                    {q.type}
-                                </span>
-                            )
-                        },
-                        {
-                            header: 'Difficulty',
-                            accessorKey: 'difficulty',
-                            cellRenderer: (q) => (
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[q.difficulty] || 'bg-muted-light text-text-light'}`}>
-                                    {q.difficulty}
-                                </span>
-                            )
-                        },
-                        {
-                            header: 'Marks',
-                            accessorKey: 'marks',
-                        },
-                        {
-                            header: 'Tags',
-                            accessorKey: 'tags',
-                            cellRenderer: (q) => (
-                                <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                    {q.tags?.slice(0, 3).map((tag) => (
-                                        <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-main">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                    {(q.tags?.length || 0) > 3 && (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-light">
-                                            +{(q.tags?.length || 0) - 3}
-                                        </span>
-                                    )}
-                                </div>
-                            )
-                        },
-                        {
-                            header: 'Actions',
-                            cellRenderer: (q) => (
-                                <button
-                                    onClick={() => setDeleteTarget(q)}
-                                    className="p-1.5 rounded-lg hover:bg-error-light/20 text-error-main transition-colors"
-                                    title="Delete"
-                                >
-                                    <MdDelete className="text-lg" />
-                                </button>
-                            )
-                        }
-                    ]}
-                />
-            </div>
+            <AgGridTable<QuestionInterface>
+                rowData={questions}
+                columnDefs={columnDefs}
+            />
 
             {/* Delete Confirmation Modal */}
             <Confirmation
@@ -198,7 +177,7 @@ const AdminQuestions: React.FC = () => {
                 message={`Are you sure you want to delete this question? "${deleteTarget?.question?.substring(0, 80)}${(deleteTarget?.question?.length || 0) > 80 ? '...' : ''}"`}
                 onConfirm={() => {
                     if (deleteTarget) {
-                        deleteMutation.mutate(deleteTarget.questionId);
+                        deleteMutation.mutate(deleteTarget.id);
                     }
                 }}
                 confirmText="Delete"

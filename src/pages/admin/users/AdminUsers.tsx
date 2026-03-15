@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MdSearch, MdFilterList, MdMoreVert, MdPersonAdd } from 'react-icons/md';
+import { MdPersonAdd } from 'react-icons/md';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { useAuth } from '../../../hooks/useAuth';
 import Button from '../../../components/ui/Button';
-import Input from '../../../components/ui/Input';
 import { getUsers } from '../../../services/axios/adminApi';
-import type { UserInterface } from '../../../types/types';
+import type { UserInterface } from '../../../types/authTypes';
 import CreateUserModal from './CreateUserModal';
-import Table from '../../../components/ui/Table';
+import AgGridTable from '../../../components/common/AgGridTable';
+import Search from '../../../components/ui/Search';
+import moment from 'moment';
 
 const roleBadgeStyles: Record<string, string> = {
     super_admin: 'bg-primary-light/20 text-primary-dark',
@@ -31,16 +33,110 @@ const getStatusDotColor = (status: string) => {
 };
 
 const AdminUsers: React.FC = () => {
+    const [searchText, setSearchText] = useState('');
     const { user } = useAuth();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    const { data: usersResponse, isLoading } = useQuery({
+    const { data: usersResponse } = useQuery({
         queryKey: ['adminUsers'],
         queryFn: getUsers,
         enabled: !!user,
     });
 
     const users: UserInterface[] = usersResponse?.data ?? [];
+
+    const filteredUsers = useMemo(() => {
+        if (!searchText) return users;
+        const lower = searchText.toLowerCase();
+        return users.filter((u) => {
+            const joinedDate = moment(u.createdAt).format('DD MMM, YYYY');
+            return (
+                u.id?.toString().includes(lower) ||
+                u.fullName.toLowerCase().includes(lower) ||
+                u.email.toLowerCase().includes(lower) ||
+                (u.phone ?? '').toLowerCase().includes(lower) ||
+                joinedDate.toLowerCase().includes(lower)
+            );
+        });
+    }, [searchText, users]);
+
+
+    const columnDefs = useMemo<ColDef<UserInterface>[]>(() => [
+        {
+            headerName: 'User',
+            field: 'fullName',
+            minWidth: 220,
+            flex: 2,
+            cellRenderer: (params: ICellRendererParams<UserInterface>) => {
+                if (!params.data) return null;
+                const u = params.data;
+                return (
+                    <div className="flex items-center gap-3 py-1">
+                        <div className="w-8 h-8 rounded-full bg-secondary-main/20 text-secondary-main flex items-center justify-center text-sm font-bold shrink-0">
+                            {u.fullName?.[0]?.toUpperCase() ?? '?'}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-medium text-text-dark text-sm truncate">{u.fullName}</p>
+                            <p className="text-xs text-text-light truncate">{u.email}</p>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: 'Role',
+            field: 'role',
+            minWidth: 130,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<UserInterface>) => {
+                if (!params.data) return null;
+                const role = params.data.role;
+                return (
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${roleBadgeStyles[role] ?? roleBadgeStyles.user}`}>
+                        {role?.replace('_', ' ')}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Status',
+            field: 'status',
+            minWidth: 120,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<UserInterface>) => {
+                if (!params.data) return null;
+                const status = params.data.status;
+                return (
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[status] ?? statusStyles.inactive}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(status)}`}></span>
+                        {status}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Joined',
+            field: 'createdAt',
+            minWidth: 130,
+            flex: 1,
+            valueGetter: (params) => {
+                if (!params.data?.createdAt) return '—';
+                return new Date(params.data.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            },
+        },
+        {
+            headerName: 'Last Login',
+            field: 'lastLogin',
+            minWidth: 130,
+            flex: 1,
+            valueGetter: (params) => {
+                if (!params.data?.lastLogin) return 'Never';
+                return new Date(params.data.lastLogin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            },
+        },
+    ], []);
+
+
 
     return (
         <div className="space-y-6">
@@ -64,105 +160,12 @@ const AdminUsers: React.FC = () => {
                 </Button>
             </div>
 
-            {/* Search & Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" fontSize="small" />
-                    <Input
-                        type="text"
-                        placeholder="Search users by name or email..."
-                        className="pl-10"
-                    />
-                </div>
-                <Button variant="outline" className="flex items-center gap-2">
-                    <MdFilterList fontSize="small" />
-                    Filters
-                </Button>
-            </div>
-
             {/* Users Table */}
-            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 overflow-hidden">
-                <Table<UserInterface>
-                    data={users}
-                    isLoading={isLoading}
-                    keyExtractor={(u) => u.id}
-                    emptyStateMessage="No users found"
-                    emptyStateSubMessage="Users will appear here once they register."
-                    emptyStateIcon={<MdPersonAdd className="text-4xl" />}
-                    columns={[
-                        {
-                            header: 'User',
-                            accessorKey: 'fullName',
-                            cellRenderer: (u) => (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-secondary-main/20 text-secondary-main flex items-center justify-center text-sm font-bold shrink-0">
-                                        {u.fullName?.[0]?.toUpperCase() ?? '?'}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="font-medium text-text-dark text-sm truncate">{u.fullName}</p>
-                                        <p className="text-xs text-text-light truncate">{u.email}</p>
-                                    </div>
-                                </div>
-                            ),
-                        },
-                        {
-                            header: 'Role',
-                            accessorKey: 'role',
-                            cellRenderer: (u) => (
-                                <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${roleBadgeStyles[u.role] ?? roleBadgeStyles.user}`}>
-                                    {u.role?.replace('_', ' ')}
-                                </span>
-                            ),
-                        },
-                        {
-                            header: 'Status',
-                            accessorKey: 'status',
-                            cellRenderer: (u) => (
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[u.status] ?? statusStyles.inactive}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(u.status)}`}></span>
-                                    {u.status}
-                                </span>
-                            ),
-                        },
-                        {
-                            header: 'Joined',
-                            accessorKey: 'createdAt',
-                            className: 'hidden md:table-cell',
-                            valueGetter: (u) =>
-                                u.createdAt
-                                    ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                    : '—',
-                        },
-                        {
-                            header: 'Last Login',
-                            accessorKey: 'lastLogin',
-                            className: 'hidden lg:table-cell',
-                            valueGetter: (u) =>
-                                u.lastLogin
-                                    ? new Date(u.lastLogin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                    : 'Never',
-                        },
-                        {
-                            header: 'Actions',
-                            className: 'text-right',
-                            cellRenderer: () => (
-                                <div className="text-right">
-                                    <button className="p-1.5 rounded-lg hover:bg-muted-light text-text-light hover:text-text-dark transition-colors">
-                                        <MdMoreVert fontSize="small" />
-                                    </button>
-                                </div>
-                            ),
-                        },
-                    ]}
-                />
-
-                {/* Footer */}
-                {users.length > 0 && (
-                    <div className="px-5 py-3 border-t border-border-light bg-muted-light/20 flex items-center justify-between text-sm text-text-light">
-                        <span>Showing {users.length} user{users.length === 1 ? '' : 's'}</span>
-                    </div>
-                )}
-            </div>
+            <AgGridTable<UserInterface>
+                leftSection={<Search value={searchText} onChange={(e) => setSearchText(e.target.value)} handleClear={() => setSearchText('')} />}
+                rowData={filteredUsers}
+                columnDefs={columnDefs}
+            />
 
             {/* Create User Modal */}
             <CreateUserModal

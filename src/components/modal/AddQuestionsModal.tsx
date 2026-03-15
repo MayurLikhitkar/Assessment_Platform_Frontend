@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MdSearch, MdFilterList, MdAdd } from 'react-icons/md';
+import { AgGridReact } from 'ag-grid-react';
+import type { ColDef, ICellRendererParams, GridReadyEvent, GridApi, RowClickedEvent } from 'ag-grid-community';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import Table from '../ui/Table';
+import Select from '../ui/Select';
 import { getQuestions } from '../../services/axios/adminApi';
-import type { Question } from '../../types/types';
+import type { QuestionInterface } from '../../types/questionTypes';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface AddQuestionsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAddSelected: (questions: Question[]) => void;
-    existingQuestionIds: number[];
+    onAddSelected: (questions: QuestionInterface[]) => void;
+    existingQuestionIds: string[];
 }
 
 const typeColors: Record<string, string> = {
@@ -25,7 +30,8 @@ const typeColors: Record<string, string> = {
 const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, onAddSelected, existingQuestionIds }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('all');
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const gridRef = React.useRef<GridApi<QuestionInterface> | null>(null);
 
     const { data: questionsData, isLoading } = useQuery({
         queryKey: ['adminQuestions'],
@@ -33,9 +39,9 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
         enabled: isOpen,
     });
 
-    const questions: Question[] = questionsData?.data || [];
+    const questions: QuestionInterface[] = questionsData?.data || [];
 
-    const availableQuestions = questions.filter(q => !existingQuestionIds.includes(q.questionId));
+    const availableQuestions = questions.filter(q => !existingQuestionIds.includes(q._id));
 
     const filteredQuestions = availableQuestions.filter(q => {
         const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase());
@@ -43,22 +49,87 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
         return matchesSearch && matchesType;
     });
 
-    const toggleSelection = (id: number) => {
-        const newSet = new Set(selectedIds);
-        if (newSet.has(id)) {
-            newSet.delete(id);
-        } else {
-            newSet.add(id);
-        }
-        setSelectedIds(newSet);
-    };
+    const onGridReady = useCallback((params: GridReadyEvent<QuestionInterface>) => {
+        gridRef.current = params.api;
+    }, []);
+
+    const onRowClicked = useCallback((event: RowClickedEvent<QuestionInterface>) => {
+        if (!event.data) return;
+        const id = event.data._id;
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    }, []);
 
     const handleAdd = () => {
-        const selectedQuestions = questions.filter(q => selectedIds.has(q.questionId));
+        const selectedQuestions = questions.filter(q => selectedIds.has(q._id));
         onAddSelected(selectedQuestions);
-        setSelectedIds(newSet => { newSet.clear(); return newSet; });
+        setSelectedIds(new Set());
         onClose();
     };
+
+    const columnDefs = useMemo<ColDef<QuestionInterface>[]>(() => [
+        {
+            headerName: '',
+            maxWidth: 50,
+            filter: false,
+            sortable: false,
+            headerCheckboxSelection: true,
+            checkboxSelection: true,
+        },
+        {
+            headerName: 'Question',
+            field: 'question',
+            minWidth: 250,
+            flex: 3,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                return (
+                    <div>
+                        <p className="text-sm font-medium text-text-dark line-clamp-2">{params.data.question}</p>
+                        <div className="flex gap-1 mt-1">
+                            {params.data.tags?.slice(0, 2).map((tag) => (
+                                <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: 'Type',
+            field: 'type',
+            minWidth: 100,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const type = params.data.type;
+                return (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${typeColors[type] || 'bg-muted-light text-text-main'}`}>
+                        {type}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Marks',
+            field: 'marks',
+            minWidth: 80,
+            flex: 0.5,
+        },
+    ], []);
+
+    const defaultColDef = useMemo<ColDef>(() => ({
+        filter: true,
+        sortable: true,
+        resizable: true,
+    }), []);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Add Questions from Question Bank" maxWidth="4xl">
@@ -77,88 +148,35 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                     </div>
                     <div className="flex items-center gap-2">
                         <MdFilterList className="text-text-light text-xl" />
-                        <select
+                        <Select
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
-                            className="px-3 py-2 border border-border-light rounded-lg bg-background-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-light/30"
-                        >
-                            <option value="all">All Types</option>
-                            <option value="mcq">MCQ</option>
-                            <option value="coding">Coding</option>
-                            <option value="query">Query</option>
-                            <option value="subjective">Subjective</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Questions List */}
-                <div className="border border-border-light/50 rounded-lg overflow-hidden h-[50vh] flex flex-col">
-                    <div className="overflow-y-auto custom-scrollbar flex-1 bg-background-light">
-                        <Table<Question>
-                            data={filteredQuestions}
-                            isLoading={isLoading}
-                            keyExtractor={(q) => q.questionId}
-                            emptyStateMessage="No available questions match your criteria"
-                            emptyStateSubMessage="Try adjusting your search or filters."
-                            onRowClick={(q) => toggleSelection(q.questionId)}
-                            columns={[
-                                {
-                                    header: (
-                                        <input
-                                            type="checkbox"
-                                            className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-main focus:ring-2"
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedIds(new Set(filteredQuestions.map(q => q.questionId)));
-                                                } else {
-                                                    setSelectedIds(new Set());
-                                                }
-                                            }}
-                                            checked={filteredQuestions.length > 0 && selectedIds.size === filteredQuestions.length}
-                                        />
-                                    ),
-                                    className: 'w-12 text-center',
-                                    cellRenderer: (q) => (
-                                        <div className="flex justify-center">
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 rounded border-border-light text-primary-main focus:ring-primary-main focus:ring-2 pointer-events-none"
-                                                checked={selectedIds.has(q.questionId)}
-                                                readOnly
-                                            />
-                                        </div>
-                                    )
-                                },
-                                {
-                                    header: 'Question',
-                                    accessorKey: 'question',
-                                    cellRenderer: (q) => (
-                                        <div>
-                                            <p className="text-sm font-medium text-text-dark line-clamp-2">{q.question}</p>
-                                            <div className="flex gap-1 mt-1">
-                                                {q.tags?.slice(0, 2).map((tag) => (
-                                                    <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )
-                                },
-                                {
-                                    header: 'Type',
-                                    accessorKey: 'type',
-                                    className: 'w-24',
-                                    cellRenderer: (q) => (
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${typeColors[q.type] || 'bg-muted-light text-text-main'}`}>{q.type}</span>
-                                    )
-                                },
-                                {
-                                    header: 'Marks',
-                                    accessorKey: 'marks',
-                                    className: 'w-24',
-                                }
+                            placeholder="All Types"
+                            options={[
+                                { label: 'All Types', value: 'all' },
+                                { label: 'MCQ', value: 'mcq' },
+                                { label: 'Coding', value: 'coding' },
+                                { label: 'Query', value: 'query' },
+                                { label: 'Subjective', value: 'subjective' },
                             ]}
                         />
                     </div>
+                </div>
+
+                {/* AG Grid Table */}
+                <div className="h-[50vh] border border-border-light/50 rounded-lg overflow-hidden">
+                    <AgGridReact<QuestionInterface>
+                        rowData={filteredQuestions}
+                        columnDefs={columnDefs}
+                        defaultColDef={defaultColDef}
+                        onGridReady={onGridReady}
+                        onRowClicked={onRowClicked}
+                        rowSelection="multiple"
+                        suppressRowClickSelection={false}
+                        enableCellTextSelection={true}
+                        loading={isLoading}
+                        overlayNoRowsTemplate="<span class='text-text-light'>No available questions match your criteria</span>"
+                    />
                 </div>
 
                 {/* Actions */}

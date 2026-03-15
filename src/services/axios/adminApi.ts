@@ -1,4 +1,7 @@
-import type { ApiResponse, AssessmentInterface, Question, UserInterface } from "../../types/types"
+import type { AssessmentInterface } from "../../types/assessmentTypes";
+import type { UserInterface } from "../../types/authTypes";
+import type { QuestionInterface } from "../../types/questionTypes";
+import type { ApiResponse } from "../../types/types"
 import api from "./api"
 
 export const getUsers = async () => {
@@ -11,9 +14,9 @@ export const getUsers = async () => {
     }
 }
 
-export const createUser = async (data: Partial<UserInterface> & { password?: string }) => {
+export const createUser = async (data: Partial<UserInterface>) => {
     try {
-        const response = await api.post<ApiResponse<UserInterface>>('/auth/register', data)
+        const response = await api.post<ApiResponse<UserInterface>>('/auth/addUser', data)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -49,7 +52,7 @@ export const getAdminAssessments = async () => {
 
 export const getQuestions = async () => {
     try {
-        const response = await api.get<ApiResponse<Question[]>>('/questions')
+        const response = await api.get<ApiResponse<QuestionInterface[]>>('/questions')
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -57,9 +60,9 @@ export const getQuestions = async () => {
     }
 }
 
-export const createQuestion = async (data: Partial<Question>) => {
+export const createQuestion = async (data: Partial<QuestionInterface>) => {
     try {
-        const response = await api.post<ApiResponse<Question>>('/questions', data)
+        const response = await api.post<ApiResponse<QuestionInterface>>('/questions', data)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -70,6 +73,16 @@ export const createQuestion = async (data: Partial<Question>) => {
 export const deleteQuestion = async (id: number) => {
     try {
         const response = await api.delete<ApiResponse<null>>(`/questions/${id}`)
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+}
+
+export const createAssessment = async (data: Partial<AssessmentInterface>) => {
+    try {
+        const response = await api.post<ApiResponse<AssessmentInterface>>('/assessments', data)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
