@@ -43,13 +43,12 @@ const AgGridTable = <T,>({ rowData, columnDefs, leftSection, ...props }: AgGridT
         }
     };
 
-    const onPageSizeChanged = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const onPageSizeChanged = useCallback((value: string | number) => {
         if (!gridRef.current) return;
 
-        const newSize = e.target.value;
-        const size = newSize === 'All'
+        const size = value === 'All'
             ? gridRef.current.getDisplayedRowCount()
-            : Number(newSize);
+            : Number(value);
 
         setPaginationPageSize(size);
         gridRef.current.paginationGoToPage(0);

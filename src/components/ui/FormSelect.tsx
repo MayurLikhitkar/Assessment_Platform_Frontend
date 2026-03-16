@@ -40,10 +40,12 @@ const FormSelect = <T,>({
                 options={options}
                 required={required}
                 value={formik.values[name] as string | number}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                disabled={disabled}
-                className={error ? 'focus:ring-error-main!' : ''}
+                onChange={(val) => formik.setFieldValue(name, val)} // ✅ fix 2
+                onBlur={() => formik.setFieldTouched(name, true)}
+                isDisabled={disabled}
+                classNames={{
+                    control: () => error ? 'border-error-main!' : '',
+                }}
             />
             {error && (
                 <div className="text-sm text-error-main mt-1">{helperText}</div>

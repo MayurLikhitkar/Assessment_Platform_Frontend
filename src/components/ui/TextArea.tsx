@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge'
 const TextArea: React.FC<TextareaHTMLAttributes<HTMLTextAreaElement>> = ({ className, ...props }) => {
     return (
         <textarea
-            className={twMerge("p-2 w-full rounded-lg focus:outline-none focus:ring-2 ring ring-primary-light/60 text-text-main", className)}
+            className={twMerge("p-2 w-full rounded-lg focus:outline-none focus:ring-2 ring ring-primary-dark/40 text-text-main", className)}
             {...props}
         />
     )

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MdAdd, MdDelete, MdClose } from 'react-icons/md';
+import { MdAdd, MdDelete } from 'react-icons/md';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { toast } from 'react-hot-toast';
 import Confirmation from '../../../components/modal/Confirmation';
@@ -10,6 +10,7 @@ import type { QuestionInterface } from '../../../types/questionTypes';
 import { BsFillPatchQuestionFill } from 'react-icons/bs';
 import AgGridTable from '../../../components/common/AgGridTable';
 import CreateQuestionModal from './CreateQuestionModal';
+import Button from '../../../components/ui/Button';
 
 const typeColors: Record<string, string> = {
     mcq: 'bg-secondary-light/20 text-secondary-dark',
@@ -149,13 +150,14 @@ const AdminQuestions: React.FC = () => {
                     <h1 className="text-3xl font-bold text-text-dark">Question Bank</h1>
                     <p className="text-text-light mt-1">Create, manage, and organize questions</p>
                 </div>
-                <button
-                    className="flex items-center gap-2 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
-                    onClick={() => setShowCreateForm(!showCreateForm)}
+                <Button
+                    variant="primary"
+                    onClick={() => setShowCreateForm(true)}
+                    className="flex items-center gap-2 shadow-sm"
                 >
-                    {showCreateForm ? <MdClose className="text-xl" /> : <MdAdd className="text-xl" />}
-                    {showCreateForm ? 'Cancel' : 'Create Question'}
-                </button>
+                    <MdAdd className="text-xl" />
+                    Add Question
+                </Button>
             </div>
 
             <CreateQuestionModal

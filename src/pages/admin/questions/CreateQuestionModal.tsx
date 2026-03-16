@@ -19,25 +19,12 @@ interface CreateQuestionModalProps {
     onClose: () => void;
 }
 
-
-const emptyQuestion: Partial<QuestionInterface> = {
-    type: QuestionType.MCQ,
-    question: '',
-    marks: 1,
-    difficulty: Difficulty.EASY,
-    tags: [],
-    options: [
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-    ],
-};
-
 const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClose }) => {
     const queryClient = useQueryClient();
     const [tagInput, setTagInput] = useState('');
 
     const createMutation = useMutation({
-        mutationFn: (data: Partial<QuestionInterface>) => createQuestion(data),
+        mutationFn: createQuestion,
         onSuccess: (data) => {
             if (data?.success) {
                 toast.success(data.responseMessage || 'Question created successfully');
@@ -51,24 +38,18 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
     });
 
     const formik = useFormik<Partial<QuestionInterface>>({
-        initialValues: emptyQuestion,
+        initialValues: {
+            type: QuestionType.MCQ,
+            question: '',
+            marks: 1,
+            difficulty: Difficulty.EASY,
+            tags: [],
+            options: [
+                { text: '', isCorrect: false },
+                { text: '', isCorrect: false },
+            ],
+        },
         onSubmit: (values) => {
-            if (!values.question?.trim()) {
-                toast.error('Question text is required');
-                return;
-            }
-            if (values.type === 'mcq') {
-                const hasCorrect = values.options?.some(o => o.isCorrect);
-                if (!hasCorrect) {
-                    toast.error('At least one option must be marked as correct');
-                    return;
-                }
-                const hasEmpty = values.options?.some(o => !o.text.trim());
-                if (hasEmpty) {
-                    toast.error('All options must have text');
-                    return;
-                }
-            }
             createMutation.mutate(values);
         }
     });
@@ -84,6 +65,13 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
         if (tag && !formik.values.tags?.includes(tag)) {
             formik.setFieldValue('tags', [...(formik.values.tags || []), tag]);
             setTagInput('');
+        }
+    };
+
+    const handleTagKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleAddTag();
         }
     };
 
@@ -163,7 +151,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                 />
 
                 {/* MCQ Options */}
-                {formik.values.type === 'mcq' && (
+                {formik.values.type === QuestionType.MCQ && (
                     <div>
                         <label className="block text-sm font-medium text-text-main mb-2">Options</label>
                         <div className="space-y-2">
@@ -185,49 +173,47 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                                         placeholder={`Option ${index + 1}`}
                                     />
                                     {(formik.values.options?.length || 0) > 2 && (
-                                        <button
-                                            type="button"
+                                        <Button
                                             onClick={() => handleRemoveOption(index)}
-                                            className="p-1.5 text-error-main hover:bg-error-light/20 rounded-lg transition-colors"
+                                            variant='icon' className='!text-error-main hover:bg-error-light/50'
                                         >
                                             <MdClose className="text-lg" />
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                             ))}
                         </div>
-                        <button
-                            type="button"
+                        <Button
+                            variant='text'
                             onClick={handleAddOption}
-                            className="mt-2 text-sm text-primary-main hover:underline font-medium flex items-center gap-1"
                         >
                             <MdAdd /> Add Option
-                        </button>
+                        </Button>
                     </div>
                 )}
 
                 {/* Tags */}
                 <div>
-                    <label htmlFor="tag-input" className="block text-sm font-medium text-text-main mb-1">Tags</label>
+                    <label htmlFor="tag-input" className="mb-2 block text-base font-medium text-text-main">Tags</label>
                     <div className="flex gap-2 items-center">
                         <Input
                             id="tag-input"
                             type="text"
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-                            placeholder="Add a tag and press Enter"
+                            onKeyDown={handleTagKeyDown}
+                            placeholder="Add a tag and press Enter or click Add"
                         />
-                        <Button type="button" variant="primary" size="sm" onClick={handleAddTag} disabled={!tagInput.trim()}>
+                        <Button variant="primary" size="sm" onClick={handleAddTag} disabled={!tagInput.trim()}>
                             Add
                         </Button>
                     </div>
                     {formik.values.tags && formik.values.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                             {formik.values.tags.map((tag) => (
-                                <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-dark">
+                                <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-primary-light/20 text-text-light">
                                     {tag}
-                                    <MdClose className="cursor-pointer hover:text-error-main" onClick={() => handleRemoveTag(tag)} />
+                                    <MdClose className="text-base cursor-pointer hover:text-error-main" onClick={() => handleRemoveTag(tag)} />
                                 </span>
                             ))}
                         </div>

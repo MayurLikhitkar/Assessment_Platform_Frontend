@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave } from 'react-icons/md';
+import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave, MdClose } from 'react-icons/md';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
@@ -355,7 +355,6 @@ const Profile: React.FC = () => {
                                                     />
                                                     {editMode && (
                                                         <Button
-                                                            type="button"
                                                             onClick={handleAddSkill}
                                                             variant="primary"
                                                             size="md"
@@ -367,9 +366,9 @@ const Profile: React.FC = () => {
                                                 </div>
                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                     {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill, index) => (
-                                                        <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium border border-primary-light/50 text-text-dark">
-                                                            <MdCancel className="cursor-pointer text-error-dark text-base hover:text-error-main" onClick={() => handleRemoveSkill(skill)} />
+                                                        <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium border border-primary-light/50 text-text-light">
                                                             {skill}
+                                                            <MdClose className="text-base cursor-pointer hover:text-error-main" onClick={() => handleRemoveSkill(skill)} />
                                                         </span>
                                                     ))}
                                                 </div>
