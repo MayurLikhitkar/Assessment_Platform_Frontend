@@ -365,10 +365,10 @@ const Profile: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <div className="flex flex-wrap gap-2 mt-2">
-                                                    {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill, index) => (
-                                                        <span key={index + 1} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium border border-primary-light/50 text-text-light">
+                                                    {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill) => (
+                                                        <span key={skill} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-primary-light/20 text-text-main">
                                                             {skill}
-                                                            <MdClose className="text-base cursor-pointer hover:text-error-main" onClick={() => handleRemoveSkill(skill)} />
+                                                            <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveSkill(skill)} />
                                                         </span>
                                                     ))}
                                                 </div>
