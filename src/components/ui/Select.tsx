@@ -1,7 +1,5 @@
 import ReactSelect, {
-    type ClassNamesConfig,
-    type GroupBase,
-    type Props as ReactSelectProps,
+    type ClassNamesConfig, type GroupBase, type Props as ReactSelectProps,
 } from 'react-select';
 import { twMerge } from 'tailwind-merge';
 
@@ -15,7 +13,6 @@ interface SelectProps extends Omit<ReactSelectProps<Option, false, GroupBase<Opt
     options: Option[];
     placeholder?: string;
     onChange?: (value: string | number) => void;
-    className?: string;
 }
 
 const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
@@ -51,12 +48,13 @@ const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
     // menuPortal: () => 'z-[999]',
 };
 
-const Select: React.FC<SelectProps> = ({ value, placeholder, className, options, onChange, classNames: extraClassNames, ...rest }) => {
+const Select: React.FC<SelectProps> = ({ value, id, placeholder, className, options, onChange, classNames: extraClassNames, ...rest }) => {
     return (
         <ReactSelect
+            inputId={id}
             unstyled
             value={options.find((opt) => opt.value === value) ?? null}
-            options={options}
+            options={options}   
             placeholder={placeholder}
             classNames={{
                 ...baseClassNames,

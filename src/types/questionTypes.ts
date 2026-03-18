@@ -87,3 +87,27 @@ export interface QuestionInterface {
     expectedKeywords?: string[];
     evaluationRubric?: EvaluationRubric[];
 }
+
+export interface TestCaseFormValue {
+    input: string;
+    expectedOutput: string;
+    isPublic: boolean;
+    points: number;
+}
+
+export interface RubricFormValue {
+    criteria: string;
+    maxScore: number;
+    description: string;
+}
+
+export interface StarterCodeEntry {
+    language: ProgrammingLanguage;
+    code: string;
+}
+
+export interface CreateQuestionFormValues extends Omit<QuestionInterface, 'starterCode' | 'testCases' | 'evaluationRubric'> {
+    starterCode: StarterCodeEntry[];
+    testCases: TestCaseFormValue[];
+    evaluationRubric: RubricFormValue[];
+}

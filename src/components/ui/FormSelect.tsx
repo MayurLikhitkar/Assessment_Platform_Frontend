@@ -1,16 +1,22 @@
 import Select from './Select';
 import type { FormikProps } from 'formik';
+import {
+    type GroupBase, type Props as ReactSelectProps,
+} from 'react-select';
+import Label from './Label';
 
-interface FormSelectProps<T> {
+type Option = {
+    label: string;
+    value: string | number;
+};
+
+interface FormSelectProps<T> extends Omit<ReactSelectProps<Option, false, GroupBase<Option>>, 'value' | 'onChange'> {
     label: string
     name: keyof T & string,
-    id: string,
-    placeholder: string,
+    placeholder?: string,
     formik: FormikProps<T>,
-    options: { label: string, value: string | number }[],
-    required?: boolean
+    options: Option[],
     disabled?: boolean
-    className?: string;
     withLabel?: boolean;
 }
 
@@ -24,7 +30,8 @@ const FormSelect = <T,>({
     formik,
     withLabel = true,
     required = false,
-    disabled = false
+    disabled = false,
+    ...rest
 }: FormSelectProps<T>) => {
     const error = formik.touched[name] && Boolean(formik.errors[name]);
     const helperText = formik.touched[name] && typeof formik.errors[name] === 'string'
@@ -32,13 +39,14 @@ const FormSelect = <T,>({
 
     return (
         <div className={className}>
-            {withLabel && (<label className="w-full inline-block text-base font-medium text-text-main mb-2" htmlFor={id}>{label} {required ? <span className='text-error-main'>*</span> : <></>}</label>)}
+            {withLabel && (
+                <Label htmlFor={id} label={label} required={required} />
+            )}
             <Select
                 id={id}
                 name={name}
                 placeholder={placeholder}
                 options={options}
-                required={required}
                 value={formik.values[name] as string | number}
                 onChange={(val) => formik.setFieldValue(name, val)} // ✅ fix 2
                 onBlur={() => formik.setFieldTouched(name, true)}
@@ -46,6 +54,7 @@ const FormSelect = <T,>({
                 classNames={{
                     control: () => error ? 'border-error-main!' : '',
                 }}
+                {...rest}
             />
             {error && (
                 <div className="text-sm text-error-main mt-1">{helperText}</div>
