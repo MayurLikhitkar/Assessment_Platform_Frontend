@@ -4,8 +4,6 @@ import { useFormik } from 'formik';
 import { toast } from 'react-hot-toast';
 import { MdClose, MdAdd } from 'react-icons/md';
 import * as Yup from 'yup';
-
-import Modal from '../../../components/ui/Modal';
 import FormInput from '../../../components/ui/FormInput';
 import FormSelect from '../../../components/ui/FormSelect';
 import FormTextArea from '../../../components/ui/FormTextArea';
@@ -16,11 +14,7 @@ import { createQuestion } from '../../../services/axios/adminApi';
 import type { ApiResponse } from '../../../types/types';
 import { QuestionType, Difficulty, DatabaseType } from '../../../types/questionTypes';
 import type { QuestionInterface } from '../../../types/questionTypes';
-
-interface CreateQuestionModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
+import BackButton from '../../../components/common/BackButton';
 
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
@@ -39,6 +33,7 @@ const questionValidationSchema = Yup.object().shape({
         .required('Marks are required'),
     negativeMarks: Yup.number()
         .min(0, 'Cannot be negative')
+        .max(Yup.ref('marks'), 'Negative marks cannot exceed total marks')
         .default(0),
     difficulty: Yup.string()
         .oneOf(Object.values(Difficulty), 'Invalid difficulty')
@@ -88,14 +83,19 @@ const questionValidationSchema = Yup.object().shape({
     }),
 
     // --- CODING Validation ---
-    timeLimitInSeconds: Yup.number().when('type', {
+    timeLimitInMinutes: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.min(1).required('Time limit is required'),
+        then: (schema) => schema.min(5).max(180).required('Time limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     memoryLimitInMB: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.min(1).required('Memory limit is required'),
+        then: (schema) => schema.min(256).max(1024).required('Memory limit is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    constraints: Yup.string().when('type', {
+        is: QuestionType.CODING,
+        then: (schema) => schema.max(2000, 'Constraints too long'),
         otherwise: (schema) => schema.notRequired(),
     }),
     testCases: Yup.array().when('type', {
@@ -104,7 +104,8 @@ const questionValidationSchema = Yup.object().shape({
             Yup.object().shape({
                 input: Yup.string().required('Input is required'),
                 expectedOutput: Yup.string().required('Expected output is required'),
-                points: Yup.number().min(0).required('Points required')
+                points: Yup.number().min(0).required('Points required'),
+                isPublic: Yup.boolean().default(false)
             })
         ).min(1, 'At least one test case is required'),
         otherwise: (schema) => schema.notRequired(),
@@ -116,6 +117,11 @@ const questionValidationSchema = Yup.object().shape({
         then: (schema) => schema.required('Database type is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
+    databaseSchema: Yup.string().when('type', {
+        is: QuestionType.QUERY,
+        then: (schema) => schema.required('Database schema is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
     expectedQuery: Yup.string().when('type', {
         is: QuestionType.QUERY,
         then: (schema) => schema.required('Expected query is required'),
@@ -123,14 +129,19 @@ const questionValidationSchema = Yup.object().shape({
     }),
 
     // --- SUBJECTIVE Validation ---
+    minLength: Yup.number().when('type', {
+        is: QuestionType.SUBJECTIVE,
+        then: (schema) => schema.min(1).required('Min length is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
     maxLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.min(10).required('Max length is required'),
+        then: (schema) => schema.min(Yup.ref('minLength'), 'Max length must be >= min length').required('Max length is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
 });
 
-const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClose }) => {
+const CreateQuestion: React.FC = () => {
     const queryClient = useQueryClient();
     const [tagInput, setTagInput] = useState('');
     const [hintInput, setHintInput] = useState('');
@@ -159,15 +170,13 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
             tags: [],
             hints: [],
             explanation: '',
-            allowMultiple: false,
             options: [
                 // { text: '', isCorrect: false },
                 // { text: '', isCorrect: false }
             ],
-            timeLimitInSeconds: 2,
+            timeLimitInMinutes: 5,
             memoryLimitInMB: 256,
             testCases: [],
-            evaluationRubric: [],
             databaseType: DatabaseType.POSTGRESQL,
         },
         validationSchema: questionValidationSchema,
@@ -178,7 +187,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
             if (payload.type !== QuestionType.MCQ) delete payload.options;
             if (payload.type !== QuestionType.CODING) {
                 delete payload.testCases;
-                delete payload.timeLimitInSeconds;
+                delete payload.timeLimitInMinutes;
                 delete payload.memoryLimitInMB;
                 delete payload.constraints;
             }
@@ -188,7 +197,6 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                 delete payload.databaseSchema;
             }
             if (payload.type !== QuestionType.SUBJECTIVE) {
-                delete payload.evaluationRubric;
                 delete payload.maxLength;
                 delete payload.minLength;
             }
@@ -201,7 +209,6 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
         formik.resetForm();
         setTagInput('');
         setHintInput('');
-        onClose();
     };
 
     // --- Tag & Hint Handlers ---
@@ -213,6 +220,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
             setInput('');
         }
     };
+
     const handleRemoveItem = (item: string, field: 'tags' | 'hints') => {
         formik.setFieldValue(field, formik.values[field]?.filter(t => t !== item));
     };
@@ -221,6 +229,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
     const updateDynamicList = (field: string, index: number, key: string, value: number | string | boolean) => {
         formik.setFieldValue(`${field}[${index}].${key}`, value);
     };
+
     const removeDynamicItem = (field: keyof QuestionInterface, index: number) => {
         const list = formik.values[field];
         if (Array.isArray(list)) {
@@ -229,75 +238,77 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="New Question" maxWidth="4xl">
-            <form onSubmit={formik.handleSubmit} className="space-y-6 pt-2">
+        <div className="space-y-8 max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+            {/* Header */}
+            <div className="flex items-center gap-4 border-b pb-4">
+                <BackButton />
+                <div>
+                    <h1 className="text-2xl font-semibold text-gray-800">Create Question</h1>
+                    <p className="text-sm text-gray-500">Fill in the details to create a new question</p>
+                </div>
+            </div>
 
-                {/* --- BASE QUESTION DETAILS --- */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <form onSubmit={formik.handleSubmit} className="space-y-6">
+                {/* Base Question Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <FormSelect
                         id="type"
                         name="type"
-                        label="Type"
-                        options={Object.values(QuestionType).map(t => ({ label: t.toUpperCase(), value: t }))}
+                        label="Question Type"
+                        options={Object.values(QuestionType).map(t => ({ label: t.toUpperCase(), value: t }))
+                        }
                         formik={formik}
                         required
                     />
                     <FormSelect
                         id="difficulty"
                         name="difficulty"
-                        label="Difficulty"
-                        options={Object.values(Difficulty).map(d => ({ label: d.toUpperCase(), value: d }))}
+                        label="Difficulty Level"
+                        options={Object.values(Difficulty).map(d => ({ label: d.toUpperCase(), value: d }))
+                        }
                         formik={formik}
                         required
                     />
-                    <FormInput id="marks" name="marks" label="Marks (+)" type="number" min={1} formik={formik} required />
-                    <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks (-)" type="number" min={0} step={0.5} formik={formik} />
+                    <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
+                    <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
                 </div>
 
-                <FormTextArea id="question" name="question" label="Question Text" rows={3} formik={formik} placeholder='Enter question text here...' required />
-                <FormTextArea id="explanation" name="explanation" label="Explanation (shown after evaluation)" rows={2} formik={formik} placeholder='Enter explanation here...' />
+                <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
+                <FormTextArea id="explanation" name="explanation" label="Explanation" rows={3} formik={formik} placeholder="Provide an explanation (optional)" />
 
-                {/* --- CONDITIONAL: MCQ --- */}
+                {/* Conditional Sections */}
                 {formik.values.type === QuestionType.MCQ && (
                     <div className="bg-background-alt p-4 rounded-lg border border-border-light">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="font-semibold text-text-main">MCQ Options</h3>
-                            <label className="flex items-center gap-2 text-sm text-text-light cursor-pointer">
-                                <Input
-                                    type="checkbox"
-                                    checked={formik.values.allowMultiple}
-                                    onChange={(e) => formik.setFieldValue('allowMultiple', e.target.checked)}
-                                />
-                                Allow Multiple Answers
-                            </label>
+                            <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('options', [...(formik.values.options || []), { text: '', isCorrect: false }])}>
+                                <MdAdd className='text-xl' /> Add Option
+                            </Button>
                         </div>
                         <div className="space-y-3">
-                            {formik.values.options?.map((option, index) => (
-                                <div key={index} className="flex items-start gap-3">
+                            {formik.values.options && formik.values.options.length > 0 ? formik.values.options.map((option, index) => (
+                                <div key={index} className="flex items-center gap-3">
                                     <Input
                                         type="checkbox"
                                         checked={option.isCorrect}
                                         onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
-                                        className="mt-3 cursor-pointer"
+                                        className="cursor-pointer"
                                     />
-                                    <div className="w-full">
-                                        <Input
-                                            type="text"
-                                            value={option.text}
-                                            onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
-                                            placeholder={`Option ${index + 1}`}
-                                        />
-                                    </div>
-                                    <Button type="button" variant='icon' className='text-error-main mt-1' onClick={() => removeDynamicItem('options', index)}>
+                                    <Input
+                                        type="text"
+                                        value={option.text}
+                                        onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
+                                        placeholder={`Option ${index + 1}`}
+                                    />
+                                    <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('options', index)}>
                                         <MdClose className="text-xl" />
                                     </Button>
                                 </div>
-                            ))}
+                            )) :
+                                <div className="text-sm text-text-light/80">No options added yet</div>
+                            }
                         </div>
                         {typeof formik.errors.options === 'string' && <div className="text-sm text-error-main mt-2">{formik.errors.options}</div>}
-                        <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('options', [...(formik.values.options || []), { text: '', isCorrect: false }])}>
-                            <MdAdd /> Add Option
-                        </Button>
                     </div>
                 )}
 
@@ -306,10 +317,10 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                     <div className="bg-background-alt p-4 rounded-lg border border-border-light space-y-4">
                         <h3 className="font-semibold text-text-main mb-2">Coding Environment Specs</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <FormInput id="timeLimitInSeconds" name="timeLimitInSeconds" label="Time Limit (Seconds)" type="number" formik={formik} />
+                            <FormInput id="timeLimitInMinutes" name="timeLimitInMinutes" label="Time Limit (Minutes)" type="number" formik={formik} />
                             <FormInput id="memoryLimitInMB" name="memoryLimitInMB" label="Memory Limit (MB)" type="number" formik={formik} />
                         </div>
-                        <FormTextArea id="constraints" name="constraints" label="Constraints" rows={2} formik={formik} />
+                        <FormTextArea id="constraints" name="constraints" label="Constraints" placeholder='Enter constraints (e.g. 1 <= N <= 10^5)' rows={2} formik={formik} />
 
                         <div className="mt-4">
                             <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
@@ -365,28 +376,6 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                             <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" formik={formik} />
                             <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" formik={formik} />
                         </div>
-                        <div className="mt-4">
-                            <h4 className="font-semibold text-text-main mb-2">Evaluation Rubric</h4>
-                            <div className="space-y-3">
-                                {formik.values.evaluationRubric?.map((rubric, index) => (
-                                    <div key={index} className="flex gap-3 items-start border p-3 rounded-md bg-background-main">
-                                        <div className="flex-1 space-y-2">
-                                            <Input type="text" placeholder="Criteria (e.g. Code Readability)" value={rubric.criteria} onChange={(e) => updateDynamicList('evaluationRubric', index, 'criteria', e.target.value)} />
-                                            <Input type="text" placeholder="Description" value={rubric.description} onChange={(e) => updateDynamicList('evaluationRubric', index, 'description', e.target.value)} />
-                                        </div>
-                                        <div className="w-24">
-                                            <Input type="number" placeholder="Max Score" value={rubric.maxScore} onChange={(e) => updateDynamicList('evaluationRubric', index, 'maxScore', Number(e.target.value))} />
-                                        </div>
-                                        <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('evaluationRubric', index)}>
-                                            <MdClose className="text-xl" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('evaluationRubric', [...(formik.values.evaluationRubric || []), { criteria: '', maxScore: 5, description: '' }])}>
-                                <MdAdd /> Add Rubric Item
-                            </Button>
-                        </div>
                     </div>
                 )}
 
@@ -420,9 +409,6 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
                             {formik.values.hints?.map((hint) => (
-                                // <span key={hint} className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-secondary-light/20 text-secondary-main">
-                                //     {hint} <MdClose className="cursor-pointer hover:text-error-main" onClick={() => handleRemoveItem(hint, 'hints')} />
-                                // </span>
                                 <span key={hint} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-main">
                                     {hint}
                                     <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(hint, 'hints')}
@@ -441,8 +427,8 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({ isOpen, onClo
                     </Button>
                 </div>
             </form>
-        </Modal>
+        </div>
     );
 };
 
-export default CreateQuestionModal;
+export default CreateQuestion;

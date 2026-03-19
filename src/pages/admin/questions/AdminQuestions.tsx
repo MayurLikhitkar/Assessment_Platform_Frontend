@@ -9,8 +9,8 @@ import type { ApiResponse } from '../../../types/types';
 import type { QuestionInterface } from '../../../types/questionTypes';
 import { BsFillPatchQuestionFill } from 'react-icons/bs';
 import AgGridTable from '../../../components/common/AgGridTable';
-import CreateQuestionModal from './CreateQuestionModal';
 import Button from '../../../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 const typeColors: Record<string, string> = {
     mcq: 'bg-secondary-light/20 text-secondary-dark',
@@ -26,8 +26,8 @@ const difficultyColors: Record<string, string> = {
 };
 
 const AdminQuestions: React.FC = () => {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [showCreateForm, setShowCreateForm] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<QuestionInterface | null>(null);
 
     // Fetch questions
@@ -152,18 +152,13 @@ const AdminQuestions: React.FC = () => {
                 </div>
                 <Button
                     variant="primary"
-                    onClick={() => setShowCreateForm(true)}
+                    onClick={() => navigate('/admin/questions/create')}
                     className="flex items-center gap-2 shadow-sm"
                 >
                     <MdAdd className="text-xl" />
                     Add Question
                 </Button>
             </div>
-
-            <CreateQuestionModal
-                isOpen={showCreateForm}
-                onClose={() => setShowCreateForm(false)}
-            />
 
             {/* Questions Table */}
             <AgGridTable<QuestionInterface>

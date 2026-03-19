@@ -64,7 +64,6 @@ export interface QuestionInterface {
 
     // Type-specific fields (using discriminators or union types)
     options?: Option[];
-    allowMultiple: boolean;
     negativeMarks: number;
     explanation: string;
 
@@ -74,7 +73,7 @@ export interface QuestionInterface {
     testCases?: TestCase[];
     constraints?: string;
     hints?: string[];
-    timeLimitInSeconds: number; // in seconds
+    timeLimitInMinutes: number; // in minutes
     memoryLimitInMB: number; // in MB
 
     databaseType?: DatabaseType;
