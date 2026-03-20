@@ -24,16 +24,14 @@ const AdminLayout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background-main text-text-main">
+        <div className="flex h-screen bg-background-main text-text-main">
             <Navbar onMenuClick={() => setMobileOpen(!mobileOpen)} />
-            <div className="flex">
-                <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-                <main className='lg:w-[80%] w-full'>
-                    <Container>
-                        <Outlet />
-                    </Container>
-                </main>
-            </div>
+            <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+            <main className='lg:w-[80%] w-full h-full overflow-y-auto'>
+                <Container>
+                    <Outlet />
+                </Container>
+            </main>
         </div>
     );
 };

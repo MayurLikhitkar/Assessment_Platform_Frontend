@@ -15,6 +15,7 @@ import type { ApiResponse } from '../../../types/types';
 import { QuestionType, Difficulty, DatabaseType } from '../../../types/questionTypes';
 import type { QuestionInterface } from '../../../types/questionTypes';
 import BackButton from '../../../components/common/BackButton';
+import Page from '../../../components/ui/Page';
 
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
@@ -238,10 +239,10 @@ const CreateQuestion: React.FC = () => {
     };
 
     return (
-        <div className="space-y-8 max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+        <Page>
             {/* Header */}
             <div className="flex items-center gap-4 border-b pb-4">
-                <BackButton />
+                <BackButton variant='outline' />
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-800">Create Question</h1>
                     <p className="text-sm text-gray-500">Fill in the details to create a new question</p>
@@ -427,7 +428,7 @@ const CreateQuestion: React.FC = () => {
                     </Button>
                 </div>
             </form>
-        </div>
+        </Page>
     );
 };
 

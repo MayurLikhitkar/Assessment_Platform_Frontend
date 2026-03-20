@@ -17,6 +17,7 @@ import Confirmation from '../../../components/modal/Confirmation';
 import { BsFillPatchQuestionFill } from "react-icons/bs";
 import InfoField from '../../../components/ui/InfoField';
 import Label from '../../../components/ui/Label';
+import Page from '../../../components/ui/Page';
 
 const ProfileSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -150,7 +151,7 @@ const Profile: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <Page>
             {/* Header */}
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-text-dark">
@@ -517,7 +518,7 @@ const Profile: React.FC = () => {
                 message='Are you sure you want to enable Two-Factor Authentication? This will add an extra layer of security to your account by requiring a verification code in addition to your password.'
                 onConfirm={() => { setModal(false); toast.success('2FA Setup initiated'); }}
             />
-        </div>
+        </Page>
     );
 };
 

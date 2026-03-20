@@ -42,37 +42,35 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     const navItems = isUserAdmin ? adminNavItems : userNavItems;
 
     const drawerContent = (
-        <div className="h-full flex flex-col bg-background-light">
-            <div className="p-4">
-                <div className="mb-4 px-2">
-                    <h3 className="text-xs font-bold text-text-light uppercase tracking-wider">
-                        {isUserAdmin ? 'Admin Panel' : 'User Menu'}
-                    </h3>
-                </div>
-                <nav className="space-y-1">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) =>
-                                `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1 ${isActive
-                                    ? 'bg-primary-light/10 text-primary-main'
-                                    : 'text-text-main hover:bg-muted-light'
-                                }`
-                            }
-                            onClick={onClose}
-                        >
-                            <span className="mr-3">{item.icon}</span>
-                            {item.label}
-                        </NavLink>
-                    ))}
-                </nav>
+        <div className="h-full flex flex-col p-4">
+            <div className="mb-4 px-2">
+                <h3 className="text-xs font-bold text-text-light uppercase tracking-wider">
+                    {isUserAdmin ? 'Admin Panel' : 'User Menu'}
+                </h3>
             </div>
+            <nav className="space-y-1">
+                {navItems.map((item) => (
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className={({ isActive }) =>
+                            `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1 ${isActive
+                                ? 'bg-primary-light/10 text-primary-main'
+                                : 'text-text-main hover:bg-muted-light'
+                            }`
+                        }
+                        onClick={onClose}
+                    >
+                        <span className="mr-3">{item.icon}</span>
+                        {item.label}
+                    </NavLink>
+                ))}
+            </nav>
         </div>
     );
 
     return (
-        <aside className='hidden lg:block w-[20%]'>
+        <div className='hidden lg:block w-[20%] h-full! overflow-y-auto'>
             {/* Mobile Drawer */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
@@ -89,10 +87,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
             )}
 
             {/* Desktop Sidebar */}
-            <div className="h-full! bg-background-light border-r border-border-light">
+            <aside className="h-full! bg-background-light border-r border-border-light">
                 {drawerContent}
-            </div>
-        </aside>
+            </aside>
+        </div>
     );
 };
 
