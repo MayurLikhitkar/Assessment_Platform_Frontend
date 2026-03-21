@@ -67,7 +67,7 @@ const BackButton: React.FC<BackButtonProps> = ({
         >
             {/* The Arrow Icon with a slide animation on hover */}
             <MdKeyboardBackspace
-                className={`${iconSize} transition-transform duration-200 group-hover:-translate-x-1`}
+                className={`${iconSize} transition-transform duration-200 group-hover:scale-120`}
             />
 
             {/* Conditional Label Rendering */}

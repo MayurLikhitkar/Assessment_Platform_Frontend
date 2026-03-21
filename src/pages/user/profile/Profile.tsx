@@ -17,7 +17,7 @@ import Confirmation from '../../../components/modal/Confirmation';
 import { BsFillPatchQuestionFill } from "react-icons/bs";
 import InfoField from '../../../components/ui/InfoField';
 import Label from '../../../components/ui/Label';
-import Page from '../../../components/ui/Page';
+import { Page } from '../../../components/ui/Page';
 
 const ProfileSchema = Yup.object().shape({
     fullName: Yup.string()

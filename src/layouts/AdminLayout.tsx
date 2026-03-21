@@ -3,7 +3,6 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
-import Container from '../components/common/Container';
 import PageLoader from '../components/common/PageLoader';
 
 const AdminLayout = () => {
@@ -24,14 +23,14 @@ const AdminLayout = () => {
     }
 
     return (
-        <div className="flex h-screen bg-background-main text-text-main">
+        <div className="h-screen flex flex-col bg-background-main text-text-main">
             <Navbar onMenuClick={() => setMobileOpen(!mobileOpen)} />
-            <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-            <main className='lg:w-[80%] w-full h-full overflow-y-auto'>
-                <Container>
+            <div className='flex flex-1 overflow-hidden'>
+                <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+                <main className='flex-1 overflow-y-auto'>
                     <Outlet />
-                </Container>
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

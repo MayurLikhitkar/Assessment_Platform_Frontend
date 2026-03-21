@@ -25,14 +25,16 @@ const MainLayout = () => {
     }
 
     return (
-        <div className="flex h-screen bg-background-main text-text-main">
+        <div className="h-screen flex flex-col bg-background-main text-text-main">
             <Navbar onMenuClick={() => setMobileOpen(!mobileOpen)} />
-            <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-            <main className='lg:w-[80%] w-full h-full overflow-y-auto'>
-                <Container>
-                    <Outlet />
-                </Container>
-            </main>
+            <div className='flex flex-1 overflow-hidden'>
+                <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+                <main className='flex-1 overflow-y-auto'>
+                    <Container>
+                        <Outlet />
+                    </Container>
+                </main>
+            </div>
         </div>
     );
 };

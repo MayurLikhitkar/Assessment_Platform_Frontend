@@ -56,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
     return (
         <header className="sticky top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-border-light transition-all duration-200">
-            <div className="px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between w-full">
+            <div className="px-4 py-3 sm:px-6 lg:px-8 flex items-center justify-between w-full">
                 {/* Left side - Logo and Brand */}
                 <div className="flex items-center gap-4 sm:gap-8">
                     <button

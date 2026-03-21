@@ -15,8 +15,7 @@ import type { ApiResponse } from '../../../types/types';
 import { QuestionType, Difficulty, DatabaseType } from '../../../types/questionTypes';
 import type { QuestionInterface } from '../../../types/questionTypes';
 import BackButton from '../../../components/common/BackButton';
-import Page from '../../../components/ui/Page';
-
+import { Page } from '../../../components/ui/Page';
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
     type: Yup.string()
@@ -28,11 +27,13 @@ const questionValidationSchema = Yup.object().shape({
         .max(1000, 'Question must not exceed 1000 characters')
         .required('Question is required'),
     marks: Yup.number()
+        .typeError('Marks must be a number')
         .min(1, 'Marks must be at least 1')
         .max(100, 'Marks must not exceed 100')
         .integer('Marks must be a whole number')
         .required('Marks are required'),
     negativeMarks: Yup.number()
+        .typeError('Negative marks must be a number')
         .min(0, 'Cannot be negative')
         .max(Yup.ref('marks'), 'Negative marks cannot exceed total marks')
         .default(0),
@@ -86,12 +87,12 @@ const questionValidationSchema = Yup.object().shape({
     // --- CODING Validation ---
     timeLimitInMinutes: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.min(5).max(180).required('Time limit is required'),
+        then: (schema) => schema.typeError('Must be a number').min(5, 'Minimum 5 minutes').max(180, 'Maximum 180 minutes').required('Time limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     memoryLimitInMB: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.min(256).max(1024).required('Memory limit is required'),
+        then: (schema) => schema.typeError('Must be a number').min(256, 'Minimum 256 MB').max(1024, 'Maximum 1024 MB').required('Memory limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     constraints: Yup.string().when('type', {
@@ -103,9 +104,9 @@ const questionValidationSchema = Yup.object().shape({
         is: QuestionType.CODING,
         then: (schema) => schema.of(
             Yup.object().shape({
-                input: Yup.string().required('Input is required'),
-                expectedOutput: Yup.string().required('Expected output is required'),
-                points: Yup.number().min(0).required('Points required'),
+                input: Yup.string().trim().required('Input is required'),
+                expectedOutput: Yup.string().trim().required('Expected output is required'),
+                points: Yup.number().typeError('Must be a number').min(1, 'Points must be at least 1').required('Points required'),
                 isPublic: Yup.boolean().default(false)
             })
         ).min(1, 'At least one test case is required'),
@@ -115,29 +116,29 @@ const questionValidationSchema = Yup.object().shape({
     // --- QUERY Validation ---
     databaseType: Yup.string().when('type', {
         is: QuestionType.QUERY,
-        then: (schema) => schema.required('Database type is required'),
+        then: (schema) => schema.oneOf(Object.values(DatabaseType), 'Invalid database type').required('Database type is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     databaseSchema: Yup.string().when('type', {
         is: QuestionType.QUERY,
-        then: (schema) => schema.required('Database schema is required'),
+        then: (schema) => schema.trim().min(10, 'Schema must be at least 10 characters').required('Database schema is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     expectedQuery: Yup.string().when('type', {
         is: QuestionType.QUERY,
-        then: (schema) => schema.required('Expected query is required'),
+        then: (schema) => schema.trim().min(5, 'Query must be at least 5 characters').required('Expected query is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
 
     // --- SUBJECTIVE Validation ---
     minLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.min(1).required('Min length is required'),
+        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 word').required('Min length is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     maxLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.min(Yup.ref('minLength'), 'Max length must be >= min length').required('Max length is required'),
+        then: (schema) => schema.typeError('Must be a number').min(Yup.ref('minLength'), 'Max length must be >= min length').required('Max length is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
 });
@@ -172,15 +173,17 @@ const CreateQuestion: React.FC = () => {
             hints: [],
             explanation: '',
             options: [
-                // { text: '', isCorrect: false },
-                // { text: '', isCorrect: false }
+                { text: '', isCorrect: false },
+                { text: '', isCorrect: false }
             ],
-            timeLimitInMinutes: 5,
+            timeLimitInMinutes: 30,
             memoryLimitInMB: 256,
             testCases: [],
             databaseType: DatabaseType.POSTGRESQL,
         },
         validationSchema: questionValidationSchema,
+        validateOnChange: true,
+        validateOnBlur: true,
         onSubmit: (values) => {
             console.log("Submitting values: ", values);
             // Clean up payload based on type before sending
@@ -215,11 +218,17 @@ const CreateQuestion: React.FC = () => {
     // --- Tag & Hint Handlers ---
     const handleAddItem = (input: string, field: 'tags' | 'hints', setInput: React.Dispatch<React.SetStateAction<string>>) => {
         const item = input.trim();
-        if (item && !formik.values[field]?.includes(item)) {
-            formik.setFieldValue(field, [...(formik.values[field] || []), item]);
-            formik.setFieldTouched(field, true);
-            setInput('');
+        if (!item) {
+            toast.error(`Please enter a ${field === 'tags' ? 'tag' : 'hint'} first`);
+            return;
         }
+        if (formik.values[field]?.includes(item)) {
+            toast.error(`This ${field === 'tags' ? 'tag' : 'hint'} already exists`);
+            return;
+        }
+        formik.setFieldValue(field, [...(formik.values[field] || []), item]);
+        formik.setFieldTouched(field, true);
+        setInput('');
     };
 
     const handleRemoveItem = (item: string, field: 'tags' | 'hints') => {
@@ -234,6 +243,10 @@ const CreateQuestion: React.FC = () => {
     const removeDynamicItem = (field: keyof QuestionInterface, index: number) => {
         const list = formik.values[field];
         if (Array.isArray(list)) {
+            if (field === 'options' && list.length <= 2) {
+                toast.error('At least 2 options are required');
+                return;
+            }
             formik.setFieldValue(field, list.filter((_, i) => i !== index));
         }
     };
@@ -241,11 +254,11 @@ const CreateQuestion: React.FC = () => {
     return (
         <Page>
             {/* Header */}
-            <div className="flex items-center gap-4 border-b pb-4">
+            <div className="flex items-center gap-4 bg-background-light rounded-xl shadow-sm border border-border-light/30 pb-4">
                 <BackButton variant='outline' />
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-800">Create Question</h1>
-                    <p className="text-sm text-gray-500">Fill in the details to create a new question</p>
+                    <h1 className="text-2xl font-semibold text-text-dark">Create Question</h1>
+                    <p className="text-sm text-text-light">Fill in the details to create a new question</p>
                 </div>
             </div>
 
@@ -294,6 +307,7 @@ const CreateQuestion: React.FC = () => {
                                         checked={option.isCorrect}
                                         onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
                                         className="cursor-pointer"
+                                        title="Mark as correct answer"
                                     />
                                     <Input
                                         type="text"
@@ -354,28 +368,29 @@ const CreateQuestion: React.FC = () => {
 
                 {/* --- CONDITIONAL: QUERY --- */}
                 {formik.values.type === QuestionType.QUERY && (
-                    <div className="bg-background-alt p-4 rounded-lg border border-border-light space-y-4">
-                        <h3 className="font-semibold text-text-main mb-2">Database Details</h3>
+                    <div className="bg-background-alt p-5 rounded-lg border border-border-light space-y-5">
+                        <h3 className="font-semibold text-text-main">Database Details</h3>
                         <FormSelect
                             id="databaseType"
                             name="databaseType"
-                            placeholder='Database Type'
+                            placeholder='Select database type'
                             label="Database Type"
                             options={Object.values(DatabaseType).map(db => ({ label: db.toUpperCase(), value: db }))}
                             formik={formik}
+                            required
                         />
-                        <FormTextArea id="databaseSchema" name="databaseSchema" label="Database Schema (SQL setup script)" rows={3} formik={formik} />
-                        <FormTextArea id="expectedQuery" name="expectedQuery" label="Expected Query (Correct Answer)" rows={2} formik={formik} />
+                        <FormTextArea id="databaseSchema" name="databaseSchema" label="Database Schema (SQL setup script)" rows={4} formik={formik} placeholder="CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));" required />
+                        <FormTextArea id="expectedQuery" name="expectedQuery" label="Expected Query (Correct Answer)" rows={3} formik={formik} placeholder="SELECT * FROM users WHERE age > 18;" required />
                     </div>
                 )}
 
                 {/* --- CONDITIONAL: SUBJECTIVE --- */}
                 {formik.values.type === QuestionType.SUBJECTIVE && (
-                    <div className="bg-background-alt p-4 rounded-lg border border-border-light space-y-4">
-                        <h3 className="font-semibold text-text-main mb-2">Subjective Details</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" formik={formik} />
-                            <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" formik={formik} />
+                    <div className="bg-background-alt p-5 rounded-lg border border-border-light space-y-5">
+                        <h3 className="font-semibold text-text-main">Subjective Details</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={1} formik={formik} required />
+                            <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={1} formik={formik} required />
                         </div>
                     </div>
                 )}
@@ -384,7 +399,9 @@ const CreateQuestion: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Tags */}
                     <div>
-                        <label className="mb-2 block text-sm font-medium text-text-main">Tags</label>
+                        <label className="mb-2 block text-sm font-medium text-text-main">
+                            Tags <span className="text-error-main">*</span>
+                        </label>
                         <div className="flex gap-2">
                             <Input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(tagInput, 'tags', setTagInput))} placeholder="Add tag and press Enter" />
                             <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(tagInput, 'tags', setTagInput)}>Add</Button>
@@ -421,7 +438,7 @@ const CreateQuestion: React.FC = () => {
                 </div>
 
                 {/* --- FOOTER --- */}
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border-light/50">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border-light/50">
                     <Button type="button" variant="outline" size="md" onClick={handleClose}>Cancel</Button>
                     <Button type="submit" variant="primary" size="md" loading={createMutation.isPending}>
                         Create Question

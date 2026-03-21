@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     );
 
     return (
-        <div className='hidden lg:block w-[20%] h-full! overflow-y-auto'>
+        <>
             {/* Mobile Drawer */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
@@ -87,10 +87,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
             )}
 
             {/* Desktop Sidebar */}
-            <aside className="h-full! bg-background-light border-r border-border-light">
+            <aside className="hidden lg:block w-[260px] shrink-0 h-full overflow-y-auto bg-background-light border-r border-border-light">
                 {drawerContent}
             </aside>
-        </div>
+        </>
     );
 };
 
