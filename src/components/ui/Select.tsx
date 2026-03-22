@@ -60,9 +60,6 @@ const Select: React.FC<SelectProps> = ({ value, id, placeholder, className, opti
                 ...baseClassNames,
                 control: (state) => twMerge(baseClassNames.control?.(state), extraClassNames?.control?.(state)),
             }}
-            styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-            }}
             menuPortalTarget={document.body}
             menuPosition='fixed'
             onChange={(opt) => onChange?.(opt?.value ?? '')}

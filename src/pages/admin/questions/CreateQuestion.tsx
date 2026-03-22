@@ -15,7 +15,8 @@ import type { ApiResponse } from '../../../types/types';
 import { QuestionType, Difficulty, DatabaseType } from '../../../types/questionTypes';
 import type { QuestionInterface } from '../../../types/questionTypes';
 import BackButton from '../../../components/common/BackButton';
-import { Page } from '../../../components/ui/Page';
+import { ContentBox, Page, PageBody, PageFooter, PageHeader } from '../../../components/ui/Page';
+import { useNavigate } from 'react-router-dom';
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
     type: Yup.string()
@@ -144,6 +145,7 @@ const questionValidationSchema = Yup.object().shape({
 });
 
 const CreateQuestion: React.FC = () => {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [tagInput, setTagInput] = useState('');
     const [hintInput, setHintInput] = useState('');
@@ -166,12 +168,13 @@ const CreateQuestion: React.FC = () => {
         initialValues: {
             type: QuestionType.MCQ,
             question: '',
+            questionExplanation: '',
             marks: 1,
             negativeMarks: 0,
             difficulty: Difficulty.EASY,
             tags: [],
             hints: [],
-            explanation: '',
+            answerExplanation: '',
             options: [
                 { text: '', isCorrect: false },
                 { text: '', isCorrect: false }
@@ -254,197 +257,215 @@ const CreateQuestion: React.FC = () => {
     return (
         <Page>
             {/* Header */}
-            <div className="flex items-center gap-4 bg-background-light rounded-xl shadow-sm border border-border-light/30 pb-4">
+            <PageHeader>
                 <BackButton variant='outline' />
                 <div>
                     <h1 className="text-2xl font-semibold text-text-dark">Create Question</h1>
                     <p className="text-sm text-text-light">Fill in the details to create a new question</p>
                 </div>
-            </div>
+            </PageHeader>
 
-            <form onSubmit={formik.handleSubmit} className="space-y-6">
-                {/* Base Question Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <FormSelect
-                        id="type"
-                        name="type"
-                        label="Question Type"
-                        options={Object.values(QuestionType).map(t => ({ label: t.toUpperCase(), value: t }))
-                        }
-                        formik={formik}
-                        required
-                    />
-                    <FormSelect
-                        id="difficulty"
-                        name="difficulty"
-                        label="Difficulty Level"
-                        options={Object.values(Difficulty).map(d => ({ label: d.toUpperCase(), value: d }))
-                        }
-                        formik={formik}
-                        required
-                    />
-                    <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
-                    <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
-                </div>
-
-                <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
-                <FormTextArea id="explanation" name="explanation" label="Explanation" rows={3} formik={formik} placeholder="Provide an explanation (optional)" />
-
-                {/* Conditional Sections */}
-                {formik.values.type === QuestionType.MCQ && (
-                    <div className="bg-background-alt p-4 rounded-lg border border-border-light">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-semibold text-text-main">MCQ Options</h3>
-                            <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('options', [...(formik.values.options || []), { text: '', isCorrect: false }])}>
-                                <MdAdd className='text-xl' /> Add Option
-                            </Button>
-                        </div>
-                        <div className="space-y-3">
-                            {formik.values.options && formik.values.options.length > 0 ? formik.values.options.map((option, index) => (
-                                <div key={index} className="flex items-center gap-3">
-                                    <Input
-                                        type="checkbox"
-                                        checked={option.isCorrect}
-                                        onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
-                                        className="cursor-pointer"
-                                        title="Mark as correct answer"
-                                    />
-                                    <Input
-                                        type="text"
-                                        value={option.text}
-                                        onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
-                                        placeholder={`Option ${index + 1}`}
-                                    />
-                                    <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('options', index)}>
-                                        <MdClose className="text-xl" />
-                                    </Button>
-                                </div>
-                            )) :
-                                <div className="text-sm text-text-light/80">No options added yet</div>
-                            }
-                        </div>
-                        {typeof formik.errors.options === 'string' && <div className="text-sm text-error-main mt-2">{formik.errors.options}</div>}
-                    </div>
-                )}
-
-                {/* --- CONDITIONAL: CODING --- */}
-                {formik.values.type === QuestionType.CODING && (
-                    <div className="bg-background-alt p-4 rounded-lg border border-border-light space-y-4">
-                        <h3 className="font-semibold text-text-main mb-2">Coding Environment Specs</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormInput id="timeLimitInMinutes" name="timeLimitInMinutes" label="Time Limit (Minutes)" type="number" formik={formik} />
-                            <FormInput id="memoryLimitInMB" name="memoryLimitInMB" label="Memory Limit (MB)" type="number" formik={formik} />
-                        </div>
-                        <FormTextArea id="constraints" name="constraints" label="Constraints" placeholder='Enter constraints (e.g. 1 <= N <= 10^5)' rows={2} formik={formik} />
-
-                        <div className="mt-4">
-                            <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
-                            <div className="space-y-4">
-                                {formik.values.testCases?.map((tc, index) => (
-                                    <div key={index} className="flex gap-3 items-start border p-3 rounded-md bg-background-main">
-                                        <div className="flex-1 space-y-2">
-                                            <Input type="text" placeholder="Input (e.g. '5 10')" value={tc.input} onChange={(e) => updateDynamicList('testCases', index, 'input', e.target.value)} />
-                                            <Input type="text" placeholder="Expected Output" value={tc.expectedOutput} onChange={(e) => updateDynamicList('testCases', index, 'expectedOutput', e.target.value)} />
-                                        </div>
-                                        <div className="w-24 space-y-2">
-                                            <Input type="number" placeholder="Points" value={tc.points} onChange={(e) => updateDynamicList('testCases', index, 'points', Number(e.target.value))} />
-                                            <label className="flex items-center text-xs gap-1 mt-2">
-                                                <Input type="checkbox" checked={tc.isPublic} onChange={(e) => updateDynamicList('testCases', index, 'isPublic', e.target.checked)} />
-                                                Public
-                                            </label>
-                                        </div>
-                                        <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('testCases', index)}>
-                                            <MdClose className="text-xl" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('testCases', [...(formik.values.testCases || []), { input: '', expectedOutput: '', isPublic: false, points: 10 }])}>
-                                <MdAdd /> Add Test Case
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- CONDITIONAL: QUERY --- */}
-                {formik.values.type === QuestionType.QUERY && (
-                    <div className="bg-background-alt p-5 rounded-lg border border-border-light space-y-5">
-                        <h3 className="font-semibold text-text-main">Database Details</h3>
+            <PageBody>
+                <form id='question-form' onSubmit={formik.handleSubmit} className="space-y-6">
+                    {/* Base Question Details */}
+                    <ContentBox className="grid sm:grid-cols-2 gap-6">
                         <FormSelect
-                            id="databaseType"
-                            name="databaseType"
-                            placeholder='Select database type'
-                            label="Database Type"
-                            options={Object.values(DatabaseType).map(db => ({ label: db.toUpperCase(), value: db }))}
+                            id="type"
+                            name="type"
+                            label="Question Type"
+                            options={Object.values(QuestionType).map(t => ({ label: t.toUpperCase(), value: t }))
+                            }
                             formik={formik}
                             required
                         />
-                        <FormTextArea id="databaseSchema" name="databaseSchema" label="Database Schema (SQL setup script)" rows={4} formik={formik} placeholder="CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));" required />
-                        <FormTextArea id="expectedQuery" name="expectedQuery" label="Expected Query (Correct Answer)" rows={3} formik={formik} placeholder="SELECT * FROM users WHERE age > 18;" required />
-                    </div>
-                )}
+                        <FormSelect
+                            id="difficulty"
+                            name="difficulty"
+                            label="Difficulty Level"
+                            options={Object.values(Difficulty).map(d => ({ label: d.toUpperCase(), value: d }))
+                            }
+                            formik={formik}
+                            required
+                        />
+                        <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
+                        <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
+                    </ContentBox>
+                    <ContentBox>
+                        <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
+                        <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question (optional)" />
+                    </ContentBox>
 
-                {/* --- CONDITIONAL: SUBJECTIVE --- */}
-                {formik.values.type === QuestionType.SUBJECTIVE && (
-                    <div className="bg-background-alt p-5 rounded-lg border border-border-light space-y-5">
-                        <h3 className="font-semibold text-text-main">Subjective Details</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={1} formik={formik} required />
-                            <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={1} formik={formik} required />
-                        </div>
-                    </div>
-                )}
+                    {/* Conditional Sections */}
+                    {formik.values.type === QuestionType.MCQ && (
+                        <ContentBox>
+                            <div className="flex justify-between items-center mb-3">
+                                <h3 className="font-semibold text-text-main">MCQ Options</h3>
+                                <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('options', [...(formik.values.options || []), { text: '', isCorrect: false }])}>
+                                    <MdAdd className='text-xl' /> Add Option
+                                </Button>
+                            </div>
+                            <div className="space-y-3">
+                                {formik.values.options && formik.values.options.length > 0 ? formik.values.options.map((option, index) => (
+                                    <div key={index} className="flex items-center gap-3">
+                                        <Input
+                                            type="checkbox"
+                                            checked={option.isCorrect}
+                                            onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
+                                            className="cursor-pointer"
+                                            title="Mark as correct answer"
+                                        />
+                                        <Input
+                                            type="text"
+                                            value={option.text}
+                                            onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
+                                            placeholder={`Option ${index + 1}`}
+                                        />
+                                        <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('options', index)}>
+                                            <MdClose className="text-xl" />
+                                        </Button>
+                                    </div>
+                                )) :
+                                    <div className="text-sm text-text-light/80">No options added yet</div>
+                                }
+                            </div>
+                            {typeof formik.errors.options === 'string' && <div className="text-sm text-error-main mt-2">{formik.errors.options}</div>}
+                        </ContentBox>
+                    )}
 
-                {/* --- TAGS & HINTS --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Tags */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-text-main">
-                            Tags <span className="text-error-main">*</span>
-                        </label>
-                        <div className="flex gap-2">
-                            <Input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(tagInput, 'tags', setTagInput))} placeholder="Add tag and press Enter" />
-                            <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(tagInput, 'tags', setTagInput)}>Add</Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            {formik.values.tags?.map((tag) => (
-                                <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-primary-light/20 text-text-light">
-                                    {tag}
-                                    <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(tag, 'tags')}
-                                    />
-                                </span>
-                            ))}
-                        </div>
-                        {formik.touched.tags && typeof formik.errors.tags === 'string' && <div className="text-xs text-error-main mt-1">{formik.errors.tags}</div>}
-                    </div>
+                    {/* --- CONDITIONAL: CODING --- */}
+                    {formik.values.type === QuestionType.CODING && (
+                        <ContentBox>
+                            <h3 className="font-semibold text-text-main mb-2">Coding Environment Specs</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput id="timeLimitInMinutes" name="timeLimitInMinutes" label="Time Limit (Minutes)" type="number" formik={formik} />
+                                <FormInput id="memoryLimitInMB" name="memoryLimitInMB" label="Memory Limit (MB)" type="number" formik={formik} />
+                            </div>
+                            <FormTextArea id="constraints" name="constraints" label="Constraints" placeholder='Enter constraints (e.g. 1 <= N <= 10^5)' rows={2} formik={formik} />
 
-                    {/* Hints */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-text-main">Hints</label>
-                        <div className="flex gap-2">
-                            <Input type="text" value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(hintInput, 'hints', setHintInput))} placeholder="Add hint and press Enter" />
-                            <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(hintInput, 'hints', setHintInput)}>Add</Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            {formik.values.hints?.map((hint) => (
-                                <span key={hint} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-main">
-                                    {hint}
-                                    <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(hint, 'hints')}
-                                    />
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                            <div className="mt-4">
+                                <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
+                                <div className="space-y-4">
+                                    {formik.values.testCases?.map((tc, index) => (
+                                        <div key={index} className="flex gap-3 items-start border p-3 rounded-md bg-background-main">
+                                            <div className="flex-1 space-y-2">
+                                                <Input type="text" placeholder="Input (e.g. '5 10')" value={tc.input} onChange={(e) => updateDynamicList('testCases', index, 'input', e.target.value)} />
+                                                <Input type="text" placeholder="Expected Output" value={tc.expectedOutput} onChange={(e) => updateDynamicList('testCases', index, 'expectedOutput', e.target.value)} />
+                                            </div>
+                                            <div className="w-24 space-y-2">
+                                                <Input type="number" placeholder="Points" value={tc.points} onChange={(e) => updateDynamicList('testCases', index, 'points', Number(e.target.value))} />
+                                                <label className="flex items-center text-xs gap-1 mt-2">
+                                                    <Input type="checkbox" checked={tc.isPublic} onChange={(e) => updateDynamicList('testCases', index, 'isPublic', e.target.checked)} />
+                                                    Public
+                                                </label>
+                                            </div>
+                                            <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('testCases', index)}>
+                                                <MdClose className="text-xl" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('testCases', [...(formik.values.testCases || []), { input: '', expectedOutput: '', isPublic: false, points: 10 }])}>
+                                    <MdAdd /> Add Test Case
+                                </Button>
+                            </div>
+                        </ContentBox>
+                    )}
 
-                {/* --- FOOTER --- */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-border-light/50">
+                    {/* --- CONDITIONAL: QUERY --- */}
+                    {formik.values.type === QuestionType.QUERY && (
+                        <ContentBox>
+                            <h3 className="font-semibold text-text-main">Database Details</h3>
+                            <FormSelect
+                                id="databaseType"
+                                name="databaseType"
+                                placeholder='Select database type'
+                                label="Database Type"
+                                options={Object.values(DatabaseType).map(db => ({ label: db.toUpperCase(), value: db }))}
+                                formik={formik}
+                                required
+                            />
+                            <FormTextArea id="databaseSchema" name="databaseSchema" label="Database Schema (SQL setup script)" rows={4} formik={formik} placeholder="CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));" required />
+                            <FormTextArea id="expectedQuery" name="expectedQuery" label="Expected Query (Correct Answer)" rows={3} formik={formik} placeholder="SELECT * FROM users WHERE age > 18;" required />
+                        </ContentBox>
+                    )}
+
+                    {/* --- CONDITIONAL: SUBJECTIVE --- */}
+                    {formik.values.type === QuestionType.SUBJECTIVE && (
+                        <ContentBox>
+                            <h3 className="font-semibold text-text-main">Subjective Details</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={1} formik={formik} required />
+                                <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={1} formik={formik} required />
+                            </div>
+                        </ContentBox>
+                    )}
+
+                    {/* --- TAGS & HINTS --- */}
+                    <ContentBox className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Tags */}
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-text-main">
+                                Tags <span className="text-error-main">*</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <Input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(tagInput, 'tags', setTagInput))} placeholder="Add tag and press Enter" />
+                                <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(tagInput, 'tags', setTagInput)}>Add</Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {formik.values.tags?.map((tag) => (
+                                    <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-primary-light/20 text-text-light">
+                                        {tag}
+                                        <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(tag, 'tags')}
+                                        />
+                                    </span>
+                                ))}
+                            </div>
+                            {formik.touched.tags && typeof formik.errors.tags === 'string' && <div className="text-xs text-error-main mt-1">{formik.errors.tags}</div>}
+                        </div>
+
+                        {/* Hints */}
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-text-main">Hints</label>
+                            <div className="flex gap-2">
+                                <Input type="text" value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(hintInput, 'hints', setHintInput))} placeholder="Add hint and press Enter" />
+                                <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(hintInput, 'hints', setHintInput)}>Add</Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {formik.values.hints?.map((hint) => (
+                                    <span key={hint} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-main">
+                                        {hint}
+                                        <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(hint, 'hints')}
+                                        />
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </ContentBox>
+
+                    {/* --- FOOTER --- */}
+                    {/* <div className="flex justify-end gap-3 pt-4 border-t border-border-light/50">
                     <Button type="button" variant="outline" size="md" onClick={handleClose}>Cancel</Button>
                     <Button type="submit" variant="primary" size="md" loading={createMutation.isPending}>
                         Create Question
                     </Button>
-                </div>
-            </form>
+                </div> */}
+                </form>
+            </PageBody>
+
+            <PageFooter>
+                <Button variant="outline" onClick={() => navigate(-1)}>
+                    Cancel
+                </Button>
+                <Button
+                    type="submit"
+                    form="question-form"
+                    variant="primary"
+                    loading={createMutation.isPending}
+                    loadingText="Creating..."
+                >
+                    Create Question
+                </Button>
+            </PageFooter>
         </Page>
     );
 };

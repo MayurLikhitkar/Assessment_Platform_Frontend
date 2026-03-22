@@ -53,6 +53,7 @@ export interface QuestionInterface {
     id: number;
     type: QuestionType;
     question: string;
+    questionExplanation: string;
     marks: number;
     difficulty: Difficulty;
     tags: string[];
@@ -65,13 +66,13 @@ export interface QuestionInterface {
     // Type-specific fields (using discriminators or union types)
     options?: Option[];
     negativeMarks: number;
-    explanation: string;
+    answerExplanation: string;
 
     language?: ProgrammingLanguage;
     allowedLanguages?: ProgrammingLanguage[];
     starterCode?: Map<ProgrammingLanguage, string>;
     testCases?: TestCase[];
-    constraints?: string;
+    constraints?: string[];
     hints?: string[];
     timeLimitInMinutes: number; // in minutes
     memoryLimitInMB: number; // in MB
@@ -103,10 +104,4 @@ export interface RubricFormValue {
 export interface StarterCodeEntry {
     language: ProgrammingLanguage;
     code: string;
-}
-
-export interface CreateQuestionFormValues extends Omit<QuestionInterface, 'starterCode' | 'testCases' | 'evaluationRubric'> {
-    starterCode: StarterCodeEntry[];
-    testCases: TestCaseFormValue[];
-    evaluationRubric: RubricFormValue[];
 }
