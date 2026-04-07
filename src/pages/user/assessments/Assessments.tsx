@@ -7,6 +7,7 @@ import DataLoader from '../../../components/common/DataLoader';
 import { getAssessments } from '../../../services/axios/assessmentApi';
 import type { UserAssessmentInterface } from '../../../types/types';
 import Button from '../../../components/ui/Button';
+import { Page } from '../../../components/ui/Page';
 
 const Assessments: React.FC = () => {
     const navigate = useNavigate();
@@ -36,7 +37,7 @@ const Assessments: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <Page>
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-bold text-text-dark">
@@ -211,7 +212,7 @@ const Assessments: React.FC = () => {
             </div>
 
             {/* <CodeEditor language='' value='' onChange={() => console.log('first')} /> */}
-        </div>
+        </Page>
     );
 };
 

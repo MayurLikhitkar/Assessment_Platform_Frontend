@@ -18,7 +18,7 @@ const BackButton: React.FC<BackButtonProps> = ({
     onClick,
     label,
     variant = 'ghost',
-    size = 'md'
+    size = 'sm'
 }) => {
     const navigate = useNavigate();
 

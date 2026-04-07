@@ -7,6 +7,7 @@ import Button from '../../../components/ui/Button';
 import { getAdminAssessments } from '../../../services/axios/adminApi';
 import type { AssessmentInterface } from '../../../types/assessmentTypes';
 import AgGridTable from '../../../components/common/AgGridTable';
+import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 
 const difficultyColors: Record<string, string> = {
     beginner: 'bg-success-light/40 text-success-dark',
@@ -154,60 +155,59 @@ const AdminAssessments: React.FC = () => {
     ], []);
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-text-dark">Assessments</h1>
-                    <p className="text-text-light mt-1">Manage all assessments on the platform</p>
+        <Page>
+            <PageBody className='py-5'>
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <PageTitle title="Assessments" description="Manage all assessments on the platform" icon={MdAssignment} />
+                    <Button
+                        variant="primary"
+                        className="flex items-center gap-2"
+                        onClick={() => navigate('/admin/assessments/create')}
+                    >
+                        <MdAdd className="text-xl" />
+                        Create Assessment
+                    </Button>
                 </div>
-                <Button
-                    variant="primary"
-                    className="flex items-center gap-2"
-                    onClick={() => navigate('/admin/assessments/create')}
-                >
-                    <MdAdd className="text-xl" />
-                    Create Assessment
-                </Button>
-            </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                    <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
-                        <MdAssignment className="text-2xl" />
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                        <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
+                            <MdAssignment className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-text-dark">{assessments.length}</p>
+                            <p className="text-sm text-text-light">Total Assessments</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-2xl font-bold text-text-dark">{assessments.length}</p>
-                        <p className="text-sm text-text-light">Total Assessments</p>
+                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                        <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
+                            <MdAssignment className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
+                            <p className="text-sm text-text-light">Active</p>
+                        </div>
+                    </div>
+                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                        <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
+                            <MdAssignment className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
+                            <p className="text-sm text-text-light">Inactive</p>
+                        </div>
                     </div>
                 </div>
-                <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                    <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
-                        <MdAssignment className="text-2xl" />
-                    </div>
-                    <div>
-                        <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
-                        <p className="text-sm text-text-light">Active</p>
-                    </div>
-                </div>
-                <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                    <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
-                        <MdAssignment className="text-2xl" />
-                    </div>
-                    <div>
-                        <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
-                        <p className="text-sm text-text-light">Inactive</p>
-                    </div>
-                </div>
-            </div>
 
-            {/* Table */}
-            <AgGridTable<AssessmentInterface>
-                rowData={assessments}
-                columnDefs={columnDefs}
-            />
-        </div>
+                {/* Table */}
+                <AgGridTable<AssessmentInterface>
+                    rowData={assessments}
+                    columnDefs={columnDefs}
+                />
+            </PageBody>
+        </Page>
     );
 };
 

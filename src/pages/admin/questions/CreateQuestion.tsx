@@ -17,6 +17,8 @@ import type { QuestionInterface } from '../../../types/questionTypes';
 import BackButton from '../../../components/common/BackButton';
 import { ContentBox, Page, PageBody, PageFooter, PageHeader } from '../../../components/ui/Page';
 import { useNavigate } from 'react-router-dom';
+import Label from '../../../components/ui/Label';
+
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
     type: Yup.string()
@@ -266,7 +268,7 @@ const CreateQuestion: React.FC = () => {
             </PageHeader>
 
             <PageBody>
-                <form id='question-form' onSubmit={formik.handleSubmit} className="space-y-6">
+                <form id='question-form' onSubmit={formik.handleSubmit} className="space-y-3">
                     {/* Base Question Details */}
                     <ContentBox className="grid sm:grid-cols-2 gap-6">
                         <FormSelect
@@ -290,12 +292,13 @@ const CreateQuestion: React.FC = () => {
                         <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
                         <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
                     </ContentBox>
-                    <ContentBox>
+                    <ContentBox className="grid gap-6">
                         <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
                         <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question (optional)" />
                     </ContentBox>
 
                     {/* Conditional Sections */}
+                    {/* --- CONDITIONAL: CODING --- */}
                     {formik.values.type === QuestionType.MCQ && (
                         <ContentBox>
                             <div className="flex justify-between items-center mb-3">
@@ -306,23 +309,31 @@ const CreateQuestion: React.FC = () => {
                             </div>
                             <div className="space-y-3">
                                 {formik.values.options && formik.values.options.length > 0 ? formik.values.options.map((option, index) => (
-                                    <div key={index} className="flex items-center gap-3">
-                                        <Input
-                                            type="checkbox"
-                                            checked={option.isCorrect}
-                                            onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
-                                            className="cursor-pointer"
-                                            title="Mark as correct answer"
-                                        />
-                                        <Input
-                                            type="text"
-                                            value={option.text}
-                                            onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
-                                            placeholder={`Option ${index + 1}`}
-                                        />
-                                        <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('options', index)}>
-                                            <MdClose className="text-xl" />
-                                        </Button>
+                                    <div key={index + 1} className="flex flex-col gap-1 w-full relative">
+                                        <div className="flex items-center gap-3">
+                                            <Input
+                                                type="checkbox"
+                                                checked={option.isCorrect}
+                                                onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
+                                                className="cursor-pointer shrink-0"
+                                                title="Mark as correct answer"
+                                            />
+                                            <div className="flex-1">
+                                                <Input
+                                                    type="text"
+                                                    value={option.text}
+                                                    onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
+                                                    placeholder={`Option ${index + 1}`}
+                                                    className={Array.isArray(formik.errors.options) && (formik.errors.options as unknown as Record<string, string>[])[index]?.text ? 'ring-error-main! ring-2' : ''}
+                                                />
+                                            </div>
+                                            <Button type="button" variant='icon' className='text-error-main shrink-0' onClick={() => removeDynamicItem('options', index)}>
+                                                <MdClose className="text-xl" />
+                                            </Button>
+                                        </div>
+                                        {Array.isArray(formik.errors.options) && (formik.errors.options as unknown as Record<string, string>[])[index]?.text && (
+                                            <div className="text-xs text-error-main ml-8">{(formik.errors.options as unknown as Record<string, string>[])[index].text}</div>
+                                        )}
                                     </div>
                                 )) :
                                     <div className="text-sm text-text-light/80">No options added yet</div>
@@ -404,11 +415,9 @@ const CreateQuestion: React.FC = () => {
                     <ContentBox className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Tags */}
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-text-main">
-                                Tags <span className="text-error-main">*</span>
-                            </label>
+                            <Label htmlFor="tags" label="Tags" required={true} />
                             <div className="flex gap-2">
-                                <Input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(tagInput, 'tags', setTagInput))} placeholder="Add tag and press Enter" />
+                                <Input type="text" id='tags' value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (handleAddItem(tagInput, 'tags', setTagInput))} placeholder="Add tag and press Enter" />
                                 <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(tagInput, 'tags', setTagInput)}>Add</Button>
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
@@ -425,9 +434,9 @@ const CreateQuestion: React.FC = () => {
 
                         {/* Hints */}
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-text-main">Hints</label>
+                            <Label htmlFor="hints" label="Hints" />
                             <div className="flex gap-2">
-                                <Input type="text" value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(hintInput, 'hints', setHintInput))} placeholder="Add hint and press Enter" />
+                                <Input type="text" id='hints' value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(hintInput, 'hints', setHintInput))} placeholder="Add hint and press Enter" />
                                 <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(hintInput, 'hints', setHintInput)}>Add</Button>
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">

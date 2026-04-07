@@ -98,7 +98,7 @@ const CreateAssessment: React.FC = () => {
         <Page>
             {/* Header */}
             <PageHeader>
-                <BackButton size='sm' variant='outline' />
+                <BackButton variant='outline' />
                 <h1 className="text-2xl font-bold text-text-main">Create Assessment</h1>
             </PageHeader>
 

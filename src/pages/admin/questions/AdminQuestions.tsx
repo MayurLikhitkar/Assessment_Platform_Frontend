@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MdAdd, MdDelete } from 'react-icons/md';
+import { MdAdd, MdDelete, MdQuiz } from 'react-icons/md';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { toast } from 'react-hot-toast';
 import Confirmation from '../../../components/modal/Confirmation';
@@ -11,6 +11,7 @@ import { BsFillPatchQuestionFill } from 'react-icons/bs';
 import AgGridTable from '../../../components/common/AgGridTable';
 import Button from '../../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 
 const typeColors: Record<string, string> = {
     mcq: 'bg-secondary-light/20 text-secondary-dark',
@@ -143,28 +144,26 @@ const AdminQuestions: React.FC = () => {
     ], []);
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-text-dark">Question Bank</h1>
-                    <p className="text-text-light mt-1">Create, manage, and organize questions</p>
+        <Page>
+            <PageBody className='py-5'>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <PageTitle title="Questions" description="Create, manage, and organize questions" icon={MdQuiz} />
+                    <Button
+                        variant="primary"
+                        onClick={() => navigate('/admin/questions/create')}
+                        className="flex items-center gap-2 shadow-sm"
+                    >
+                        <MdAdd className="text-xl" />
+                        Add Question
+                    </Button>
                 </div>
-                <Button
-                    variant="primary"
-                    onClick={() => navigate('/admin/questions/create')}
-                    className="flex items-center gap-2 shadow-sm"
-                >
-                    <MdAdd className="text-xl" />
-                    Add Question
-                </Button>
-            </div>
 
-            {/* Questions Table */}
-            <AgGridTable<QuestionInterface>
-                rowData={questions}
-                columnDefs={columnDefs}
-            />
+                {/* Questions Table */}
+                <AgGridTable<QuestionInterface>
+                    rowData={questions}
+                    columnDefs={columnDefs}
+                />
+            </PageBody>
 
             {/* Delete Confirmation Modal */}
             <Confirmation
@@ -180,7 +179,7 @@ const AdminQuestions: React.FC = () => {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
-        </div>
+        </Page>
     );
 };
 

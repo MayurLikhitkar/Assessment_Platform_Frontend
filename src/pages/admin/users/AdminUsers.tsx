@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MdPersonAdd } from 'react-icons/md';
+import { MdPeople, MdPersonAdd } from 'react-icons/md';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { useAuth } from '../../../hooks/useAuth';
 import Button from '../../../components/ui/Button';
@@ -10,6 +10,7 @@ import CreateUserModal from './CreateUserModal';
 import AgGridTable from '../../../components/common/AgGridTable';
 import Search from '../../../components/ui/Search';
 import moment from 'moment';
+import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 
 const roleBadgeStyles: Record<string, string> = {
     super_admin: 'bg-primary-light/20 text-primary-dark',
@@ -59,7 +60,6 @@ const AdminUsers: React.FC = () => {
             );
         });
     }, [searchText, users]);
-
 
     const columnDefs = useMemo<ColDef<UserInterface>[]>(() => [
         {
@@ -136,43 +136,34 @@ const AdminUsers: React.FC = () => {
         },
     ], []);
 
-
-
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-text-dark">
-                        User Management
-                    </h1>
-                    <p className="text-text-light mt-1">
-                        Manage platform users and their roles
-                    </p>
+        <Page>
+            <PageBody className='py-5'>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <PageTitle title="Users" icon={MdPeople} description="Manage platform users and their roles" />
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="flex items-center gap-2 shadow-sm"
+                    >
+                        <MdPersonAdd fontSize="small" />
+                        Add User
+                    </Button>
                 </div>
-                <Button
-                    variant="primary"
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center gap-2 shadow-sm"
-                >
-                    <MdPersonAdd fontSize="small" />
-                    Add User
-                </Button>
-            </div>
 
-            {/* Users Table */}
-            <AgGridTable<UserInterface>
-                leftSection={<Search value={searchText} onChange={(e) => setSearchText(e.target.value)} handleClear={() => setSearchText('')} />}
-                rowData={filteredUsers}
-                columnDefs={columnDefs}
-            />
-
+                {/* Users Table */}
+                <AgGridTable<UserInterface>
+                    leftSection={<Search value={searchText} onChange={(e) => setSearchText(e.target.value)} handleClear={() => setSearchText('')} />}
+                    rowData={filteredUsers}
+                    columnDefs={columnDefs}
+                />
+            </PageBody>
             {/* Create User Modal */}
             <CreateUserModal
                 isCreateModalOpen={isCreateModalOpen}
                 setIsCreateModalOpen={setIsCreateModalOpen}
             />
-        </div>
+        </Page>
     );
 };
 
