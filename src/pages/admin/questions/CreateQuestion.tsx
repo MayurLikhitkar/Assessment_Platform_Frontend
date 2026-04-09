@@ -12,7 +12,7 @@ import Button from '../../../components/ui/Button';
 import { createQuestion } from '../../../services/axios/adminApi';
 
 import type { ApiResponse } from '../../../types/types';
-import { QuestionType, Difficulty, DatabaseType } from '../../../types/questionTypes';
+import { QuestionType, Difficulty, DatabaseType, ProgrammingLanguage } from '../../../types/questionTypes';
 import type { QuestionInterface } from '../../../types/questionTypes';
 import BackButton from '../../../components/common/BackButton';
 import { ContentBox, Page, PageBody, PageFooter, PageHeader } from '../../../components/ui/Page';
@@ -29,6 +29,11 @@ const questionValidationSchema = Yup.object().shape({
         .min(10, 'Question must be at least 10 characters')
         .max(1000, 'Question must not exceed 1000 characters')
         .required('Question is required'),
+    questionExplanation: Yup.string()
+        .trim()
+        .min(10, 'Question explanation must be at least 10 characters')
+        .max(2000, 'Question explanation must not exceed 2000 characters')
+        .required('Question explanation is required'),
     marks: Yup.number()
         .typeError('Marks must be a number')
         .min(1, 'Marks must be at least 1')
@@ -44,7 +49,7 @@ const questionValidationSchema = Yup.object().shape({
         .oneOf(Object.values(Difficulty), 'Invalid difficulty')
         .required('Difficulty is required'),
     tags: Yup.array().of(Yup.string()).min(1, 'At least one tag is required'),
-    explanation: Yup.string().max(2000, 'Explanation too long'),
+    answerExplanation: Yup.string().max(2000, 'Explanation too long'),
     hints: Yup.array().of(Yup.string()),
 
     // --- MCQ Validation ---
@@ -90,12 +95,17 @@ const questionValidationSchema = Yup.object().shape({
     // --- CODING Validation ---
     timeLimitInMinutes: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.typeError('Must be a number').min(5, 'Minimum 5 minutes').max(180, 'Maximum 180 minutes').required('Time limit is required'),
+        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 minute').max(180, 'Maximum 180 minutes').required('Time limit is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    allowedLanguages: Yup.array().when('type', {
+        is: QuestionType.CODING,
+        then: (schema) => schema.of(Yup.string().oneOf(Object.values(ProgrammingLanguage))).min(1, 'At least one programming language must be selected').required('Allowed languages are required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     memoryLimitInMB: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.typeError('Must be a number').min(256, 'Minimum 256 MB').max(1024, 'Maximum 1024 MB').required('Memory limit is required'),
+        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 MB').max(1024, 'Maximum 1024 MB').required('Memory limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     constraints: Yup.string().when('type', {
@@ -109,7 +119,7 @@ const questionValidationSchema = Yup.object().shape({
             Yup.object().shape({
                 input: Yup.string().trim().required('Input is required'),
                 expectedOutput: Yup.string().trim().required('Expected output is required'),
-                points: Yup.number().typeError('Must be a number').min(1, 'Points must be at least 1').required('Points required'),
+                points: Yup.number().typeError('Must be a number').min(0, 'Points must be at least 0').required('Points required'),
                 isPublic: Yup.boolean().default(false)
             })
         ).min(1, 'At least one test case is required'),
@@ -184,6 +194,7 @@ const CreateQuestion: React.FC = () => {
             timeLimitInMinutes: 30,
             memoryLimitInMB: 256,
             testCases: [],
+            allowedLanguages: [ProgrammingLanguage.JAVASCRIPT],
             databaseType: DatabaseType.POSTGRESQL,
         },
         validationSchema: questionValidationSchema,
@@ -199,6 +210,7 @@ const CreateQuestion: React.FC = () => {
                 delete payload.timeLimitInMinutes;
                 delete payload.memoryLimitInMB;
                 delete payload.constraints;
+                delete payload.allowedLanguages;
             }
             if (payload.type !== QuestionType.QUERY) {
                 delete payload.databaseType;
@@ -210,7 +222,7 @@ const CreateQuestion: React.FC = () => {
                 delete payload.minLength;
             }
 
-            // createMutation.mutate(payload as any);
+            createMutation.mutate(payload);
         }
     });
 
@@ -294,7 +306,8 @@ const CreateQuestion: React.FC = () => {
                     </ContentBox>
                     <ContentBox className="grid gap-6">
                         <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
-                        <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question (optional)" />
+                        <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question" required />
+                        <FormTextArea id="answerExplanation" name="answerExplanation" label="Answer Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the correct answer (optional)" />
                     </ContentBox>
 
                     {/* Conditional Sections */}
@@ -347,6 +360,37 @@ const CreateQuestion: React.FC = () => {
                     {formik.values.type === QuestionType.CODING && (
                         <ContentBox>
                             <h3 className="font-semibold text-text-main mb-2">Coding Environment Specs</h3>
+                            
+                            <div className="mb-4 mt-2">
+                                <Label htmlFor="allowedLanguages" label="Allowed Languages" required={true} />
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {Object.values(ProgrammingLanguage).map(lang => {
+                                        const isSelected = formik.values.allowedLanguages?.includes(lang);
+                                        return (
+                                            <button
+                                                key={lang}
+                                                type="button"
+                                                onClick={() => {
+                                                    const current = formik.values.allowedLanguages || [];
+                                                    if (isSelected) {
+                                                        formik.setFieldValue('allowedLanguages', current.filter(l => l !== lang));
+                                                    } else {
+                                                        formik.setFieldValue('allowedLanguages', [...current, lang]);
+                                                    }
+                                                    formik.setFieldTouched('allowedLanguages', true);
+                                                }}
+                                                className={`px-3 py-1 text-sm font-medium rounded-md border transition-colors ${isSelected ? 'bg-primary-main/10 border-primary-main text-primary-main' : 'border-border-light text-text-light hover:bg-background-light'}`}
+                                            >
+                                                {lang.toUpperCase()}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {formik.touched.allowedLanguages && typeof formik.errors.allowedLanguages === 'string' && (
+                                    <div className="text-xs text-error-main mt-1">{formik.errors.allowedLanguages}</div>
+                                )}
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <FormInput id="timeLimitInMinutes" name="timeLimitInMinutes" label="Time Limit (Minutes)" type="number" formik={formik} />
                                 <FormInput id="memoryLimitInMB" name="memoryLimitInMB" label="Memory Limit (MB)" type="number" formik={formik} />
@@ -357,7 +401,7 @@ const CreateQuestion: React.FC = () => {
                                 <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
                                 <div className="space-y-4">
                                     {formik.values.testCases?.map((tc, index) => (
-                                        <div key={index} className="flex gap-3 items-start border p-3 rounded-md bg-background-main">
+                                        <div key={index} className="flex gap-3 items-start border border-border-light p-3 rounded-md">
                                             <div className="flex-1 space-y-2">
                                                 <Input type="text" placeholder="Input (e.g. '5 10')" value={tc.input} onChange={(e) => updateDynamicList('testCases', index, 'input', e.target.value)} />
                                                 <Input type="text" placeholder="Expected Output" value={tc.expectedOutput} onChange={(e) => updateDynamicList('testCases', index, 'expectedOutput', e.target.value)} />
@@ -417,7 +461,7 @@ const CreateQuestion: React.FC = () => {
                         <div>
                             <Label htmlFor="tags" label="Tags" required={true} />
                             <div className="flex gap-2">
-                                <Input type="text" id='tags' value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (handleAddItem(tagInput, 'tags', setTagInput))} placeholder="Add tag and press Enter" />
+                                <Input type="text" id='tags' value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddItem(tagInput, 'tags', setTagInput); } }} placeholder="Add tag and press Enter" />
                                 <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(tagInput, 'tags', setTagInput)}>Add</Button>
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
@@ -436,7 +480,7 @@ const CreateQuestion: React.FC = () => {
                         <div>
                             <Label htmlFor="hints" label="Hints" />
                             <div className="flex gap-2">
-                                <Input type="text" id='hints' value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem(hintInput, 'hints', setHintInput))} placeholder="Add hint and press Enter" />
+                                <Input type="text" id='hints' value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddItem(hintInput, 'hints', setHintInput); } }} placeholder="Add hint and press Enter" />
                                 <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(hintInput, 'hints', setHintInput)}>Add</Button>
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
