@@ -34,7 +34,6 @@ export interface TestCase {
     input: string;
     expectedOutput: string;
     isPublic: boolean;
-    points: number;
 }
 
 export interface Option {
@@ -86,6 +85,7 @@ export interface QuestionInterface {
     minLength?: number;
     expectedKeywords?: string[];
     evaluationRubric?: EvaluationRubric[];
+    subjectiveAnswer?: string;
 }
 
 export interface TestCaseFormValue {

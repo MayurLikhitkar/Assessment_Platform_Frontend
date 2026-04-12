@@ -27,30 +27,28 @@ const questionValidationSchema = Yup.object().shape({
     question: Yup.string()
         .trim()
         .min(10, 'Question must be at least 10 characters')
-        .max(1000, 'Question must not exceed 1000 characters')
+        .max(2000, 'Question must not exceed 2000 characters')
         .required('Question is required'),
     questionExplanation: Yup.string()
         .trim()
         .min(10, 'Question explanation must be at least 10 characters')
-        .max(2000, 'Question explanation must not exceed 2000 characters')
+        .max(3000, 'Question explanation must not exceed 3000 characters')
         .required('Question explanation is required'),
     marks: Yup.number()
-        .typeError('Marks must be a number')
         .min(1, 'Marks must be at least 1')
         .max(100, 'Marks must not exceed 100')
         .integer('Marks must be a whole number')
         .required('Marks are required'),
     negativeMarks: Yup.number()
-        .typeError('Negative marks must be a number')
-        .min(0, 'Cannot be negative')
+        .min(0, 'Cannot be less than 0')
         .max(Yup.ref('marks'), 'Negative marks cannot exceed total marks')
         .default(0),
     difficulty: Yup.string()
         .oneOf(Object.values(Difficulty), 'Invalid difficulty')
         .required('Difficulty is required'),
-    tags: Yup.array().of(Yup.string()).min(1, 'At least one tag is required'),
-    answerExplanation: Yup.string().max(2000, 'Explanation too long'),
-    hints: Yup.array().of(Yup.string()),
+    tags: Yup.array().of(Yup.string().trim().min(1, 'Tag cannot be empty')).min(1, 'At least one tag is required'),
+    answerExplanation: Yup.string().trim().max(2000, 'Answer Explanation must not exceed 2000 characters'),
+    hints: Yup.array().of(Yup.string().trim().min(1, 'Hint cannot be empty')),
 
     // --- MCQ Validation ---
     options: Yup.array().when('type', {
@@ -95,12 +93,12 @@ const questionValidationSchema = Yup.object().shape({
     // --- CODING Validation ---
     timeLimitInMinutes: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 minute').max(180, 'Maximum 180 minutes').required('Time limit is required'),
+        then: (schema) => schema.min(1, 'Minimum 1 minute').max(180, 'Maximum 180 minutes').required('Time limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     allowedLanguages: Yup.array().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.of(Yup.string().oneOf(Object.values(ProgrammingLanguage))).min(1, 'At least one programming language must be selected').required('Allowed languages are required'),
+        then: (schema) => schema.of(Yup.string().oneOf(Object.values(ProgrammingLanguage))).min(1, 'At least one programming language must be selected').required('Languages are required for coding questions'),
         otherwise: (schema) => schema.notRequired(),
     }),
     memoryLimitInMB: Yup.number().when('type', {
@@ -110,7 +108,7 @@ const questionValidationSchema = Yup.object().shape({
     }),
     constraints: Yup.string().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.max(2000, 'Constraints too long'),
+        then: (schema) => schema.max(500, 'Constraints too long'),
         otherwise: (schema) => schema.notRequired(),
     }),
     testCases: Yup.array().when('type', {
@@ -119,7 +117,6 @@ const questionValidationSchema = Yup.object().shape({
             Yup.object().shape({
                 input: Yup.string().trim().required('Input is required'),
                 expectedOutput: Yup.string().trim().required('Expected output is required'),
-                points: Yup.number().typeError('Must be a number').min(0, 'Points must be at least 0').required('Points required'),
                 isPublic: Yup.boolean().default(false)
             })
         ).min(1, 'At least one test case is required'),
@@ -139,14 +136,14 @@ const questionValidationSchema = Yup.object().shape({
     }),
     expectedQuery: Yup.string().when('type', {
         is: QuestionType.QUERY,
-        then: (schema) => schema.trim().min(5, 'Query must be at least 5 characters').required('Expected query is required'),
+        then: (schema) => schema.trim().min(5, 'Query must be at least 5 characters').max(500, 'Query must not exceed 500 characters').required('Expected query is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
 
     // --- SUBJECTIVE Validation ---
     minLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 word').required('Min length is required'),
+        then: (schema) => schema.typeError('Must be a number').min(10, 'Minimum 10 words').required('Min length is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     maxLength: Yup.number().when('type', {
@@ -220,6 +217,7 @@ const CreateQuestion: React.FC = () => {
             if (payload.type !== QuestionType.SUBJECTIVE) {
                 delete payload.maxLength;
                 delete payload.minLength;
+                delete payload.subjectiveAnswer;
             }
 
             createMutation.mutate(payload);
@@ -360,7 +358,7 @@ const CreateQuestion: React.FC = () => {
                     {formik.values.type === QuestionType.CODING && (
                         <ContentBox>
                             <h3 className="font-semibold text-text-main mb-2">Coding Environment Specs</h3>
-                            
+
                             <div className="mb-4 mt-2">
                                 <Label htmlFor="allowedLanguages" label="Allowed Languages" required={true} />
                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -401,21 +399,20 @@ const CreateQuestion: React.FC = () => {
                                 <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
                                 <div className="space-y-4">
                                     {formik.values.testCases?.map((tc, index) => (
-                                        <div key={index} className="flex gap-3 items-start border border-border-light p-3 rounded-md">
+                                        <div key={index} className="space-y-3 border border-border-light p-3 rounded-md">
+                                            <div className="flex justify-between">
+                                                <label className="flex items-center text-sm gap-2 mt-2">
+                                                    <Input type="checkbox" checked={tc.isPublic} onChange={(e) => updateDynamicList('testCases', index, 'isPublic', e.target.checked)} />
+                                                    Public
+                                                </label>
+                                                <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('testCases', index)}>
+                                                    <MdClose className="text-xl" />
+                                                </Button>
+                                            </div>
                                             <div className="flex-1 space-y-2">
                                                 <Input type="text" placeholder="Input (e.g. '5 10')" value={tc.input} onChange={(e) => updateDynamicList('testCases', index, 'input', e.target.value)} />
                                                 <Input type="text" placeholder="Expected Output" value={tc.expectedOutput} onChange={(e) => updateDynamicList('testCases', index, 'expectedOutput', e.target.value)} />
                                             </div>
-                                            <div className="w-24 space-y-2">
-                                                <Input type="number" placeholder="Points" value={tc.points} onChange={(e) => updateDynamicList('testCases', index, 'points', Number(e.target.value))} />
-                                                <label className="flex items-center text-xs gap-1 mt-2">
-                                                    <Input type="checkbox" checked={tc.isPublic} onChange={(e) => updateDynamicList('testCases', index, 'isPublic', e.target.checked)} />
-                                                    Public
-                                                </label>
-                                            </div>
-                                            <Button type="button" variant='icon' className='text-error-main' onClick={() => removeDynamicItem('testCases', index)}>
-                                                <MdClose className="text-xl" />
-                                            </Button>
                                         </div>
                                     ))}
                                 </div>
@@ -447,10 +444,9 @@ const CreateQuestion: React.FC = () => {
                     {/* --- CONDITIONAL: SUBJECTIVE --- */}
                     {formik.values.type === QuestionType.SUBJECTIVE && (
                         <ContentBox>
-                            <h3 className="font-semibold text-text-main">Subjective Details</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={1} formik={formik} required />
-                                <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={1} formik={formik} required />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                                <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={10} formik={formik} required />
+                                <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={10} formik={formik} required />
                             </div>
                         </ContentBox>
                     )}

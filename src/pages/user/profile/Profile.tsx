@@ -18,6 +18,7 @@ import { BsFillPatchQuestionFill } from "react-icons/bs";
 import InfoField from '../../../components/ui/InfoField';
 import Label from '../../../components/ui/Label';
 import { Page } from '../../../components/ui/Page';
+import FormMultiInput from '../../../components/ui/FormMultiInput';
 
 const ProfileSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -42,7 +43,7 @@ const PasswordSchema = Yup.object().shape({
 const Profile: React.FC = () => {
     const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState(0);
-    const [editMode, setEditMode] = useState(true);
+    const [editMode, setEditMode] = useState(false);
     const [newSkill, setNewSkill] = useState('');
     const [modal, setModal] = useState(false);
 
@@ -157,8 +158,8 @@ const Profile: React.FC = () => {
                 <h1 className="text-3xl font-bold text-text-dark">
                     Profile Settings
                 </h1>
-                {!editMode && activeTab === 0 && (
-                    <Button variant='outline' className='text-primary-main border-primary-light'
+                {activeTab === 0 && !editMode && (
+                    <Button variant='primary' className='text-primary-main border-primary-light'
                         onClick={() => setEditMode(true)}
                     >
                         <MdEdit />
@@ -333,6 +334,14 @@ const Profile: React.FC = () => {
                                                 inputMode='text'
                                                 formik={profileFormik}
                                                 disabled={!editMode}
+                                            />
+                                            <FormMultiInput
+                                                className="md:col-span-2"
+                                                id="skills"
+                                                name="skills"
+                                                label="Skills"
+                                                placeholder="Add a skill and press Enter"
+                                                formik={profileFormik}
                                             />
 
                                             <div className="flex flex-col gap-1 md:col-span-2">
