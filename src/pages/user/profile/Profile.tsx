@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave, MdClose } from 'react-icons/md';
+import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave, } from 'react-icons/md';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
@@ -10,7 +10,6 @@ import type { UserInterface, ChangePasswordRequest } from '../../../types/authTy
 import { changePassword, getProfile, updateProfile } from '../../../services/axios/authApi';
 import Button from '../../../components/ui/Button';
 import FormInput from '../../../components/ui/FormInput';
-import Input from '../../../components/ui/Input';
 import DataLoader from '../../../components/common/DataLoader';
 import TabButton from '../../../components/ui/TabButton';
 import Confirmation from '../../../components/modal/Confirmation';
@@ -44,7 +43,6 @@ const Profile: React.FC = () => {
     const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState(0);
     const [editMode, setEditMode] = useState(false);
-    const [newSkill, setNewSkill] = useState('');
     const [modal, setModal] = useState(false);
 
     // Fetch user profile data
@@ -122,29 +120,6 @@ const Profile: React.FC = () => {
         },
     });
 
-    // Handle skills input
-    const handleAddSkill = () => {
-        const trimmedSkill = newSkill.trim();
-        if (trimmedSkill && !profileFormik.values.skills?.includes(trimmedSkill)) {
-            profileFormik.setFieldValue('skills', [...(profileFormik.values.skills || []), trimmedSkill]);
-            setNewSkill('');
-        }
-    };
-
-    const handleRemoveSkill = (skillToRemove: string) => {
-        profileFormik.setFieldValue(
-            'skills',
-            profileFormik.values.skills?.filter((skill) => skill !== skillToRemove)
-        );
-    };
-
-    const handleNewSkillKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            handleAddSkill();
-        }
-    };
-
     if (!profileData) {
         return (
             <DataLoader />
@@ -159,7 +134,7 @@ const Profile: React.FC = () => {
                     Profile Settings
                 </h1>
                 {activeTab === 0 && !editMode && (
-                    <Button variant='primary' className='text-primary-main border-primary-light'
+                    <Button variant='primary'
                         onClick={() => setEditMode(true)}
                     >
                         <MdEdit />
@@ -335,6 +310,7 @@ const Profile: React.FC = () => {
                                                 formik={profileFormik}
                                                 disabled={!editMode}
                                             />
+
                                             <FormMultiInput
                                                 className="md:col-span-2"
                                                 id="skills"
@@ -343,46 +319,6 @@ const Profile: React.FC = () => {
                                                 placeholder="Add a skill and press Enter"
                                                 formik={profileFormik}
                                             />
-
-                                            <div className="flex flex-col gap-1 md:col-span-2">
-                                                <label
-                                                    htmlFor="newSkillInput"
-                                                    className="mb-2 block text-base font-medium text-text-main"
-                                                >
-                                                    Skills
-                                                </label>
-                                                <div className="flex gap-2 items-center">
-                                                    <Input
-                                                        id="newSkillInput"
-                                                        name="newSkillInput"
-                                                        type="text"
-                                                        placeholder="Add a skill and press Enter or click Add"
-                                                        value={newSkill}
-                                                        onChange={(e) => setNewSkill(e.target.value)}
-                                                        onKeyDown={handleNewSkillKeyDown}
-                                                        disabled={!editMode}
-                                                        className="grow"
-                                                    />
-                                                    {editMode && (
-                                                        <Button
-                                                            onClick={handleAddSkill}
-                                                            variant="primary"
-                                                            size="md"
-                                                            disabled={!newSkill.trim()}
-                                                        >
-                                                            Add
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    {profileFormik.values.skills && profileFormik.values.skills.length > 0 && profileFormik.values.skills.map((skill) => (
-                                                        <span key={skill} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-primary-light/20 text-text-main">
-                                                            {skill}
-                                                            <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveSkill(skill)} />
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
                                         </div> :
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <InfoField
@@ -408,11 +344,13 @@ const Profile: React.FC = () => {
                                             <div className="mb-2">
                                                 <Label label='Skills' />
                                                 <div className="flex flex-wrap gap-2 mt-2">
-                                                    {profileData.data.skills && profileData.data.skills.length > 0 && profileData.data.skills.map((skill: string, index: number) => (
+                                                    {profileData.data.skills && profileData.data.skills.length > 0 ? profileData.data.skills.map((skill, index) => (
                                                         <span key={index + 1} className="px-2 rounded-md font-medium bg-primary-main border border-primary-light/50 text-text-inverse">
                                                             {skill}
                                                         </span>
-                                                    ))}
+                                                    )) : (
+                                                        <span className="text-gray-500">No skills added</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

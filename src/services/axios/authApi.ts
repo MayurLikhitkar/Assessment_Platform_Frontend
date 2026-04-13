@@ -1,6 +1,6 @@
-import type { ApiResponse, UserInterface } from "../../types/types"
+import type { ApiResponse, } from "../../types/types"
 import api from "./api"
-import type { ChangePasswordRequest } from '../../types/authTypes';
+import type { ChangePasswordRequest, UserInterface } from '../../types/authTypes';
 
 export const getProfile = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFormik } from 'formik';
 import { toast } from 'react-hot-toast';
@@ -10,7 +10,6 @@ import FormTextArea from '../../../components/ui/FormTextArea';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { createQuestion } from '../../../services/axios/adminApi';
-
 import type { ApiResponse } from '../../../types/types';
 import { QuestionType, Difficulty, DatabaseType, ProgrammingLanguage } from '../../../types/questionTypes';
 import type { QuestionInterface } from '../../../types/questionTypes';
@@ -18,6 +17,7 @@ import BackButton from '../../../components/common/BackButton';
 import { ContentBox, Page, PageBody, PageFooter, PageHeader } from '../../../components/ui/Page';
 import { useNavigate } from 'react-router-dom';
 import Label from '../../../components/ui/Label';
+import FormMultiInput from '../../../components/ui/FormMultiInput';
 
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
@@ -156,8 +156,6 @@ const questionValidationSchema = Yup.object().shape({
 const CreateQuestion: React.FC = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [tagInput, setTagInput] = useState('');
-    const [hintInput, setHintInput] = useState('');
 
     const createMutation = useMutation({
         mutationFn: createQuestion,
@@ -193,6 +191,7 @@ const CreateQuestion: React.FC = () => {
             testCases: [],
             allowedLanguages: [ProgrammingLanguage.JAVASCRIPT],
             databaseType: DatabaseType.POSTGRESQL,
+            expectedKeywords: [],
         },
         validationSchema: questionValidationSchema,
         validateOnChange: true,
@@ -226,28 +225,6 @@ const CreateQuestion: React.FC = () => {
 
     const handleClose = () => {
         formik.resetForm();
-        setTagInput('');
-        setHintInput('');
-    };
-
-    // --- Tag & Hint Handlers ---
-    const handleAddItem = (input: string, field: 'tags' | 'hints', setInput: React.Dispatch<React.SetStateAction<string>>) => {
-        const item = input.trim();
-        if (!item) {
-            toast.error(`Please enter a ${field === 'tags' ? 'tag' : 'hint'} first`);
-            return;
-        }
-        if (formik.values[field]?.includes(item)) {
-            toast.error(`This ${field === 'tags' ? 'tag' : 'hint'} already exists`);
-            return;
-        }
-        formik.setFieldValue(field, [...(formik.values[field] || []), item]);
-        formik.setFieldTouched(field, true);
-        setInput('');
-    };
-
-    const handleRemoveItem = (item: string, field: 'tags' | 'hints') => {
-        formik.setFieldValue(field, formik.values[field]?.filter(t => t !== item));
     };
 
     // --- Dynamic List Handlers ---
@@ -444,60 +421,42 @@ const CreateQuestion: React.FC = () => {
                     {/* --- CONDITIONAL: SUBJECTIVE --- */}
                     {formik.values.type === QuestionType.SUBJECTIVE && (
                         <ContentBox>
+                            <h3 className="font-semibold text-text-main mb-2">Subjective Question Specs</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                                 <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={10} formik={formik} required />
                                 <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={10} formik={formik} required />
                             </div>
+                            <FormMultiInput
+                                id="expectedKeywords"
+                                name="expectedKeywords"
+                                label="Expected Keywords (In Candidate's Answer)"
+                                placeholder="Enter keywords"
+                                formik={formik}
+                                required
+                            />
                         </ContentBox>
                     )}
 
                     {/* --- TAGS & HINTS --- */}
                     <ContentBox className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Tags */}
-                        <div>
-                            <Label htmlFor="tags" label="Tags" required={true} />
-                            <div className="flex gap-2">
-                                <Input type="text" id='tags' value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddItem(tagInput, 'tags', setTagInput); } }} placeholder="Add tag and press Enter" />
-                                <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(tagInput, 'tags', setTagInput)}>Add</Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {formik.values.tags?.map((tag) => (
-                                    <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-primary-light/20 text-text-light">
-                                        {tag}
-                                        <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(tag, 'tags')}
-                                        />
-                                    </span>
-                                ))}
-                            </div>
-                            {formik.touched.tags && typeof formik.errors.tags === 'string' && <div className="text-xs text-error-main mt-1">{formik.errors.tags}</div>}
-                        </div>
+                        <FormMultiInput
+                            id="tags"
+                            name="tags"
+                            label="Tags"
+                            placeholder="Add a tag and press Enter"
+                            formik={formik}
+                        />
 
                         {/* Hints */}
-                        <div>
-                            <Label htmlFor="hints" label="Hints" />
-                            <div className="flex gap-2">
-                                <Input type="text" id='hints' value={hintInput} onChange={(e) => setHintInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddItem(hintInput, 'hints', setHintInput); } }} placeholder="Add hint and press Enter" />
-                                <Button type="button" variant="primary" size="sm" onClick={() => handleAddItem(hintInput, 'hints', setHintInput)}>Add</Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {formik.values.hints?.map((hint) => (
-                                    <span key={hint} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium bg-secondary-light/20 text-secondary-main">
-                                        {hint}
-                                        <MdClose className="text-2xl p-1 cursor-pointer rounded-full text-error-main! hover:bg-error-light/50" onClick={() => handleRemoveItem(hint, 'hints')}
-                                        />
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
+                        <FormMultiInput
+                            id="hints"
+                            name="hints"
+                            label="Hints"
+                            placeholder="Add a hint and press Enter"
+                            formik={formik}
+                        />
                     </ContentBox>
-
-                    {/* --- FOOTER --- */}
-                    {/* <div className="flex justify-end gap-3 pt-4 border-t border-border-light/50">
-                    <Button type="button" variant="outline" size="md" onClick={handleClose}>Cancel</Button>
-                    <Button type="submit" variant="primary" size="md" loading={createMutation.isPending}>
-                        Create Question
-                    </Button>
-                </div> */}
                 </form>
             </PageBody>
 
