@@ -285,6 +285,7 @@ const Profile: React.FC = () => {
                                                 name="email"
                                                 label="Work Email"
                                                 type="email"
+                                                inputMode="email"
                                                 placeholder="john.doe@company.com"
                                                 formik={profileFormik}
                                                 disabled={!editMode}
@@ -295,6 +296,7 @@ const Profile: React.FC = () => {
                                                 name="phone"
                                                 label="Phone Number"
                                                 type="tel"
+                                                inputMode="tel"
                                                 placeholder="123-456-7890"
                                                 formik={profileFormik}
                                                 disabled={!editMode}
@@ -306,7 +308,7 @@ const Profile: React.FC = () => {
                                                 label="Experience (years)"
                                                 type="number"
                                                 placeholder="1"
-                                                inputMode='text'
+                                                inputMode='decimal'
                                                 formik={profileFormik}
                                                 disabled={!editMode}
                                             />

@@ -32,8 +32,7 @@ const questionValidationSchema = Yup.object().shape({
     questionExplanation: Yup.string()
         .trim()
         .min(10, 'Question explanation must be at least 10 characters')
-        .max(3000, 'Question explanation must not exceed 3000 characters')
-        .required('Question explanation is required'),
+        .max(3000, 'Question explanation must not exceed 3000 characters'),
     marks: Yup.number()
         .min(1, 'Marks must be at least 1')
         .max(100, 'Marks must not exceed 100')
@@ -243,6 +242,20 @@ const CreateQuestion: React.FC = () => {
         }
     };
 
+    const addOption = () => {
+        formik.setFieldValue('options', [
+            ...(formik.values.options || []),
+            { text: '', isCorrect: false }
+        ]);
+    }
+
+    const addTestCase = () => {
+        formik.setFieldValue('testCases', [
+            ...(formik.values.testCases || []),
+            { input: '', expectedOutput: '', isPublic: false }
+        ]);
+    }
+
     return (
         <Page>
             {/* Header */}
@@ -281,17 +294,17 @@ const CreateQuestion: React.FC = () => {
                     </ContentBox>
                     <ContentBox className="grid gap-6">
                         <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
-                        <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question" required />
+                        <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question" />
                         <FormTextArea id="answerExplanation" name="answerExplanation" label="Answer Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the correct answer (optional)" />
                     </ContentBox>
 
                     {/* Conditional Sections */}
-                    {/* --- CONDITIONAL: CODING --- */}
+                    {/* --- CONDITIONAL: MCQ --- */}
                     {formik.values.type === QuestionType.MCQ && (
                         <ContentBox>
                             <div className="flex justify-between items-center mb-3">
                                 <h3 className="font-semibold text-text-main">MCQ Options</h3>
-                                <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('options', [...(formik.values.options || []), { text: '', isCorrect: false }])}>
+                                <Button type="button" variant='text' className="mt-2" onClick={addOption}>
                                     <MdAdd className='text-xl' /> Add Option
                                 </Button>
                             </div>
@@ -393,7 +406,7 @@ const CreateQuestion: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                                <Button type="button" variant='text' className="mt-2" onClick={() => formik.setFieldValue('testCases', [...(formik.values.testCases || []), { input: '', expectedOutput: '', isPublic: false, points: 10 }])}>
+                                <Button type="button" variant='text' className="mt-2" onClick={addTestCase}>
                                     <MdAdd /> Add Test Case
                                 </Button>
                             </div>
