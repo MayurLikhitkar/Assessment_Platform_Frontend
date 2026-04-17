@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MdAdd, MdDelete, MdQuiz } from 'react-icons/md';
+import { MdAdd, MdDelete, MdQuiz, MdVisibility, MdEdit } from 'react-icons/md';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { toast } from 'react-hot-toast';
 import Confirmation from '../../../components/modal/Confirmation';
@@ -38,6 +38,9 @@ const AdminQuestions: React.FC = () => {
     });
 
     const questions: QuestionInterface[] = questionsData?.data || [];
+
+    const activeCount = questions.filter((q: QuestionInterface) => q.isActive).length;
+    const inactiveCount = questions.filter((q: QuestionInterface) => !q.isActive).length;
 
     // Delete mutation
     const deleteMutation = useMutation({
@@ -123,21 +126,53 @@ const AdminQuestions: React.FC = () => {
             },
         },
         {
+            headerName: 'Status',
+            field: 'isActive',
+            minWidth: 100,
+            flex: 0.7,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const isActive = params.data.isActive;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isActive
+                        ? 'bg-success-light/40 text-success-dark'
+                        : 'bg-error-light/40 text-error-dark'
+                        }`}>
+                        {isActive ? 'Active' : 'Inactive'}
+                    </span>
+                );
+            },
+        },
+        {
             headerName: 'Actions',
-            minWidth: 80,
-            maxWidth: 80,
+            minWidth: 120,
+            maxWidth: 120,
             filter: false,
             sortable: false,
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data) return null;
                 return (
-                    <button
-                        onClick={() => setDeleteTarget(params.data!)}
-                        className="p-1.5 rounded-lg hover:bg-error-light/20 text-error-main transition-colors"
-                        title="Delete"
-                    >
-                        <MdDelete className="text-lg" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            className="p-1.5 rounded-lg hover:bg-secondary-light/20 text-secondary-main transition-colors"
+                            title="View Details"
+                        >
+                            <MdVisibility className="text-lg" />
+                        </button>
+                        <button
+                            className="p-1.5 rounded-lg hover:bg-primary-light/10 text-primary-main transition-colors"
+                            title="Edit"
+                        >
+                            <MdEdit className="text-lg" />
+                        </button>
+                        <button
+                            onClick={() => setDeleteTarget(params.data!)}
+                            className="p-1.5 rounded-lg hover:bg-error-light/20 text-error-main transition-colors"
+                            title="Delete"
+                        >
+                            <MdDelete className="text-lg" />
+                        </button>
+                    </div>
                 );
             },
         },
@@ -156,6 +191,37 @@ const AdminQuestions: React.FC = () => {
                         <MdAdd className="text-xl" />
                         Add Question
                     </Button>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                        <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
+                            <MdQuiz className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-text-dark">{questions.length}</p>
+                            <p className="text-sm text-text-light">Total Questions</p>
+                        </div>
+                    </div>
+                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                        <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
+                            <MdQuiz className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
+                            <p className="text-sm text-text-light">Active</p>
+                        </div>
+                    </div>
+                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                        <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
+                            <MdQuiz className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
+                            <p className="text-sm text-text-light">Inactive</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Questions Table */}

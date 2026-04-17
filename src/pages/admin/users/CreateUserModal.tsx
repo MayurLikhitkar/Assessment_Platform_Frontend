@@ -112,12 +112,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isCreateModalOpen, se
                     label="Assign Role"
                     placeholder="Select a role"
                     formik={formik}
-                    options={[
-                        { label: 'User (Candidate)', value: 'user' },
-                        { label: 'Proctor', value: 'proctor' },
-                        { label: 'Evaluator', value: 'evaluator' },
-                        { label: 'Admin', value: 'admin' },
-                    ]}
+                    options={Object.values(UserRole).map(d => ({ label: d.replaceAll(/\b\w/g, c => c.toUpperCase()), value: d }))
+                    }
                     required
                 />
                 <FormInput

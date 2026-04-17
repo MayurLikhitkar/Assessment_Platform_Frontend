@@ -21,7 +21,7 @@ const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
             'rounded-lg bg-background-light px-1 min-h-[40px]! cursor-pointer transition-all ring ring-primary-dark/40',
             isFocused && 'ring-2 focus:outline-none'
         ),
-    valueContainer: () => 'px-2 py-0.5 text-text-main',
+    valueContainer: () => 'px-2 text-text-main',
     singleValue: () => 'text-text-main text-sm',
     placeholder: () => 'text-text-light text-sm',
     input: () => 'text-text-main',
@@ -38,14 +38,13 @@ const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
         ),
     dropdownIndicator: ({ isFocused, selectProps }) =>
         twMerge(
-            'px-2 transition-all duration-200',
+            'px-2 transition-all duration-200 ',
             isFocused ? 'text-primary-main' : 'text-text-light hover:text-primary-main',
             selectProps.menuIsOpen ? 'rotate-180' : 'rotate-0'
         ),
     clearIndicator: () => 'px-1 text-text-light hover:text-error-main transition-colors',
     indicatorSeparator: () => 'hidden',
     noOptionsMessage: () => 'text-text-light text-sm py-2',
-    // menuPortal: () => 'z-[999]',
 };
 
 const Select: React.FC<SelectProps> = ({ value, id, placeholder, className, options, onChange, classNames: extraClassNames, ...rest }) => {
@@ -54,7 +53,7 @@ const Select: React.FC<SelectProps> = ({ value, id, placeholder, className, opti
             inputId={id}
             unstyled
             value={options.find((opt) => opt.value === value) ?? null}
-            options={options}   
+            options={options}
             placeholder={placeholder}
             classNames={{
                 ...baseClassNames,
@@ -62,6 +61,7 @@ const Select: React.FC<SelectProps> = ({ value, id, placeholder, className, opti
             }}
             menuPortalTarget={document.body}
             menuPosition='fixed'
+            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
             onChange={(opt) => onChange?.(opt?.value ?? '')}
             className={className}
             {...rest}

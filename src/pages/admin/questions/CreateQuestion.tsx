@@ -26,7 +26,7 @@ const questionValidationSchema = Yup.object().shape({
         .required('Question type is required'),
     question: Yup.string()
         .trim()
-        .min(10, 'Question must be at least 10 characters')
+        .min(5, 'Question must be at least 5 characters')
         .max(2000, 'Question must not exceed 2000 characters')
         .required('Question is required'),
     questionExplanation: Yup.string()
@@ -102,12 +102,12 @@ const questionValidationSchema = Yup.object().shape({
     }),
     memoryLimitInMB: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 MB').max(1024, 'Maximum 1024 MB').required('Memory limit is required'),
+        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 MB').max(128, 'Maximum 128 MB').required('Memory limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
-    constraints: Yup.string().when('type', {
+    constraints: Yup.array().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.max(500, 'Constraints too long'),
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Constraint cannot be empty')).min(1, 'At least one constraint is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     testCases: Yup.array().when('type', {
@@ -150,6 +150,11 @@ const questionValidationSchema = Yup.object().shape({
         then: (schema) => schema.typeError('Must be a number').min(Yup.ref('minLength'), 'Max length must be >= min length').required('Max length is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
+    expectedKeywords: Yup.array().when('type', {
+        is: QuestionType.SUBJECTIVE,
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Keyword cannot be empty')).min(1, 'At least one keyword is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
 });
 
 const CreateQuestion: React.FC = () => {
@@ -188,6 +193,7 @@ const CreateQuestion: React.FC = () => {
             timeLimitInMinutes: 30,
             memoryLimitInMB: 256,
             testCases: [],
+            constraints: [],
             allowedLanguages: [ProgrammingLanguage.JAVASCRIPT],
             databaseType: DatabaseType.POSTGRESQL,
             expectedKeywords: [],
@@ -216,6 +222,7 @@ const CreateQuestion: React.FC = () => {
                 delete payload.maxLength;
                 delete payload.minLength;
                 delete payload.subjectiveAnswer;
+                delete payload.expectedKeywords;
             }
 
             createMutation.mutate(payload);
@@ -292,6 +299,7 @@ const CreateQuestion: React.FC = () => {
                         <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
                         <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
                     </ContentBox>
+                    
                     <ContentBox className="grid gap-6">
                         <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
                         <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question" />
@@ -346,10 +354,10 @@ const CreateQuestion: React.FC = () => {
 
                     {/* --- CONDITIONAL: CODING --- */}
                     {formik.values.type === QuestionType.CODING && (
-                        <ContentBox>
-                            <h3 className="font-semibold text-text-main mb-2">Coding Environment Specs</h3>
+                        <ContentBox className='space-y-6'>
+                            <h3 className="font-semibold text-text-main">Coding Environment Specs</h3>
 
-                            <div className="mb-4 mt-2">
+                            <div>
                                 <Label htmlFor="allowedLanguages" label="Allowed Languages" required={true} />
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {Object.values(ProgrammingLanguage).map(lang => {
@@ -383,9 +391,16 @@ const CreateQuestion: React.FC = () => {
                                 <FormInput id="timeLimitInMinutes" name="timeLimitInMinutes" label="Time Limit (Minutes)" type="number" formik={formik} />
                                 <FormInput id="memoryLimitInMB" name="memoryLimitInMB" label="Memory Limit (MB)" type="number" formik={formik} />
                             </div>
-                            <FormTextArea id="constraints" name="constraints" label="Constraints" placeholder='Enter constraints (e.g. 1 <= N <= 10^5)' rows={2} formik={formik} />
 
-                            <div className="mt-4">
+                            <FormMultiInput
+                                id="constraints"
+                                name="constraints"
+                                label="Constraints"
+                                placeholder="Add a constraint and press Enter"
+                                formik={formik}
+                            />
+
+                            <div>
                                 <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
                                 <div className="space-y-4">
                                     {formik.values.testCases?.map((tc, index) => (
@@ -406,7 +421,7 @@ const CreateQuestion: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                                <Button type="button" variant='text' className="mt-2" onClick={addTestCase}>
+                                <Button type="button" variant='text' onClick={addTestCase}>
                                     <MdAdd /> Add Test Case
                                 </Button>
                             </div>
