@@ -89,3 +89,43 @@ export const createAssessment = async (data: Partial<AssessmentInterface>) => {
         throw apiError;
     }
 }
+
+export const getQuestionById = async (id: string | number) => {
+    try {
+        const response = await api.get<ApiResponse<QuestionInterface>>(`/questions/${id}`);
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+};
+
+export const updateQuestion = async ({ id, data }: { id: string | number, data: Partial<QuestionInterface> }) => {
+    try {
+        const response = await api.put<ApiResponse<QuestionInterface>>(`/questions/${id}`, data);
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+};
+
+export const getAssessmentById = async (id: string | number) => {
+    try {
+        const response = await api.get<ApiResponse<AssessmentInterface>>(`/assessments/${id}`);
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+};
+
+export const updateAssessment = async ({ id, data }: { id: string | number, data: Partial<AssessmentInterface> }) => {
+    try {
+        const response = await api.put<ApiResponse<AssessmentInterface>>(`/assessments/${id}`, data);
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+};

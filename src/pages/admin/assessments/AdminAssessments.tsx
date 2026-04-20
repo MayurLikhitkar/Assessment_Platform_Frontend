@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MdAdd, MdVisibility, MdEdit, MdAssignment } from 'react-icons/md';
+import { MdAdd, MdAssignment } from 'react-icons/md';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
@@ -8,6 +8,7 @@ import { getAdminAssessments } from '../../../services/axios/adminApi';
 import type { AssessmentInterface } from '../../../types/assessmentTypes';
 import AgGridTable from '../../../components/common/AgGridTable';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
+import ActionCell from '../../../components/common/ActionCell';
 
 const difficultyColors: Record<string, string> = {
     beginner: 'bg-success-light/40 text-success-dark',
@@ -135,21 +136,11 @@ const AdminAssessments: React.FC = () => {
             maxWidth: 100,
             filter: false,
             sortable: false,
-            cellRenderer: () => (
-                <div className="flex items-center gap-2">
-                    <button
-                        className="p-1.5 rounded-lg hover:bg-secondary-light/20 text-secondary-main transition-colors"
-                        title="View Details"
-                    >
-                        <MdVisibility className="text-lg" />
-                    </button>
-                    <button
-                        className="p-1.5 rounded-lg hover:bg-primary-light/10 text-primary-main transition-colors"
-                        title="Edit"
-                    >
-                        <MdEdit className="text-lg" />
-                    </button>
-                </div>
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => (
+                <ActionCell
+                    onView={() => console.log('View', params.data)}
+                    onEdit={() => console.log('Edit', params.data)}
+                />
             ),
         },
     ], []);

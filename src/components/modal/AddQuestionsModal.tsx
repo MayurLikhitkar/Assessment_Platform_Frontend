@@ -16,7 +16,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 interface AddQuestionsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAddSelected: (questions: QuestionInterface[]) => void;
+    onAddSelected: (questions: string[]) => void;
     existingQuestionIds: string[];
 }
 
@@ -172,7 +172,6 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                         onGridReady={onGridReady}
                         onRowClicked={onRowClicked}
                         rowSelection="multiple"
-                        suppressRowClickSelection={false}
                         enableCellTextSelection={true}
                         loading={isLoading}
                         overlayNoRowsTemplate="<span class='text-text-light'>No available questions match your criteria</span>"

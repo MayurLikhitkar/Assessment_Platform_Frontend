@@ -14,6 +14,7 @@ export enum AssessmentDifficulty {
 }
 
 export interface AssessmentInterface {
+    _id: string;
     id: number;
     title: string;
     description: string;

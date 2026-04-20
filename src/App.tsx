@@ -21,6 +21,8 @@ import Dashboard from './pages/user/dashboard/Dashboard';
 import { getHomePath } from './utils/roleUtils';
 import { useAuth } from './hooks/useAuth';
 import CreateQuestion from './pages/admin/questions/CreateQuestion';
+import EditAssessment from './pages/admin/assessments/EditAssessment';
+import EditQuestion from './pages/admin/questions/EditQuestion';
 
 // Add a root redirect component to handle role-based routing
 const RootRedirect = () => {
@@ -57,8 +59,10 @@ function App() {
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/assessments" element={<AdminAssessments />} />
               <Route path="/admin/assessments/create" element={<CreateAssessment />} />
+              <Route path="/admin/assessments/edit/:id" element={<EditAssessment />} />
               <Route path="/admin/questions" element={<AdminQuestions />} />
               <Route path="/admin/questions/create" element={<CreateQuestion />} />
+              <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
             </Route>
 
             {/* 404 Route */}

@@ -36,7 +36,7 @@ const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
                     ? 'bg-secondary-main text-text-inverse'
                     : 'text-text-main'
         ),
-    dropdownIndicator: ({ isFocused, selectProps }) =>
+    dropdownIndicator: ({ isFocused, selectProps }) =>  
         twMerge(
             'px-2 transition-all duration-200 ',
             isFocused ? 'text-primary-main' : 'text-text-light hover:text-primary-main',
