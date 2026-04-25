@@ -138,12 +138,12 @@ const AdminAssessments: React.FC = () => {
             sortable: false,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => (
                 <ActionCell
-                    onView={() => console.log('View', params.data)}
-                    onEdit={() => console.log('Edit', params.data)}
+                    onView={() => navigate(`/admin/assessments/view/${params.data?.id}`)}
+                    onEdit={() => navigate(`/admin/assessments/edit/${params.data?.id}`)}
                 />
             ),
         },
-    ], []);
+    ], [navigate]);
 
     return (
         <Page>

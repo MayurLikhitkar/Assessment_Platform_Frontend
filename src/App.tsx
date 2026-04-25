@@ -59,6 +59,7 @@ function App() {
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/assessments" element={<AdminAssessments />} />
               <Route path="/admin/assessments/create" element={<CreateAssessment />} />
+              <Route path="/admin/assessments/view/:id" element={<EditAssessment />} />
               <Route path="/admin/assessments/edit/:id" element={<EditAssessment />} />
               <Route path="/admin/questions" element={<AdminQuestions />} />
               <Route path="/admin/questions/create" element={<CreateQuestion />} />
