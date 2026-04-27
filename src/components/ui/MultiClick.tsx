@@ -26,7 +26,7 @@ const MultiClick = <T extends string | number>({
 
     return (
         <div className={twMerge('flex flex-wrap gap-2', className)} {...props}>
-            {options.map((option, index) => {
+            {options.map((option) => {
                 const optValue = (typeof option === 'string' ? option : option.value) as T;
                 // Give objects their specific label, or format the raw string nicely
                 const optLabel = typeof option === 'string' ? option.toUpperCase() : option.label;
@@ -34,14 +34,14 @@ const MultiClick = <T extends string | number>({
 
                 return (
                     <button
-                        key={index}
+                        key={String(optValue)}
                         type="button"
                         onClick={() => handleToggle(optValue)}
                         className={twMerge(
-                            'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                            'px-3 py-2 text-xs font-medium rounded-lg cursor-pointer border transition-colors border-primary-dark/50',
                             isSelected
-                                ? 'bg-primary-main/10 border-primary-main text-primary-main'
-                                : 'bg-background-main text-text-main border-border-light hover:border-primary-main/50',
+                                ? 'bg-primary-main/10 text-primary-main'
+                                : 'text-text-main',
                             hasError && !isSelected ? 'border-error-main bg-error-main/5 text-error-main' : ''
                         )}
                     >

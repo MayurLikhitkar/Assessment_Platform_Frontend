@@ -36,10 +36,8 @@ const FormMultiClick = <FormValues, ItemType extends string | number>({
 
     return (
         <div className={twMerge('w-full', className)}>
-            {withLabel && label && (
-                <div className="mb-1.5">
-                    <Label htmlFor={id} label={label} required={required} />
-                </div>
+            {label && withLabel && (
+                <Label htmlFor={id} label={label} required={required} />
             )}
             <MultiClick<ItemType>
                 id={id}

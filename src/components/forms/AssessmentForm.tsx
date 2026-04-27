@@ -8,7 +8,7 @@ import FormSelect from '../ui/FormSelect';
 import FormTextArea from '../ui/FormTextArea';
 import FormMultiClick from '../ui/FormMultiClick';
 import Button from '../ui/Button';
-import { ContentBox } from '../ui/Page';
+import { ContentBox, PageFooter } from '../ui/Page';
 import AddQuestionsModal from '../modal/AddQuestionsModal';
 
 import { type AssessmentInterface } from '../../types/assessmentTypes';
@@ -74,79 +74,69 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     };
 
     return (
-        <>
-            <div className="grid lg:grid-cols-3 gap-6">
-                {/* Left Col: Details */}
-                <div className="lg:col-span-1 space-y-6">
-                    <ContentBox>
-                        <form id="assessment-form" onSubmit={formik.handleSubmit} className="space-y-4">
-                            <FormInput id="title" name="title" label="Title" type="text" formik={formik} required />
-                            <FormTextArea id="description" name="description" label="Description" rows={3} formik={formik} required />
+        <form id="assessment-form" onSubmit={formik.handleSubmit} className="space-y-3">
+            <ContentBox className="space-y-5">
+                <FormInput id="title" name="title" label="Title of Assessment" type="text" formik={formik} required />
+                <FormTextArea id="description" name="description" label="Description" rows={3} formik={formik} required />
 
-                            {/* Assessment Type - multi-select chips */}
-                            <FormMultiClick
-                                id="type"
-                                name="type"
-                                label="Type"
-                                options={typeOptions}
-                                formik={formik}
-                                required
-                            />
+                <FormMultiClick
+                    id="type"
+                    name="type"
+                    label="Assessment Type"
+                    options={typeOptions}
+                    formik={formik}
+                    required
+                />
+                <div className="grid grid-cols-2 gap-5">
+                    <FormSelect
+                        id="difficulty"
+                        name="difficulty"
+                        label="Difficulty"
+                        options={[
+                            { label: 'Beginner', value: 'beginner' },
+                            { label: 'Intermediate', value: 'intermediate' },
+                            { label: 'Advanced', value: 'advanced' },
+                            { label: 'Expert', value: 'expert' },
+                        ]}
+                        formik={formik}
+                        placeholder="Select difficulty"
+                        required
+                    />
+                    <FormInput id="durationInMinutes" name="durationInMinutes" label="Duration (In Min)" type="number" formik={formik} required />
+                    <FormInput id="totalMarks" name="totalMarks" label="Maximum Marks" type="number" formik={formik} required />
+                    <FormInput id="passingMarks" name="passingMarks" label="Minimum Passing Marks" type="number" formik={formik} required />
+                </div>
+            </ContentBox>
 
-                            <FormSelect
-                                id="difficulty"
-                                name="difficulty"
-                                label="Difficulty"
-                                options={[
-                                    { label: 'Beginner', value: 'beginner' },
-                                    { label: 'Intermediate', value: 'intermediate' },
-                                    { label: 'Advanced', value: 'advanced' },
-                                    { label: 'Expert', value: 'expert' },
-                                ]}
-                                formik={formik}
-                                placeholder="Select difficulty"
-                                required
-                            />
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormInput id="durationInMinutes" name="durationInMinutes" label="Duration (min)" type="number" formik={formik} required />
-                                <FormInput id="totalMarks" name="totalMarks" label="Total Marks" type="number" formik={formik} required />
-                                <FormInput id="passingMarks" name="passingMarks" label="Passing Marks" type="number" formik={formik} required />
-                            </div>
-                        </form>
-                    </ContentBox>
+            <ContentBox>
+                <h2 className="text-lg font-semibold text-text-dark mb-4 border-b border-border-light/50 pb-2">
+                    Proctoring Settings
+                </h2>
+                <p className="text-sm text-text-light">Advanced proctoring options will go here.</p>
+            </ContentBox>
 
-                    <ContentBox>
-                        <h2 className="text-lg font-semibold text-text-dark mb-4 border-b border-border-light/50 pb-2">
-                            Proctoring Settings
-                        </h2>
-                        <p className="text-sm text-text-light">Advanced proctoring options will go here.</p>
-                    </ContentBox>
+            <ContentBox className='space-y-6'>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-text-dark">Assessment Questions</h2>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => setIsAddQuestionsModalOpen(true)}
+                    >
+                        <MdAdd /> Add Questions
+                    </Button>
                 </div>
 
-                {/* Right Col: Questions */}
-                <div className="lg:col-span-2">
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-6">
-                        <div className="flex justify-between items-center mb-4 border-b border-border-light/50 pb-2">
-                            <h2 className="text-lg font-semibold text-text-dark">Questions</h2>
-                            <Button
-                                type="button"
-                                variant="primary"
-                                size="sm"
-                                className="flex items-center gap-1"
-                                onClick={() => setIsAddQuestionsModalOpen(true)}
-                            >
-                                <MdAdd /> Add Questions
-                            </Button>
-                        </div>
-
-                        {(formik.values.questions?.length || 0) < 1 ? (
-                            <div className="text-center py-12 bg-muted-light/20 rounded-lg border border-dashed border-border-light">
-                                <p className="text-text-main font-medium">No questions added yet</p>
-                                <p className="text-sm text-text-light mt-1">Click "Add Questions" to select from question bank.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {/* {questions.map((q, idx) => (
+                {(formik.values.questions?.length || 0) < 1 ? (
+                    <div className="text-center py-12 bg-muted-light rounded-lg border border-dashed border-border-light">
+                        <p className="text-text-main font-medium">No questions added yet</p>
+                        <p className="text-sm text-text-light mt-1">Click "Add Questions" to select from question bank.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {/* {questions.map((q, idx) => (
                                     <div key={q._id} className="flex justify-between items-center bg-background-main border border-border-light rounded-lg p-3">
                                         <div className="flex-1 mr-4">
                                             <div className="flex items-start">
@@ -169,13 +159,11 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                                         </button>
                                     </div>
                                 ))} */}
-                            </div>
-                        )}
                     </div>
-                </div>
-            </div>
+                )}
+            </ContentBox>
 
-            <div className="flex items-center justify-end gap-3 mt-6 border-t border-border-light/50 pt-5">
+            <PageFooter>
                 <Button variant="outline" onClick={handleCancel} type="button">
                     Cancel
                 </Button>
@@ -188,7 +176,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 >
                     {isEditMode ? "Update Assessment" : "Create Assessment"}
                 </Button>
-            </div>
+            </PageFooter>
 
             <AddQuestionsModal
                 isOpen={isAddQuestionsModalOpen}
@@ -196,7 +184,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 onAddSelected={handleAddQuestions}
                 existingQuestionIds={initialValues.questions || []}
             />
-        </>
+        </form>
     );
 };
 

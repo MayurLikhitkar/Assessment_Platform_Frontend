@@ -6,18 +6,19 @@ import Select from '../ui/Select';
 import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
 import { paginationOptions } from '../../utils/config';
+import Search from '../ui/Search';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface AgGridTableProps<T> extends AgGridReactProps {
-    leftSection?: React.ReactNode;
     rowData: T[];
     columnDefs: ColDef[];
 }
 
-const AgGridTable = <T,>({ rowData, columnDefs, leftSection, ...props }: AgGridTableProps<T>) => {
+const AgGridTable = <T,>({ rowData, columnDefs, ...props }: AgGridTableProps<T>) => {
     const gridRef = useRef<GridApi<T> | null>(null);
     const [paginationPageSize, setPaginationPageSize] = useState(10);
+    const [searchText, setSearchText] = useState('');
 
     const onGridReady = useCallback((params: GridReadyEvent<T>) => {
         gridRef.current = params.api;
@@ -54,30 +55,44 @@ const AgGridTable = <T,>({ rowData, columnDefs, leftSection, ...props }: AgGridT
         gridRef.current.paginationGoToPage(0);
     }, []);
 
+    const onSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchText(value);
+        gridRef.current?.setGridOption('quickFilterText', value);
+    }, []);
+
+    const handleClearSearch = useCallback(() => {
+        setSearchText('');
+        gridRef.current?.setGridOption('quickFilterText', '');
+    }, []);
+
     return (
         <div className="flex flex-col gap-3">
-            <div className="flex gap-2 flex-wrap bg-background-light p-2 md:p-3 border border-border-light/30 shadow-sm rounded-lg">
-                {leftSection}
-                <Select
-                    value={paginationOptions.includes(paginationPageSize) ? paginationPageSize.toString() : "All"}
-                    options={paginationOptions.map((size) => ({
-                        label: size.toString(),
-                        value: size.toString(),
-                    }))}
-                    placeholder=""
-                    className="max-w-[80px]"
-                    onChange={onPageSizeChanged}
-                />
-                <Tooltip text="Download CSV">
-                    <Button variant="outline" disabled={rowData.length === 0} onClick={exportCSV}>
-                        <MdDownload className="text-lg" />
-                    </Button>
-                </Tooltip>
-                <Tooltip text="Clear Filters & Sorting">
-                    <Button variant="outline" disabled={rowData.length === 0} onClick={clearAllFilters}>
-                        <MdFilterListOff className="text-lg" />
-                    </Button>
-                </Tooltip>
+            {/* Filter, page size, search and export */}
+            <div className="flex justify-between items-center bg-background-light p-2 md:p-3 border border-border-light/30 shadow-sm rounded-lg">
+                <Search value={searchText} onChange={onSearchChange} handleClear={handleClearSearch} />
+                <div className="flex gap-2 items-center">
+                    <Tooltip text="Download CSV">
+                        <Button variant="outline" size='md' disabled={rowData.length === 0} onClick={exportCSV}>
+                            <MdDownload className="text-lg" />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip text="Clear Filters & Sorting">
+                        <Button variant="outline" size='md' disabled={rowData.length === 0} onClick={clearAllFilters}>
+                            <MdFilterListOff className="text-lg" />
+                        </Button>
+                    </Tooltip>
+                    <Select
+                        value={paginationOptions.includes(paginationPageSize) ? paginationPageSize.toString() : "All"}
+                        options={paginationOptions.map((size) => ({
+                            label: size.toString(),
+                            value: size.toString(),
+                        }))}
+                        placeholder=""
+                        className="max-w-[80px]"
+                        onChange={onPageSizeChanged}
+                    />
+                </div>
             </div>
             <div className="h-[50vh] shadow-sm rounded-lg">
                 <AgGridReact<T>

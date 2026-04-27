@@ -1,6 +1,8 @@
 import React, { type InputHTMLAttributes } from 'react';
 import { MdSearch, MdClose } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
+import Input from './Input';
+import Button from './Button';
 
 type SearchProps = InputHTMLAttributes<HTMLInputElement> & {
     handleClear?: () => void;
@@ -11,8 +13,7 @@ const Search: React.FC<SearchProps> = ({ value, handleClear, className, containe
     return (
         <div className={twMerge('relative flex items-center', containerClassName)}>
             <MdSearch className="absolute left-3 text-text-light text-xl pointer-events-none" />
-            <input
-                type="text"
+            <Input
                 value={value}
                 placeholder="Search"
                 className={twMerge(
@@ -24,14 +25,14 @@ const Search: React.FC<SearchProps> = ({ value, handleClear, className, containe
                 {...props}
             />
             {value && handleClear && (
-                <button
-                    type="button"
+                <Button
                     onClick={handleClear}
+                    variant='outline'
                     aria-label="Clear search"
-                    className="absolute right-2 p-0.5 text-text-main hover:text-text-light rounded transition-colors"
+                    className="absolute right-2 p-0.5 text-primary-light hover:bg-primary-light/10 rounded transition-colors"
                 >
                     <MdClose className="text-lg" />
-                </button>
+                </Button>
             )}
         </div>
     );

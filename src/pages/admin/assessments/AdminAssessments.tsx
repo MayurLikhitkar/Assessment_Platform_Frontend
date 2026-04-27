@@ -35,15 +35,14 @@ const AdminAssessments: React.FC = () => {
 
     const assessments = assessmentsData?.data || [];
 
-    const activeCount = assessments.filter((a: AssessmentInterface) => a.isActive).length;
-    const inactiveCount = assessments.filter((a: AssessmentInterface) => !a.isActive).length;
+    const activeCount = assessments.filter((a) => a.isActive).length;
+    const inactiveCount = assessments.filter((a) => !a.isActive).length;
 
     const columnDefs = useMemo<ColDef<AssessmentInterface>[]>(() => [
         {
             headerName: 'Title',
             field: 'title',
-            minWidth: 220,
-            flex: 2,
+            minWidth: 100,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
                 if (!params.data) return null;
                 return (
@@ -57,8 +56,7 @@ const AdminAssessments: React.FC = () => {
         {
             headerName: 'Type',
             field: 'type',
-            minWidth: 150,
-            flex: 1,
+            minWidth: 80,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
                 if (!params.data) return null;
                 return (
@@ -76,7 +74,6 @@ const AdminAssessments: React.FC = () => {
             headerName: 'Difficulty',
             field: 'difficulty',
             minWidth: 120,
-            flex: 1,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
                 if (!params.data) return null;
                 const diff = params.data.difficulty;
@@ -88,25 +85,22 @@ const AdminAssessments: React.FC = () => {
             },
         },
         {
-            headerName: 'Duration',
+            headerName: 'Duration (Mins)',
             field: 'durationInMinutes',
-            minWidth: 100,
-            flex: 0.7,
+            minWidth: 150,
             valueGetter: (params) => {
                 if (!params.data) return '';
-                return <span>{params.data.durationInMinutes} mins</span>;
+                return params.data.durationInMinutes;
             },
         },
         {
             headerName: 'Marks',
             field: 'totalMarks',
-            minWidth: 80,
-            flex: 0.5,
+            minWidth: 100,
         },
         {
             headerName: 'Questions',
             minWidth: 100,
-            flex: 0.7,
             valueGetter: (params) => {
                 if (!params.data) return 0;
                 return params.data.questions?.length || 0;
@@ -115,8 +109,7 @@ const AdminAssessments: React.FC = () => {
         {
             headerName: 'Status',
             field: 'isActive',
-            minWidth: 100,
-            flex: 0.7,
+            minWidth: 120,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
                 if (!params.data) return null;
                 const isActive = params.data.isActive;
@@ -132,16 +125,17 @@ const AdminAssessments: React.FC = () => {
         },
         {
             headerName: 'Actions',
-            minWidth: 100,
-            maxWidth: 100,
+            maxWidth: 120,
             filter: false,
             sortable: false,
-            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => (
-                <ActionCell
-                    onView={() => navigate(`/admin/assessments/view/${params.data?.id}`)}
-                    onEdit={() => navigate(`/admin/assessments/edit/${params.data?.id}`)}
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                const { data } = params;
+                if (!data) return null;
+                return <ActionCell
+                    onView={() => navigate(`/admin/assessments/view/${data.id}`)}
+                    onEdit={() => navigate(`/admin/assessments/edit/${data.id}`)}
                 />
-            ),
+            },
         },
     ], [navigate]);
 

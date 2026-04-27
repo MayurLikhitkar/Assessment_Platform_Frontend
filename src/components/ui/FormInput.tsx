@@ -31,7 +31,7 @@ const FormInput = <T,>({
 
     return (
         <div className={twMerge('w-full', props.className)}>
-            {withLabel && (
+            {withLabel && label && (
                 <Label htmlFor={id} label={label} required={props.required} />
             )}
             <Input

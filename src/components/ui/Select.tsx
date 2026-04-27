@@ -18,7 +18,7 @@ interface SelectProps extends Omit<ReactSelectProps<Option, false, GroupBase<Opt
 const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
     control: ({ isFocused }) =>
         twMerge(
-            'rounded-lg bg-background-light px-1 min-h-[40px]! cursor-pointer transition-all ring ring-primary-dark/40',
+            'rounded-lg bg-background-light px-1 h-full cursor-pointer! transition-all ring ring-primary-dark/40',
             isFocused && 'ring-2 focus:outline-none'
         ),
     valueContainer: () => 'px-2 text-text-main',

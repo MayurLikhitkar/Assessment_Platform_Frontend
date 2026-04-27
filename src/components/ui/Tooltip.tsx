@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface TooltipProps {
     children: React.ReactNode;
@@ -15,7 +15,6 @@ interface TooltipProps {
 }
 
 const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top' }) => {
-    const [visible, setVisible] = useState(false);
 
     // Positioning classes (Tailwind-based)
     const positions: Record<string, string> = {
@@ -33,19 +32,20 @@ const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top' }) =
         position.replace('-', '').replace('left', 'Left').replace('right', 'Right');
 
     return (
-        <div
-            className="relative cursor-pointer"
-            onMouseEnter={() => setVisible(true)}
-            onMouseLeave={() => setVisible(false)}
-            onFocus={() => setVisible(true)}
-            onBlur={() => setVisible(false)}
-            tabIndex={0}
-        >
+        <div className="relative cursor-pointer group">
             {children}
 
             <div
                 role="tooltip"
-                className={`absolute z-10 px-3 py-1 font-semibold text-xs text-dark-main bg-secondary-main rounded-sm whitespace-normal ${positions[normalizedPosition] || positions.top} transition-all duration-900 ${visible ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
+                className={`
+                    absolute z-10 px-3 py-1 font-semibold text-xs
+                    text-text-inverse bg-secondary-main rounded-sm whitespace-normal
+                    transition-all duration-200 pointer-events-none
+                    opacity-0 scale-95
+                    group-hover:opacity-100 group-hover:scale-100
+                    group-focus-within:opacity-100 group-focus-within:scale-100
+                    ${positions[normalizedPosition] ?? positions['top']}
+                `}
             >
                 {text}
             </div>
