@@ -26,6 +26,7 @@ const Search: React.FC<SearchProps> = ({ value, handleClear, className, containe
             />
             {value && handleClear && (
                 <Button
+                    type="button"
                     onClick={handleClear}
                     variant='outline'
                     aria-label="Clear search"

@@ -13,9 +13,14 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 interface AgGridTableProps<T> extends AgGridReactProps {
     rowData: T[];
     columnDefs: ColDef[];
+    actions?: React.ReactNode;
+    hasSearch?: boolean;
+    hasExport?: boolean;
+    hasPageSize?: boolean;
+    hasToolbar?: boolean;
 }
 
-const AgGridTable = <T,>({ rowData, columnDefs, ...props }: AgGridTableProps<T>) => {
+const AgGridTable = <T,>({ rowData, columnDefs, actions, hasSearch = true, hasExport = true, hasPageSize = true, hasToolbar = true, ...props }: AgGridTableProps<T>) => {
     const gridRef = useRef<GridApi<T> | null>(null);
     const [paginationPageSize, setPaginationPageSize] = useState(10);
     const [searchText, setSearchText] = useState('');
@@ -69,20 +74,23 @@ const AgGridTable = <T,>({ rowData, columnDefs, ...props }: AgGridTableProps<T>)
     return (
         <div className="flex flex-col gap-3">
             {/* Filter, page size, search and export */}
-            <div className="flex justify-between items-center bg-background-light p-2 md:p-3 border border-border-light/30 shadow-sm rounded-lg">
-                <Search value={searchText} onChange={onSearchChange} handleClear={handleClearSearch} />
+            {hasToolbar && <div className="flex justify-between items-center bg-background-light p-2 md:p-3 border border-border-light/30 shadow-sm rounded-lg">
+                {hasSearch && <div className="flex gap-2 items-center">
+                    <Search value={searchText} onChange={onSearchChange} handleClear={handleClearSearch} />
+                    {actions}
+                </div>}
                 <div className="flex gap-2 items-center">
-                    <Tooltip text="Download CSV">
-                        <Button variant="outline" size='md' disabled={rowData.length === 0} onClick={exportCSV}>
+                    {hasExport && <Tooltip text="Download CSV">
+                        <Button type="button" variant="outline" size='md' disabled={rowData.length === 0} onClick={exportCSV}>
                             <MdDownload className="text-lg" />
                         </Button>
-                    </Tooltip>
+                    </Tooltip>}
                     <Tooltip text="Clear Filters & Sorting">
-                        <Button variant="outline" size='md' disabled={rowData.length === 0} onClick={clearAllFilters}>
+                        <Button type="button" variant="outline" size='md' disabled={rowData.length === 0} onClick={clearAllFilters}>
                             <MdFilterListOff className="text-lg" />
                         </Button>
                     </Tooltip>
-                    <Select
+                    {hasPageSize && <Select
                         value={paginationOptions.includes(paginationPageSize) ? paginationPageSize.toString() : "All"}
                         options={paginationOptions.map((size) => ({
                             label: size.toString(),
@@ -91,9 +99,9 @@ const AgGridTable = <T,>({ rowData, columnDefs, ...props }: AgGridTableProps<T>)
                         placeholder=""
                         className="max-w-[80px]"
                         onChange={onPageSizeChanged}
-                    />
+                    />}
                 </div>
-            </div>
+            </div>}
             <div className="h-[50vh] shadow-sm rounded-lg">
                 <AgGridReact<T>
                     rowData={rowData}

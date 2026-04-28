@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { MdAdd } from 'react-icons/md';
+import { MdAdd, MdClose } from 'react-icons/md';
+import { useQuery } from '@tanstack/react-query';
+import type { ColDef, ICellRendererParams, SelectionChangedEvent } from 'ag-grid-community';
 
 import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
@@ -9,9 +11,10 @@ import FormTextArea from '../ui/FormTextArea';
 import FormMultiClick from '../ui/FormMultiClick';
 import Button from '../ui/Button';
 import { ContentBox, PageFooter } from '../ui/Page';
-import AddQuestionsModal from '../modal/AddQuestionsModal';
-
+import { getQuestions } from '../../services/axios/adminApi';
+import type { QuestionInterface } from '../../types/questionTypes';
 import { type AssessmentInterface } from '../../types/assessmentTypes';
+import AgGridTable from '../common/AgGridTable';
 
 // Validation Schema
 const assessmentSchema = Yup.object({
@@ -50,7 +53,15 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     isLoading,
     isEditMode = false
 }) => {
-    const [isAddQuestionsModalOpen, setIsAddQuestionsModalOpen] = useState(false);
+    const [isAddingQuestions, setIsAddingQuestions] = useState(false);
+    const [selectedQns, setSelectedQns] = useState<Set<string>>(new Set());
+
+    const { data: questionsData, isLoading: isLoadingQuestions } = useQuery({
+        queryKey: ['adminQuestions'],
+        queryFn: getQuestions,
+    });
+
+    const allQuestions: QuestionInterface[] = questionsData?.data || [];
 
     const formik = useFormik<Partial<AssessmentInterface>>({
         initialValues,
@@ -59,19 +70,85 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         onSubmit: async (values) => {
             const payload = {
                 ...values,
-                // questions: initialValues.questions?.map(q => q._id).filter(Boolean) as string[],
             };
             onSubmit(payload);
         },
     });
 
-    const handleAddQuestions = (selectedQuestions: string[]) => {
-        // Filter duplicates just in case
-        const existingQuestions = formik.values.questions ?? [];
-        const existingIds = new Set(existingQuestions);
-        const newQuestions = selectedQuestions.filter(q => !existingIds.has(q));
-        formik.setFieldValue('questions', [...existingQuestions, ...newQuestions]);
+    const existingQuestionIds = formik.values.questions || [];
+    const availableQuestions = allQuestions.filter(q => !existingQuestionIds.includes(q._id));
+    const filteredQuestions = availableQuestions;
+
+    const onSelectionChanged = useCallback((event: SelectionChangedEvent<QuestionInterface>) => {
+        const selectedRows = event.api.getSelectedRows();
+        const ids = selectedRows.map(row => row._id);
+        setSelectedQns(new Set(ids));
+    }, []);
+
+    const handleConfirmAdd = () => {
+        const existing = formik.values.questions || [];
+        formik.setFieldValue('questions', [...existing, ...Array.from(selectedQns)]);
+        setSelectedQns(new Set());
+        setIsAddingQuestions(false);
     };
+
+    const handleRemoveQuestion = (id: string) => {
+        const existing = formik.values.questions || [];
+        formik.setFieldValue('questions', existing.filter(qId => qId !== id));
+    };
+
+    const columnDefs = useMemo<ColDef<QuestionInterface>[]>(() => [
+        {
+            headerName: '',
+            maxWidth: 50,
+            filter: false,
+            sortable: false,
+            headerCheckboxSelection: true,
+            checkboxSelection: true,
+        },
+        {
+            headerName: 'Question',
+            field: 'question',
+            minWidth: 250,
+            flex: 3,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                return (
+                    <div>
+                        <p className="text-sm font-medium text-text-dark line-clamp-2">{params.data.question}</p>
+                        <div className="flex gap-1 mt-1">
+                            {params.data.tags?.slice(0, 2).map((tag) => (
+                                <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: 'Type',
+            field: 'type',
+            minWidth: 100,
+            flex: 1,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const type = params.data.type;
+                return (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold bg-muted-light/80 text-text-light`}>
+                        {type}
+                    </span>
+                );
+            },
+        },
+        {
+            headerName: 'Marks',
+            field: 'marks',
+            minWidth: 80,
+            flex: 0.5,
+        },
+    ], []);
+
+    const selectedQuestionsObjects = allQuestions.filter(q => existingQuestionIds.includes(q._id));
 
     return (
         <form id="assessment-form" onSubmit={formik.handleSubmit} className="space-y-3">
@@ -118,25 +195,71 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             <ContentBox className='space-y-6'>
                 <div className="flex justify-between items-center">
                     <h2 className="text-lg font-semibold text-text-dark">Assessment Questions</h2>
-                    <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        className="flex items-center gap-1"
-                        onClick={() => setIsAddQuestionsModalOpen(true)}
-                    >
-                        <MdAdd /> Add Questions
-                    </Button>
+                    {!isAddingQuestions && (
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            className="flex items-center gap-1"
+                            onClick={() => setIsAddingQuestions(true)}
+                        >
+                            <MdAdd /> Add Questions
+                        </Button>
+                    )}
                 </div>
 
-                {(formik.values.questions?.length || 0) < 1 ? (
-                    <div className="text-center py-12 bg-muted-light rounded-lg border border-dashed border-border-light">
-                        <p className="text-text-main font-medium">No questions added yet</p>
-                        <p className="text-sm text-text-light mt-1">Click "Add Questions" to select from question bank.</p>
+                {isAddingQuestions ? (
+                    <div className="space-y-4 border border-border-light rounded-lg p-4 bg-background-main">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-medium text-text-dark">Select Questions from Bank</h3>
+                            <Button
+                                type="button"
+                                onClick={() => setIsAddingQuestions(false)}
+                                variant="icon"
+                                className="border! border-secondary-light/50! "
+                                aria-label="Close modal"
+                            >
+                                <MdClose className="text-xl" />
+                            </Button>
+                        </div>
+
+                        <AgGridTable<QuestionInterface>
+                            rowData={filteredQuestions}
+                            columnDefs={columnDefs}
+                            onSelectionChanged={onSelectionChanged}
+                            rowSelection="multiple"
+                            loading={isLoadingQuestions}
+                            hasExport={false}
+                            getRowId={(params) => params.data._id}
+                        />
+                        <div className="flex items-center justify-between pt-2">
+                            <p className="text-sm font-medium text-text-main">
+                                {selectedQns.size} Question(s) selected
+                            </p>
+                            <div className="flex gap-3">
+                                <Button type="button" variant="outline" onClick={() => setIsAddingQuestions(false)}>Cancel</Button>
+                                <Button
+                                    type="button"
+                                    variant="primary"
+                                    disabled={selectedQns.size === 0}
+                                    onClick={handleConfirmAdd}
+                                    className="flex items-center gap-1"
+                                >
+                                    <MdAdd /> Add Selected
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {/* {questions.map((q, idx) => (
+                    <>
+                        {(existingQuestionIds.length) < 1 ? (
+                            <div className="text-center py-12 bg-muted-light rounded-lg border border-dashed border-border-light">
+                                <p className="text-text-main font-medium">No questions added yet</p>
+                                <p className="text-sm text-text-light mt-1">Click "Add Questions" to select from question bank.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {selectedQuestionsObjects.map((q, idx) => (
                                     <div key={q._id} className="flex justify-between items-center bg-background-main border border-border-light rounded-lg p-3">
                                         <div className="flex-1 mr-4">
                                             <div className="flex items-start">
@@ -144,7 +267,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                                                 <div>
                                                     <span className="text-sm text-text-main line-clamp-2">{q.question}</span>
                                                     <div className="flex gap-2 mt-1">
-                                                        <span className="text-[10px] bg-muted-light/80 text-text-light px-2 py-0.5 rounded-full uppercase font-bold">{q.type}</span>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold bg-muted-light/80 text-text-light`}>{q.type}</span>
                                                         <span className="text-[10px] bg-secondary-light/20 text-secondary-dark px-2 py-0.5 rounded-full font-bold">{q.marks} Marks</span>
                                                     </div>
                                                 </div>
@@ -153,13 +276,15 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                                         <button
                                             type="button"
                                             className="p-1.5 text-error-main hover:bg-error-light/20 rounded-lg transition-colors shrink-0"
-                                            onClick={() => setQuestions(prev => prev.filter(pq => pq._id !== q._id))}
+                                            onClick={() => handleRemoveQuestion(q._id)}
                                         >
                                             <MdClose />
                                         </button>
                                     </div>
-                                ))} */}
-                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </ContentBox>
 
@@ -178,12 +303,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 </Button>
             </PageFooter>
 
-            <AddQuestionsModal
-                isOpen={isAddQuestionsModalOpen}
-                onClose={() => setIsAddQuestionsModalOpen(false)}
-                onAddSelected={handleAddQuestions}
-                existingQuestionIds={initialValues.questions || []}
-            />
+
         </form>
     );
 };
