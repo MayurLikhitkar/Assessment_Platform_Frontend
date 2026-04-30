@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
                         aria-label="Close menu"
                         tabIndex={-1}
                     ></button>
-                    <div className="fixed inset-y-0 left-0 w-64 bg-background-light shadow-2xl animate-in slide-in-from-left duration-300">
+                    <div className="fixed inset-y-0 left-0 w-64 h-full bg-background-light shadow-2xl animate-in slide-in-from-left duration-300">
                         {drawerContent}
                     </div>
                 </div>

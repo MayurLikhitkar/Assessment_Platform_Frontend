@@ -103,8 +103,6 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             maxWidth: 50,
             filter: false,
             sortable: false,
-            headerCheckboxSelection: true,
-            checkboxSelection: true,
         },
         {
             headerName: 'Question',
@@ -210,7 +208,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
                 {isAddingQuestions ? (
                     <div className="space-y-4 border border-border-light rounded-lg p-4 bg-background-main">
-                        <div className="flex justify-between items-center mb-2">
+                        <div className="flex justify-between items-center">
                             <h3 className="font-medium text-text-dark">Select Questions from Bank</h3>
                             <Button
                                 type="button"
@@ -227,12 +225,12 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                             rowData={filteredQuestions}
                             columnDefs={columnDefs}
                             onSelectionChanged={onSelectionChanged}
-                            rowSelection="multiple"
+                            rowSelection={{ mode: 'multiRow', checkboxes: true, headerCheckbox: true }}
                             loading={isLoadingQuestions}
                             hasExport={false}
                             getRowId={(params) => params.data._id}
                         />
-                        <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-text-main">
                                 {selectedQns.size} Question(s) selected
                             </p>

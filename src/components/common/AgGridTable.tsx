@@ -1,6 +1,6 @@
-import { AgGridReact, type AgGridReactProps } from 'ag-grid-react'
+import { AgGridProvider, AgGridReact, type AgGridReactProps } from 'ag-grid-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { AllCommunityModule, ModuleRegistry, type ColDef, type GridApi, type GridReadyEvent } from 'ag-grid-community';
+import { AllCommunityModule, type ColDef, type GridApi, type GridReadyEvent } from 'ag-grid-community';
 import { MdDownload, MdFilterListOff } from 'react-icons/md';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
@@ -8,7 +8,8 @@ import Tooltip from '../ui/Tooltip';
 import { paginationOptions } from '../../utils/config';
 import Search from '../ui/Search';
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+// ModuleRegistry.registerModules([AllCommunityModule]);
+const modules = [AllCommunityModule];
 
 interface AgGridTableProps<T> extends AgGridReactProps {
     rowData: T[];
@@ -72,7 +73,7 @@ const AgGridTable = <T,>({ rowData, columnDefs, actions, hasSearch = true, hasEx
     }, []);
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="space-y-3">
             {/* Filter, page size, search and export */}
             {hasToolbar && <div className="flex justify-between items-center bg-background-light p-2 md:p-3 border border-border-light/30 shadow-sm rounded-lg">
                 {hasSearch && <div className="flex gap-2 items-center">
@@ -102,20 +103,22 @@ const AgGridTable = <T,>({ rowData, columnDefs, actions, hasSearch = true, hasEx
                     />}
                 </div>
             </div>}
-            <div className="h-[50vh] shadow-sm rounded-lg">
-                <AgGridReact<T>
-                    rowData={rowData}
-                    columnDefs={columnDefs}
-                    defaultColDef={defaultColDef}
-                    pagination={true}
-                    paginationPageSize={paginationPageSize}
-                    onGridReady={onGridReady}
-                    paginationPageSizeSelector={false}
-                    enableCellTextSelection={true}
-                    tooltipTrigger='hover'
-                    {...props}
-                />
-            </div>
+            <AgGridProvider modules={modules}>
+                <div className="h-[50vh] shadow-sm rounded-lg">
+                    <AgGridReact<T>
+                        rowData={rowData}
+                        columnDefs={columnDefs}
+                        defaultColDef={defaultColDef}
+                        pagination={true}
+                        paginationPageSize={paginationPageSize}
+                        onGridReady={onGridReady}
+                        paginationPageSizeSelector={false}
+                        enableCellTextSelection={true}
+                        tooltipTrigger='hover'
+                        {...props}
+                    />
+                </div>
+            </AgGridProvider>
         </div>
     )
 }
