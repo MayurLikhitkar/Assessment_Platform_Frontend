@@ -31,6 +31,7 @@ const RootRedirect = () => {
 };
 
 function App() {
+  console.info("Welcome to Assessment Platform");
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

@@ -73,20 +73,20 @@ const AgGridTable = <T,>({ rowData, columnDefs, actions, hasSearch = true, hasEx
     }, []);
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-3 relative overflow-hidden">
             {/* Filter, page size, search and export */}
-            {hasToolbar && <div className="flex justify-between items-center bg-background-light p-2 md:p-3 border border-border-light/30 shadow-sm rounded-lg">
+            {hasToolbar && <div className="flex justify-between items-center bg-background-light p-2 md:p-3 border border-border-light/80 shadow-sm rounded-xl">
                 {hasSearch && <div className="flex gap-2 items-center">
                     <Search value={searchText} onChange={onSearchChange} handleClear={handleClearSearch} />
                     {actions}
                 </div>}
                 <div className="flex gap-2 items-center">
-                    {hasExport && <Tooltip text="Download CSV">
+                    {hasExport && <Tooltip text="Download CSV" position='bottom'>
                         <Button type="button" variant="outline" size='md' disabled={rowData.length === 0} onClick={exportCSV}>
                             <MdDownload className="text-lg" />
                         </Button>
                     </Tooltip>}
-                    <Tooltip text="Clear Filters & Sorting">
+                    <Tooltip text="Clear Filters & Sorting" position='bottom'>
                         <Button type="button" variant="outline" size='md' disabled={rowData.length === 0} onClick={clearAllFilters}>
                             <MdFilterListOff className="text-lg" />
                         </Button>

@@ -38,7 +38,7 @@ const MultiClick = <T extends string | number>({
                         type="button"
                         onClick={() => handleToggle(optValue)}
                         className={twMerge(
-                            'px-3 py-2 text-xs font-medium rounded-lg cursor-pointer border transition-colors border-primary-dark/50',
+                            'px-3 py-2 text-xs font-medium rounded-lg cursor-pointer border transition-colors border-primary-dark/40',
                             isSelected
                                 ? 'bg-primary-main/10 text-primary-main'
                                 : 'text-text-main',

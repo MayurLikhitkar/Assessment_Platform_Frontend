@@ -28,8 +28,7 @@ const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top' }) =
         left: 'right-full top-1/2 -translate-y-1/2 mr-2',
     };
 
-    const normalizedPosition =
-        position.replace('-', '').replace('left', 'Left').replace('right', 'Right');
+    const normalizedPosition = position.split('-').map((part, i) => i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)).join('');
 
     return (
         <div className="relative cursor-pointer group">
@@ -43,7 +42,7 @@ const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top' }) =
                     transition-all duration-200 pointer-events-none
                     opacity-0 scale-95
                     group-hover:opacity-100 group-hover:scale-100
-                    group-focus-within:opacity-100 group-focus-within:scale-100
+                    [&:has(:focus-visible)]:opacity-100 [&:has(:focus-visible)]:scale-100
                     ${positions[normalizedPosition] ?? positions['top']}
                 `}
             >

@@ -100,26 +100,37 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     const columnDefs = useMemo<ColDef<QuestionInterface>[]>(() => [
         {
             headerName: '',
-            maxWidth: 50,
+            maxWidth: 10,
             filter: false,
             sortable: false,
         },
         {
             headerName: 'Question',
             field: 'question',
-            minWidth: 250,
+            minWidth: 150,
             flex: 3,
+            cellClass: 'font-semibold',
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data) return null;
+                return params.data.question;
+            },
+        },
+        {
+            headerName: 'Difficulty',
+            field: 'difficulty',
+            minWidth: 130,
+            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
+                if (!params.data) return null;
+                const difficulty = params.data.difficulty;
+                const colorMap = {
+                    easy: 'text-success-main bg-success-main/10',
+                    medium: 'text-primary-main bg-primary-main/10',
+                    hard: 'text-error-main bg-error-main/10',
+                };
                 return (
-                    <div>
-                        <p className="text-sm font-medium text-text-dark line-clamp-2">{params.data.question}</p>
-                        <div className="flex gap-1 mt-1">
-                            {params.data.tags?.slice(0, 2).map((tag) => (
-                                <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>
-                            ))}
-                        </div>
-                    </div>
+                    <span className={`${colorMap[difficulty]} px-2 py-1 text-xs font-semibold capitalize rounded-md`}>
+                        {difficulty}
+                    </span>
                 );
             },
         },
@@ -127,22 +138,18 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             headerName: 'Type',
             field: 'type',
             minWidth: 100,
-            flex: 1,
+            cellClass: "uppercase text-xs font-semibold",
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data) return null;
                 const type = params.data.type;
-                return (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold bg-muted-light/80 text-text-light`}>
-                        {type}
-                    </span>
-                );
+                return type;
             },
         },
         {
             headerName: 'Marks',
             field: 'marks',
-            minWidth: 80,
-            flex: 0.5,
+            minWidth: 100,
+            cellClass: "font-bold text-secondary-main",
         },
     ], []);
 
@@ -207,7 +214,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 </div>
 
                 {isAddingQuestions ? (
-                    <div className="space-y-4 border border-border-light rounded-lg p-4 bg-background-main">
+                    <div className="space-y-4 border border-border-light bg-background-main rounded-lg p-4">
                         <div className="flex justify-between items-center">
                             <h3 className="font-medium text-text-dark">Select Questions from Bank</h3>
                             <Button
@@ -232,7 +239,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         />
                         <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-text-main">
-                                {selectedQns.size} Question(s) selected
+                                Question(s) Selected : <span className="text-secondary-main text-lg">{selectedQns.size}</span>
                             </p>
                             <div className="flex gap-3">
                                 <Button type="button" variant="outline" onClick={() => setIsAddingQuestions(false)}>Cancel</Button>
@@ -251,9 +258,9 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 ) : (
                     <>
                         {(existingQuestionIds.length) < 1 ? (
-                            <div className="text-center py-12 bg-muted-light rounded-lg border border-dashed border-border-light">
+                            <div className="text-center py-12 bg-background-dark rounded-lg outline-dashed outline-2 outline-muted-dark outline-offset-2">
                                 <p className="text-text-main font-medium">No questions added yet</p>
-                                <p className="text-sm text-text-light mt-1">Click "Add Questions" to select from question bank.</p>
+                                <p className="text-sm text-text-light mt-1">Click "Add Questions" to select from Question Bank.</p>
                             </div>
                         ) : (
                             <div className="space-y-3">

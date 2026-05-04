@@ -13,19 +13,6 @@ import Button from '../../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 
-const typeColors: Record<string, string> = {
-    mcq: 'bg-secondary-light/20 text-secondary-dark',
-    coding: 'bg-accent-light/30 text-accent-dark',
-    query: 'bg-warn-light/30 text-warn-dark',
-    subjective: 'bg-muted-light text-dark-main',
-};
-
-const difficultyColors: Record<string, string> = {
-    easy: 'bg-success-light/40 text-success-dark',
-    medium: 'bg-warn-light/40 text-warn-dark',
-    hard: 'bg-error-light/40 text-error-dark',
-};
-
 const AdminQuestions: React.FC = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -74,7 +61,7 @@ const AdminQuestions: React.FC = () => {
                 if (!params.data) return null;
                 const type = params.data.type;
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase ${typeColors[type] || 'bg-muted-light text-text-light'}`}>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase `}>
                         {type}
                     </span>
                 );
@@ -83,14 +70,18 @@ const AdminQuestions: React.FC = () => {
         {
             headerName: 'Difficulty',
             field: 'difficulty',
-            minWidth: 120,
-            flex: 1,
+            minWidth: 130,
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data) return null;
-                const diff = params.data.difficulty;
+                const difficulty = params.data.difficulty;
+                const colorMap = {
+                    easy: 'text-success-main bg-success-main/10',
+                    medium: 'text-primary-main bg-primary-main/10',
+                    hard: 'text-error-main bg-error-main/10',
+                };
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[diff] || 'bg-muted-light text-text-light'}`}>
-                        {diff}
+                    <span className={`${colorMap[difficulty]} px-2 py-1 text-xs font-semibold capitalize rounded-md`}>
+                        {difficulty}
                     </span>
                 );
             },
