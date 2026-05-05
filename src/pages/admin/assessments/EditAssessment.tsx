@@ -10,6 +10,7 @@ import AssessmentForm from '../../../components/forms/AssessmentForm';
 import { getAssessmentById, updateAssessment } from '../../../services/axios/adminApi';
 import type { ApiResponse } from '../../../types/types';
 import type { AssessmentInterface } from '../../../types/assessmentTypes';
+import DataLoader from '../../../components/common/DataLoader';
 
 const EditAssessment: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -23,7 +24,7 @@ const EditAssessment: React.FC = () => {
         }
     }, [id, navigate]);
 
-    const { data: response, isLoading: isFetching } = useQuery({
+    const { data: response, isLoading } = useQuery({
         queryKey: ['assessment', id],
         queryFn: () => getAssessmentById(id as string),
         enabled: !!id,
@@ -35,6 +36,7 @@ const EditAssessment: React.FC = () => {
             if (data?.success) {
                 toast.success(data.responseMessage || 'Assessment updated successfully!');
                 queryClient.invalidateQueries({ queryKey: ['adminAssessments'] });
+                queryClient.invalidateQueries({ queryKey: ['assessment', id] });
                 navigate('/admin/assessments');
             }
         },
@@ -51,11 +53,9 @@ const EditAssessment: React.FC = () => {
             </PageHeader>
 
             <PageBody>
-                {isFetching ? (
-                    <div className="flex justify-center py-10 text-text-light">Loading...</div>
-                ) : !response?.data ? (
-                    <div className="flex justify-center py-10 text-error-main">Assessment not found</div>
-                ) : (
+                {isLoading ? (
+                    <DataLoader />
+                ) : response?.data ? (
                     <AssessmentForm
                         initialValues={response.data}
                         onSubmit={(values) => updateMutation.mutate(values)}
@@ -63,6 +63,8 @@ const EditAssessment: React.FC = () => {
                         isLoading={updateMutation.isPending}
                         isEditMode={true}
                     />
+                ) : (
+                    <div className="flex justify-center py-10 text-error-main">Assessment not found</div>
                 )}
             </PageBody>
         </Page>

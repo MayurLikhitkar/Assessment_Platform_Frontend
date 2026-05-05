@@ -9,26 +9,12 @@ import type { AssessmentInterface } from '../../../types/assessmentTypes';
 import AgGridTable from '../../../components/common/AgGridTable';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 import ActionCell from '../../../components/common/ActionCell';
-
-const difficultyColors: Record<string, string> = {
-    beginner: 'bg-success-light/40 text-success-dark',
-    intermediate: 'bg-secondary-light/20 text-secondary-dark',
-    advanced: 'bg-warn-light/40 text-warn-dark',
-    expert: 'bg-error-light/40 text-error-dark',
-};
-
-const typeColors: Record<string, string> = {
-    mcq: 'bg-secondary-light/20 text-secondary-dark',
-    coding: 'bg-accent-light/30 text-accent-dark',
-    query: 'bg-warn-light/30 text-warn-dark',
-    subjective: 'bg-muted-light text-dark-main',
-};
+import DataLoader from '../../../components/common/DataLoader';
 
 const AdminAssessments: React.FC = () => {
     const navigate = useNavigate();
 
-
-    const { data: assessmentsData } = useQuery({
+    const { data: assessmentsData, isLoading } = useQuery({
         queryKey: ['adminAssessments'],
         queryFn: getAdminAssessments,
     });
@@ -43,27 +29,27 @@ const AdminAssessments: React.FC = () => {
             headerName: 'Title',
             field: 'title',
             minWidth: 100,
+            cellClass: 'font-semibold',
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return null;
-                return (
-                    <div className="py-1">
-                        <p className="font-medium text-text-dark text-sm">{params.data.title}</p>
-                        <p className="text-xs text-text-light mt-0.5 line-clamp-1">{params.data.description}</p>
-                    </div>
-                );
+                if (!params.data) return 'N/A';
+                return params.data.title;
             },
         },
         {
             headerName: 'Type',
             field: 'type',
-            minWidth: 80,
+            minWidth: 100,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return null;
+                if (!params.data) return 'N/A';
+                const type = params.data.type;
                 return (
-                    <div className="flex flex-wrap gap-1">
-                        {params.data.type.map((t) => (
-                            <span key={t} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${typeColors[t] || 'bg-muted-light text-text-light'}`}>
-                                {t}
+                    <div className="space-x-2">
+                        {type.map((type, index) => (
+                            <span
+                                key={index + 1}
+                                className="bg-secondary-main/10 text-secondary-main px-2 py-0.5 rounded text-xs uppercase font-semibold"
+                            >
+                                {type}
                             </span>
                         ))}
                     </div>
@@ -73,25 +59,54 @@ const AdminAssessments: React.FC = () => {
         {
             headerName: 'Difficulty',
             field: 'difficulty',
-            minWidth: 120,
+            minWidth: 130,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return null;
-                const diff = params.data.difficulty;
+                if (!params.data) return 'N/A';
+                const difficulty = params.data.difficulty;
+                const colorMap = {
+                    beginner: 'text-success-main bg-success-main/10',
+                    intermediate: 'text-primary-main bg-primary-main/10',
+                    advanced: 'text-warn-main bg-warn-main/10',
+                    expert: 'text-error-main bg-error-main/10',
+                };
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${difficultyColors[diff] || 'bg-muted-light text-text-light'}`}>
-                        {diff}
+                    <span className={`${colorMap[difficulty]} px-2 py-0.5 rounded text-xs capitalize font-semibold`}>
+                        {difficulty}
                     </span>
                 );
+            },
+        },
+        {
+            headerName: 'Start Date',
+            field: 'startDate',
+            minWidth: 150,
+            valueGetter: (params) => {
+                if (!params.data?.startDate) return 'N/A';
+                return new Date(params.data.startDate).toLocaleString();
+            },
+        },
+        {
+            headerName: 'End Date',
+            field: 'endDate',
+            minWidth: 150,
+            valueGetter: (params) => {
+                if (!params.data?.endDate) return 'N/A';
+                return new Date(params.data.endDate).toLocaleString();
+            },
+        },
+        {
+            headerName: 'Tags',
+            field: 'tags',
+            minWidth: 150,
+            valueGetter: (params) => {
+                if (!params.data?.tags) return 'N/A';
+                return params.data.tags.join(', ');
             },
         },
         {
             headerName: 'Duration (Mins)',
             field: 'durationInMinutes',
             minWidth: 150,
-            valueGetter: (params) => {
-                if (!params.data) return '';
-                return params.data.durationInMinutes;
-            },
         },
         {
             headerName: 'Marks',
@@ -103,7 +118,7 @@ const AdminAssessments: React.FC = () => {
             minWidth: 100,
             valueGetter: (params) => {
                 if (!params.data) return 0;
-                return params.data.questions?.length || 0;
+                return params.data.questions.length || 0;
             },
         },
         {
@@ -111,10 +126,10 @@ const AdminAssessments: React.FC = () => {
             field: 'isActive',
             minWidth: 120,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return null;
+                if (!params.data) return 'N/A';
                 const isActive = params.data.isActive;
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isActive
+                    <span className={`px-2.5 py-1 rounded text-xs font-medium ${isActive
                         ? 'bg-success-light/40 text-success-dark'
                         : 'bg-error-light/40 text-error-dark'
                         }`}>
@@ -130,9 +145,8 @@ const AdminAssessments: React.FC = () => {
             sortable: false,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
                 const { data } = params;
-                if (!data) return null;
+                if (!data) return 'N/A';
                 return <ActionCell
-                    onView={() => navigate(`/admin/assessments/view/${data.id}`)}
                     onEdit={() => navigate(`/admin/assessments/edit/${data.id}`)}
                 />
             },
@@ -155,42 +169,48 @@ const AdminAssessments: React.FC = () => {
                     </Button>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                        <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
-                            <MdAssignment className="text-2xl" />
+                {isLoading ? (
+                    <DataLoader />
+                ) : (
+                    <>
+                        {/* Stats */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                                <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
+                                    <MdAssignment className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-text-dark">{assessments.length}</p>
+                                    <p className="text-sm text-text-light">Total Assessments</p>
+                                </div>
+                            </div>
+                            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                                <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
+                                    <MdAssignment className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
+                                    <p className="text-sm text-text-light">Active</p>
+                                </div>
+                            </div>
+                            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                                <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
+                                    <MdAssignment className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
+                                    <p className="text-sm text-text-light">Inactive</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-2xl font-bold text-text-dark">{assessments.length}</p>
-                            <p className="text-sm text-text-light">Total Assessments</p>
-                        </div>
-                    </div>
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                        <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
-                            <MdAssignment className="text-2xl" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
-                            <p className="text-sm text-text-light">Active</p>
-                        </div>
-                    </div>
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                        <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
-                            <MdAssignment className="text-2xl" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
-                            <p className="text-sm text-text-light">Inactive</p>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Table */}
-                <AgGridTable<AssessmentInterface>
-                    rowData={assessments}
-                    columnDefs={columnDefs}
-                />
+                        {/* Table */}
+                        <AgGridTable<AssessmentInterface>
+                            rowData={assessments}
+                            columnDefs={columnDefs}
+                        />
+                    </>
+                )}
             </PageBody>
         </Page>
     );

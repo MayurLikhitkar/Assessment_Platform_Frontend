@@ -37,6 +37,15 @@ const CreateAssessment: React.FC = () => {
         durationInMinutes: 60,
         totalMarks: 100,
         passingMarks: 50,
+        tags: [],
+        instructions: '',
+        requireWebcam: false,
+        requireMicrophone: false,
+        enableRecording: false,
+        allowTabSwitch: false,
+        maxTabSwitches: 0,
+        allowFullscreenExit: false,
+        maxFullscreenExits: 0,
     };
 
     return (

@@ -5,14 +5,14 @@ import { twMerge } from 'tailwind-merge';
 
 type Option = {
     label: string;
-    value: string | number;
+    value: string | number | boolean;
 };
 
 interface SelectProps extends Omit<ReactSelectProps<Option, false, GroupBase<Option>>, 'value' | 'onChange'> {
-    value: string | number;
+    value: string | number | boolean;
     options: Option[];
     placeholder?: string;
-    onChange?: (value: string | number) => void;
+    onChange?: (value: string | number | boolean) => void;
 }
 
 const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {

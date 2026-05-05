@@ -8,9 +8,9 @@ import { getUsers } from '../../../services/axios/adminApi';
 import type { UserInterface } from '../../../types/authTypes';
 import CreateUserModal from './CreateUserModal';
 import AgGridTable from '../../../components/common/AgGridTable';
-import Search from '../../../components/ui/Search';
 import moment from 'moment';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
+import DataLoader from '../../../components/common/DataLoader';
 
 const roleBadgeStyles: Record<string, string> = {
     super_admin: 'bg-primary-light/20 text-primary-dark',
@@ -34,11 +34,10 @@ const getStatusDotColor = (status: string) => {
 };
 
 const AdminUsers: React.FC = () => {
-    const [searchText, setSearchText] = useState('');
     const { user } = useAuth();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    const { data: usersResponse } = useQuery({
+    const { data: usersResponse, isLoading } = useQuery({
         queryKey: ['adminUsers'],
         queryFn: getUsers,
         enabled: !!user,
@@ -46,29 +45,13 @@ const AdminUsers: React.FC = () => {
 
     const users: UserInterface[] = usersResponse?.data ?? [];
 
-    const filteredUsers = useMemo(() => {
-        if (!searchText) return users;
-        const lower = searchText.toLowerCase();
-        return users.filter((u) => {
-            const joinedDate = moment(u.createdAt).format('DD MMM, YYYY');
-            return (
-                u.id?.toString().includes(lower) ||
-                u.fullName.toLowerCase().includes(lower) ||
-                u.email.toLowerCase().includes(lower) ||
-                (u.phone ?? '').toLowerCase().includes(lower) ||
-                joinedDate.toLowerCase().includes(lower)
-            );
-        });
-    }, [searchText, users]);
-
     const columnDefs = useMemo<ColDef<UserInterface>[]>(() => [
         {
             headerName: 'User',
             field: 'fullName',
             minWidth: 220,
-            flex: 2,
             cellRenderer: (params: ICellRendererParams<UserInterface>) => {
-                if (!params.data) return null;
+                if (!params.data) return 'N/A';
                 const u = params.data;
                 return (
                     <div className="flex items-center gap-3 py-1">
@@ -89,7 +72,7 @@ const AdminUsers: React.FC = () => {
             minWidth: 130,
             flex: 1,
             cellRenderer: (params: ICellRendererParams<UserInterface>) => {
-                if (!params.data) return null;
+                if (!params.data) return 'N/A';
                 const role = params.data.role;
                 return (
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${roleBadgeStyles[role] ?? roleBadgeStyles.user}`}>
@@ -104,7 +87,7 @@ const AdminUsers: React.FC = () => {
             minWidth: 120,
             flex: 1,
             cellRenderer: (params: ICellRendererParams<UserInterface>) => {
-                if (!params.data) return null;
+                if (!params.data) return 'N/A';
                 const status = params.data.status;
                 return (
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[status] ?? statusStyles.inactive}`}>
@@ -152,11 +135,14 @@ const AdminUsers: React.FC = () => {
                 </div>
 
                 {/* Users Table */}
-                <AgGridTable<UserInterface>
-                    leftSection={<Search value={searchText} onChange={(e) => setSearchText(e.target.value)} handleClear={() => setSearchText('')} />}
-                    rowData={filteredUsers}
-                    columnDefs={columnDefs}
-                />
+                {isLoading ? (
+                    <DataLoader />
+                ) : (
+                    <AgGridTable<UserInterface>
+                        rowData={users}
+                        columnDefs={columnDefs}
+                    />
+                )}
             </PageBody>
             {/* Create User Modal */}
             <CreateUserModal

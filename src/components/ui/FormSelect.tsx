@@ -7,7 +7,7 @@ import Label from './Label';
 
 type Option = {
     label: string;
-    value: string | number;
+    value: string | number | boolean;
 };
 
 interface FormSelectProps<T> extends Omit<ReactSelectProps<Option, false, GroupBase<Option>>, 'value' | 'onChange'> {
@@ -47,7 +47,7 @@ const FormSelect = <T,>({
                 name={name}
                 placeholder={placeholder}
                 options={options}
-                value={formik.values[name] as string | number}
+                value={formik.values[name] as string | number | boolean}
                 onChange={(val) => formik.setFieldValue(name, val)} // ✅ fix 2
                 onBlur={() => formik.setFieldTouched(name, true)}
                 isDisabled={disabled}

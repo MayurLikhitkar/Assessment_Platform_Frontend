@@ -74,7 +74,7 @@ const AdminDashboard: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {statCards.map((card) => (
-                            <button
+                            <ContentBox
                                 key={card.label}
                                 className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-5 hover:shadow-md transition-shadow cursor-pointer group text-left w-full"
                                 onClick={() => card.link !== '#' && navigate(card.link)}
@@ -95,7 +95,7 @@ const AdminDashboard: React.FC = () => {
                                         View details <MdArrowForward className="ml-1 text-sm" />
                                     </div>
                                 )}
-                            </button>
+                            </ContentBox>
                         ))}
                     </div>
                 )}
@@ -124,14 +124,14 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Recent Activity Placeholder */}
-                <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-6">
+                <ContentBox>
                     <h2 className="text-xl font-bold text-text-dark mb-4">Recent Activity</h2>
                     <div className="text-center py-10">
                         <MdTrendingUp className="text-muted-dark text-5xl mb-3" />
                         <p className="text-text-light">Activity tracking coming soon</p>
                         <p className="text-sm text-text-light mt-1">Recent user actions and system events will appear here.</p>
                     </div>
-                </div>
+                </ContentBox>
             </PageBody>
         </Page>
     );

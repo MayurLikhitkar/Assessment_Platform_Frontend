@@ -9,6 +9,8 @@ import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
 import FormTextArea from '../ui/FormTextArea';
 import FormMultiClick from '../ui/FormMultiClick';
+import FormDatePicker from '../ui/FormDatePicker';
+import FormMultiInput from '../ui/FormMultiInput';
 import Button from '../ui/Button';
 import { ContentBox, PageFooter } from '../ui/Page';
 import { getQuestions } from '../../services/axios/adminApi';
@@ -28,6 +30,25 @@ const assessmentSchema = Yup.object({
     durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Required'),
     totalMarks: Yup.number().min(1).required('Required'),
     passingMarks: Yup.number().min(1).required('Required'),
+    startDate: Yup.date().nullable(),
+    endDate: Yup.date().nullable().min(Yup.ref('startDate'), 'End date must be after start date'),
+    tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
+    instructions: Yup.string().required('Instructions are required'),
+    requireWebcam: Yup.boolean(),
+    requireMicrophone: Yup.boolean(),
+    allowTabSwitch: Yup.boolean(),
+    maxTabSwitches: Yup.number().when('allowTabSwitch', {
+        is: true,
+        then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
+        otherwise: (schema) => schema.notRequired()
+    }),
+    allowFullscreenExit: Yup.boolean(),
+    maxFullscreenExits: Yup.number().when('allowFullscreenExit', {
+        is: true,
+        then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
+        otherwise: (schema) => schema.notRequired()
+    }),
+    enableRecording: Yup.boolean()
 });
 
 const typeOptions = [
@@ -51,7 +72,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     onSubmit,
     handleCancel,
     isLoading,
-    isEditMode = false
+    isEditMode
 }) => {
     const [isAddingQuestions, setIsAddingQuestions] = useState(false);
     const [selectedQns, setSelectedQns] = useState<Set<string>>(new Set());
@@ -190,11 +211,65 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 </div>
             </ContentBox>
 
+            <ContentBox className="space-y-5">
+                <div className="grid grid-cols-2 gap-5">
+                    <FormDatePicker id="startDate" name="startDate" dateType='future' label="Start Date" formik={formik} type='datetime-local'/>
+                    <FormDatePicker id="endDate" name="endDate" dateType='future' label="End Date" formik={formik} type='datetime-local'/>
+                </div>
+
+                <FormMultiInput id="tags" name="tags" label="Tags" formik={formik} placeholder="Type and press enter" required />
+
+                <FormTextArea id="instructions" name="instructions" label="Instructions" rows={4} formik={formik} required />
+
+            </ContentBox>
+
             <ContentBox>
                 <h2 className="text-lg font-semibold text-text-dark mb-4 border-b border-border-light/50 pb-2">
                     Proctoring Settings
                 </h2>
-                <p className="text-sm text-text-light">Advanced proctoring options will go here.</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                    <FormSelect
+                        id="requireWebcam"
+                        name="requireWebcam"
+                        label="Require Webcam"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
+                    <FormSelect
+                        id="requireMicrophone"
+                        name="requireMicrophone"
+                        label="Require Microphone"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
+                    <FormSelect
+                        id="enableRecording"
+                        name="enableRecording"
+                        label="Enable Recording"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
+                    <FormSelect
+                        id="allowTabSwitch"
+                        name="allowTabSwitch"
+                        label="Allow Tab Switch"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
+                    {formik.values.allowTabSwitch && (
+                        <FormInput id="maxTabSwitches" name="maxTabSwitches" label="Max Tab Switches" type="number" formik={formik} required />
+                    )}
+                    <FormSelect
+                        id="allowFullscreenExit"
+                        name="allowFullscreenExit"
+                        label="Allow Fullscreen Exit"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
+                    {formik.values.allowFullscreenExit && (
+                        <FormInput id="maxFullscreenExits" name="maxFullscreenExits" label="Max Fullscreen Exits" type="number" formik={formik} required />
+                    )}
+                </div>
             </ContentBox>
 
             <ContentBox className='space-y-6'>
@@ -266,25 +341,24 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                             <div className="space-y-3">
                                 {selectedQuestionsObjects.map((q, idx) => (
                                     <div key={q._id} className="flex justify-between items-center bg-background-main border border-border-light rounded-lg p-3">
-                                        <div className="flex-1 mr-4">
-                                            <div className="flex items-start">
-                                                <span className="font-semibold text-text-dark text-sm mr-2 mt-0.5">{idx + 1}.</span>
-                                                <div>
-                                                    <span className="text-sm text-text-main line-clamp-2">{q.question}</span>
-                                                    <div className="flex gap-2 mt-1">
-                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold bg-muted-light/80 text-text-light`}>{q.type}</span>
-                                                        <span className="text-[10px] bg-secondary-light/20 text-secondary-dark px-2 py-0.5 rounded-full font-bold">{q.marks} Marks</span>
-                                                    </div>
+                                        <div className="flex-1 flex items-start gap-3">
+                                            <span className="font-semibold text-secondary-dark text-sm">{idx + 1}.</span>
+                                            <div>
+                                                <span className="text-sm font-semibold text-text-main line-clamp-2">{q.question}</span>
+                                                <div className="flex gap-2 mt-2">
+                                                    <span className="text-xs bg-secondary-light/20 text-secondary-dark px-2 py-0.5 rounded font-bold">{q.marks} Marks</span>
+                                                    <span className={`text-xs px-2 py-0.5 rounded uppercase font-bold bg-background-light text-text-light border border-border-light`}>{q.type}</span>
+                                                    <span className="text-xs bg-primary-light/10 text-primary-main px-2 py-0.5 rounded font-bold capitalize border border-border-light">{q.difficulty}</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <button
+                                        <Button
                                             type="button"
-                                            className="p-1.5 text-error-main hover:bg-error-light/20 rounded-lg transition-colors shrink-0"
+                                            variant='outline'
                                             onClick={() => handleRemoveQuestion(q._id)}
                                         >
                                             <MdClose />
-                                        </button>
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
@@ -303,6 +377,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                     variant="primary"
                     loading={isLoading}
                     loadingText={isEditMode ? "Updating..." : "Creating..."}
+                    disabled={!formik.dirty || formik.isSubmitting}
                 >
                     {isEditMode ? "Update Assessment" : "Create Assessment"}
                 </Button>

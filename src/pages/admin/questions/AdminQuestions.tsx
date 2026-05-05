@@ -12,6 +12,7 @@ import AgGridTable from '../../../components/common/AgGridTable';
 import Button from '../../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
+import DataLoader from '../../../components/common/DataLoader';
 
 const AdminQuestions: React.FC = () => {
     const navigate = useNavigate();
@@ -19,7 +20,7 @@ const AdminQuestions: React.FC = () => {
     const [deleteTarget, setDeleteTarget] = useState<QuestionInterface | null>(null);
 
     // Fetch questions
-    const { data: questionsData } = useQuery({
+    const { data: questionsData, isLoading } = useQuery({
         queryKey: ['adminQuestions'],
         queryFn: getQuestions,
     });
@@ -184,42 +185,48 @@ const AdminQuestions: React.FC = () => {
                     </Button>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                        <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
-                            <MdQuiz className="text-2xl" />
+                {isLoading ? (
+                    <DataLoader />
+                ) : (
+                    <>
+                        {/* Stats */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                                <div className="p-3 bg-secondary-light/20 rounded-lg text-secondary-main">
+                                    <MdQuiz className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-text-dark">{questions.length}</p>
+                                    <p className="text-sm text-text-light">Total Questions</p>
+                                </div>
+                            </div>
+                            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                                <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
+                                    <MdQuiz className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
+                                    <p className="text-sm text-text-light">Active</p>
+                                </div>
+                            </div>
+                            <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
+                                <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
+                                    <MdQuiz className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
+                                    <p className="text-sm text-text-light">Inactive</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-2xl font-bold text-text-dark">{questions.length}</p>
-                            <p className="text-sm text-text-light">Total Questions</p>
-                        </div>
-                    </div>
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                        <div className="p-3 bg-success-light/30 rounded-lg text-success-main">
-                            <MdQuiz className="text-2xl" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
-                            <p className="text-sm text-text-light">Active</p>
-                        </div>
-                    </div>
-                    <div className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-4 flex items-center gap-4">
-                        <div className="p-3 bg-error-light/30 rounded-lg text-error-main">
-                            <MdQuiz className="text-2xl" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
-                            <p className="text-sm text-text-light">Inactive</p>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Questions Table */}
-                <AgGridTable<QuestionInterface>
-                    rowData={questions}
-                    columnDefs={columnDefs}
-                />
+                        {/* Questions Table */}
+                        <AgGridTable<QuestionInterface>
+                            rowData={questions}
+                            columnDefs={columnDefs}
+                        />
+                    </>
+                )}
             </PageBody>
 
             {/* Delete Confirmation Modal */}
@@ -236,7 +243,7 @@ const AdminQuestions: React.FC = () => {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
-        </Page>
+        </Page >
     );
 };
 
