@@ -10,6 +10,7 @@ import type { QuestionInterface } from '../../../types/questionTypes';
 import BackButton from '../../../components/common/BackButton';
 import { Page, PageBody, PageHeader } from '../../../components/ui/Page';
 import QuestionForm from '../../../components/forms/QuestionForm';
+import DataLoader from '../../../components/common/DataLoader';
 
 const EditQuestion: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -33,9 +34,10 @@ const EditQuestion: React.FC = () => {
         mutationFn: (data: Partial<QuestionInterface>) => updateQuestion({ id: id as string, data }),
         onSuccess: (data) => {
             if (data?.success) {
-                toast.success(data.responseMessage || 'Question updated successfully');
+                toast.success(data.responseMessage || 'Question updated successfully!');
                 queryClient.invalidateQueries({ queryKey: ['adminQuestions'] });
-                navigate(-1);
+                queryClient.invalidateQueries({ queryKey: ['question', id] });
+                navigate('/admin/questions');
             }
         },
         onError: (error: ApiResponse<null>) => {
@@ -47,18 +49,13 @@ const EditQuestion: React.FC = () => {
         <Page>
             <PageHeader>
                 <BackButton variant='outline' />
-                <div>
-                    <h1 className="text-2xl font-semibold text-text-dark">Edit Question</h1>
-                    <p className="text-sm text-text-light">Modify the details of the question</p>
-                </div>
+                <h1 className="text-2xl font-bold text-text-main">Edit Question</h1>
             </PageHeader>
 
             <PageBody>
                 {isFetching ? (
-                    <div className="flex justify-center py-10 text-text-light">Loading...</div>
-                ) : !response?.data ? (
-                    <div className="flex justify-center py-10 text-error-main">Question not found</div>
-                ) : (
+                    <DataLoader />
+                ) : response?.data ? (
                     <QuestionForm
                         initialValues={response.data}
                         onSubmit={(values) => updateMutation.mutate(values)}
@@ -66,6 +63,8 @@ const EditQuestion: React.FC = () => {
                         isLoading={updateMutation.isPending}
                         isEditMode={true}
                     />
+                ) : (
+                    <div className="flex justify-center py-10 text-error-main">Question not found</div>
                 )}
             </PageBody>
         </Page>

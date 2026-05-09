@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MdAdd, MdDelete, MdQuiz, MdVisibility, MdEdit } from 'react-icons/md';
+import { MdAdd, MdQuiz } from 'react-icons/md';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { toast } from 'react-hot-toast';
 import Confirmation from '../../../components/modal/Confirmation';
@@ -13,6 +13,7 @@ import Button from '../../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 import DataLoader from '../../../components/common/DataLoader';
+import ActionCell from '../../../components/common/ActionCell';
 
 const AdminQuestions: React.FC = () => {
     const navigate = useNavigate();
@@ -144,31 +145,14 @@ const AdminQuestions: React.FC = () => {
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data) return null;
                 return (
-                    <div className="flex items-center gap-1.5">
-                        <button
-                            className="p-1.5 rounded-lg hover:bg-secondary-light/20 text-secondary-main transition-colors"
-                            title="View Details"
-                        >
-                            <MdVisibility className="text-lg" />
-                        </button>
-                        <button
-                            className="p-1.5 rounded-lg hover:bg-primary-light/10 text-primary-main transition-colors"
-                            title="Edit"
-                        >
-                            <MdEdit className="text-lg" />
-                        </button>
-                        <button
-                            onClick={() => setDeleteTarget(params.data!)}
-                            className="p-1.5 rounded-lg hover:bg-error-light/20 text-error-main transition-colors"
-                            title="Delete"
-                        >
-                            <MdDelete className="text-lg" />
-                        </button>
-                    </div>
+                    <ActionCell
+                        onEdit={() => navigate(`/admin/questions/edit/${params.data!.id}`)}
+                        onDelete={() => setDeleteTarget(params.data!)}
+                    />
                 );
             },
         },
-    ], []);
+    ], [navigate]);
 
     return (
         <Page>

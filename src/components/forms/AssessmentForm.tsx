@@ -17,6 +17,7 @@ import { getQuestions } from '../../services/axios/adminApi';
 import type { QuestionInterface } from '../../types/questionTypes';
 import { type AssessmentInterface } from '../../types/assessmentTypes';
 import AgGridTable from '../common/AgGridTable';
+import DatePicker from '../ui/DatePicker';
 
 // Validation Schema
 const assessmentSchema = Yup.object({
@@ -213,10 +214,10 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
             <ContentBox className="space-y-5">
                 <div className="grid grid-cols-2 gap-5">
-                    <FormDatePicker id="startDate" name="startDate" dateType='future' label="Start Date" formik={formik} type='datetime-local'/>
-                    <FormDatePicker id="endDate" name="endDate" dateType='future' label="End Date" formik={formik} type='datetime-local'/>
+                    <FormDatePicker id="startDate" name="startDate" dateType='future' label="Start Date" formik={formik} type='datetime-local' />
+                    <FormDatePicker id="endDate" name="endDate" dateType='future' label="End Date" formik={formik} type='datetime-local' />
                 </div>
-
+                <DatePicker />
                 <FormMultiInput id="tags" name="tags" label="Tags" formik={formik} placeholder="Type and press enter" required />
 
                 <FormTextArea id="instructions" name="instructions" label="Instructions" rows={4} formik={formik} required />
