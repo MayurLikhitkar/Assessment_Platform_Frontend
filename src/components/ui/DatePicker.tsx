@@ -8,9 +8,13 @@ import {
     type DateTimePickerProps as MuiDateTimePickerProps,
 } from '@mui/x-date-pickers/DateTimePicker';
 
-type DatePickerProps =
-    | ({ withTime?: false } & Omit<MuiDatePickerProps, 'shouldDisableDate'>)
-    | ({ withTime: true } & Omit<MuiDateTimePickerProps, 'shouldDisableDate'>);
+type BaseProps = {
+    withTime?: boolean;
+};
+
+export type DatePickerProps = BaseProps &
+    Partial<MuiDatePickerProps> &
+    Partial<MuiDateTimePickerProps>;
 
 const DatePicker: React.FC<DatePickerProps> = ({
     withTime = false,
@@ -21,8 +25,25 @@ const DatePicker: React.FC<DatePickerProps> = ({
         format: withTime ? 'DD-MM-YYYY HH:mm' : 'DD-MM-YYYY',
         slotProps: {
             textField: {
+                fullWidth: true,
+                size: 'small',
+                className: [
+                    '[&_.MuiPickersOutlinedInput-root]:!rounded-lg',
+                    '[&_.MuiPickersOutlinedInput-notchedOutline]:!border-2',
+                    '[&_.MuiPickersOutlinedInput-notchedOutline]:!border-primary-light/50',
+                    '[&_.MuiPickersOutlinedInput-root.Mui-focused_.MuiPickersOutlinedInput-notchedOutline]:!border-primary-light',
+                    '[&_.MuiPickersOutlinedInput-root:hover_.MuiPickersOutlinedInput-notchedOutline]:!border-primary-light',
+                ].join(' '),
                 sx: {
-                    borderRadius: 999,
+                    // '& .MuiPickersOutlinedInput-root': {
+                    //     borderRadius: '28px',
+                    // },
+                    // '& .MuiPickersOutlinedInput-notchedOutline': {
+                    //     borderColor: 'red',
+                    // },
+                    '&:hover .MuiPickersOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--color-primary-light)',  // ✅ hover
+                    },
                 },
 
             },
@@ -51,15 +72,14 @@ const DatePicker: React.FC<DatePickerProps> = ({
         ...commonProps,
         ...restProps,
         slotProps: {
-            ...commonProps.slotProps,
             ...customSlotProps,
+            ...commonProps.slotProps,
         },
     };
 
     if (withTime) {
         return (
             <MuiDateTimePicker
-                className="w-full"
                 {...(finalProps as MuiDateTimePickerProps)}
             />
         );
@@ -67,7 +87,6 @@ const DatePicker: React.FC<DatePickerProps> = ({
 
     return (
         <MuiDatePicker
-            className="w-full"
             {...(finalProps as MuiDatePickerProps)}
         />
     );

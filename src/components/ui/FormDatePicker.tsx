@@ -1,19 +1,17 @@
 import type { FormikProps } from 'formik';
-import { type DateTimePickerProps } from '@mui/x-date-pickers/DateTimePicker';
 import moment, { type Moment } from 'moment';
 import { twMerge } from 'tailwind-merge';
+import DatePicker, { type DatePickerProps } from './DatePicker';
+import Label from './Label';
 
-import DatePicker from './DatePicker';
-
-interface FormDatePickerProps<T> extends Omit<DateTimePickerProps<Moment>, 'onChange' | 'value'> {
+interface FormDatePickerProps<T> extends Omit<DatePickerProps, 'onChange' | 'value'> {
     label: string;
-    required?: boolean;
-    dateType?: 'past' | 'future' | 'default';
+    withLabel?: boolean;
     withTime?: boolean;
     formik: FormikProps<T>;
-    name: Extract<keyof T, string>;
-    id?: string;
-    className?: string;
+    name: keyof T & string;
+    id?: keyof T & string;
+    required?: boolean;
 }
 
 const errorStyles = [
@@ -23,13 +21,12 @@ const errorStyles = [
 
 const FormDatePicker = <T,>({
     label,
-    dateType = 'default',
-    required,
     name,
     formik,
-    className = '',
     id,
+    withLabel = true,
     withTime,
+    required,
     ...props
 }: FormDatePickerProps<T>) => {
     const isTouched = formik.touched[name];
@@ -38,13 +35,8 @@ const FormDatePicker = <T,>({
     const errorMessage = hasError && typeof error === 'string' ? error : '';
 
     const value = formik.values[name]
-        ? moment(formik.values[name] as string | Date)
+        ? moment(formik.values[name])
         : null;
-
-    let minDate: Moment | undefined;
-    let maxDate: Moment | undefined;
-    if (dateType === 'past') maxDate = moment();
-    else if (dateType === 'future') minDate = moment();
 
     const handleChange = (newValue: Moment | null) => {
         formik.setFieldValue(name, newValue ? newValue.toDate() : null);
@@ -53,28 +45,25 @@ const FormDatePicker = <T,>({
     const mergedClassName = twMerge(
         'w-full',
         hasError && errorStyles,
-        className,
     );
 
     return (
         <div className="w-full">
+            {withLabel && label && (
+                <Label htmlFor={id} label={label} required={required} />
+            )}
             <DatePicker
-                label={required ? `${label} *` : label}
                 value={value}
                 onChange={handleChange}
-                minDate={minDate}
-                maxDate={maxDate}
-                withTime={withTime as false}
-                type={dateType}
+                withTime={withTime}
                 className={mergedClassName}
                 slotProps={{
                     textField: {
                         error: hasError,
                         helperText: errorMessage,
                         onBlur: () => formik.setFieldTouched(name, true, true),
-                        fullWidth: true,
-                        id: id || name,
-                        size: 'small',
+                        id: id,
+                        name: name,
                     },
                 }}
                 {...props}

@@ -47,7 +47,7 @@ const FormMultiClick = <FormValues, ItemType extends string | number>({
                 {...props}
             />
             {errorMessage && (
-                <div className="text-xs text-error-main mt-1.5">{errorMessage}</div>
+                <div className="text-sm text-error-main mt-1">{errorMessage}</div>
             )}
         </div>
     );

@@ -17,7 +17,6 @@ import { getQuestions } from '../../services/axios/adminApi';
 import type { QuestionInterface } from '../../types/questionTypes';
 import { type AssessmentInterface } from '../../types/assessmentTypes';
 import AgGridTable from '../common/AgGridTable';
-import DatePicker from '../ui/DatePicker';
 
 // Validation Schema
 const assessmentSchema = Yup.object({
@@ -27,12 +26,12 @@ const assessmentSchema = Yup.object({
         .of(Yup.string().oneOf(['aptitude', 'coding', 'query', 'subjective', 'mcq']))
         .min(1, 'Select at least one type')
         .required('Type is required'),
-    difficulty: Yup.string().required('Required'),
-    durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Required'),
-    totalMarks: Yup.number().min(1).required('Required'),
-    passingMarks: Yup.number().min(1).required('Required'),
+    difficulty: Yup.string().required('Difficulty is required'),
+    durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Duration is required'),
+    totalMarks: Yup.number().min(1).required('Total marks is required'),
+    passingMarks: Yup.number().min(1).required('Passing marks is required'),
     startDate: Yup.date().nullable(),
-    endDate: Yup.date().nullable().min(Yup.ref('startDate'), 'End date must be after start date'),
+    endDate: Yup.date().nullable().min(Yup.ref('startDate'), 'End date must be after Start date'),
     tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
     instructions: Yup.string().required('Instructions are required'),
     requireWebcam: Yup.boolean(),
@@ -214,10 +213,9 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
             <ContentBox className="space-y-5">
                 <div className="grid grid-cols-2 gap-5">
-                    <FormDatePicker id="startDate" name="startDate" dateType='future' label="Start Date" formik={formik} type='datetime-local' />
-                    <FormDatePicker id="endDate" name="endDate" dateType='future' label="End Date" formik={formik} type='datetime-local' />
+                    <FormDatePicker id="startDate" name="startDate" label="Start Date" formik={formik} />
+                    <FormDatePicker id="endDate" name="endDate" label="End Date" formik={formik} />
                 </div>
-                <DatePicker />
                 <FormMultiInput id="tags" name="tags" label="Tags" formik={formik} placeholder="Type and press enter" required />
 
                 <FormTextArea id="instructions" name="instructions" label="Instructions" rows={4} formik={formik} required />
@@ -383,8 +381,6 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                     {isEditMode ? "Update Assessment" : "Create Assessment"}
                 </Button>
             </PageFooter>
-
-
         </form>
     );
 };

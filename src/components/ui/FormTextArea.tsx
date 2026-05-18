@@ -38,7 +38,7 @@ const FormTextArea = <T,>({
                 value={inputValue}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={hasError ? 'ring-error-main!' : ''}
+                className={hasError ? 'border-error-main!' : ''}
                 {...props}
             />
             {hasError && (

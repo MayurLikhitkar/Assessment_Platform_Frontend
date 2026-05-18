@@ -38,11 +38,11 @@ const MultiClick = <T extends string | number>({
                         type="button"
                         onClick={() => handleToggle(optValue)}
                         className={twMerge(
-                            'px-3 py-2 text-xs font-medium rounded-lg cursor-pointer border transition-colors border-primary-dark/40',
+                            'px-3 py-2 text-xs font-medium rounded-lg cursor-pointer border-2 border-primary-light/50 hover:border-primary-light focus:border-primary-light transition-colors outline-none',
                             isSelected
-                                ? 'bg-primary-main/10 text-primary-main'
+                                ? 'bg-primary-main text-text-inverse'
                                 : 'text-text-main',
-                            hasError && !isSelected ? 'border-error-main bg-error-main/5 text-error-main' : ''
+                            hasError && !isSelected ? 'border-error-main bg-error-main/5 text-error-dark' : ''
                         )}
                     >
                         {optLabel}

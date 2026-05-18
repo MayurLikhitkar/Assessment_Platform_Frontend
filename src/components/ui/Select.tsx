@@ -18,8 +18,8 @@ interface SelectProps extends Omit<ReactSelectProps<Option, false, GroupBase<Opt
 const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
     control: ({ isFocused }) =>
         twMerge(
-            'rounded-lg bg-background-light px-1 h-full cursor-pointer! transition-all ring ring-primary-dark/30',
-            isFocused && 'ring-2 focus:outline-none'
+            'rounded-lg bg-background-light px-1 h-full cursor-pointer! transition-all border-2 border-primary-light/50 hover:border-primary-light outline-none',
+            isFocused && 'focus:border-primary-light'
         ),
     valueContainer: () => 'px-2 text-text-main',
     singleValue: () => 'text-text-main text-sm',
@@ -36,7 +36,7 @@ const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
                     ? 'bg-secondary-main text-text-inverse'
                     : 'text-text-main'
         ),
-    dropdownIndicator: ({ isFocused, selectProps }) =>  
+    dropdownIndicator: ({ isFocused, selectProps }) =>
         twMerge(
             'px-2 transition-all duration-200 ',
             isFocused ? 'text-primary-main' : 'text-text-light hover:text-primary-main',
