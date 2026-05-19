@@ -50,7 +50,7 @@ const AgGridTable = <T,>({ rowData, columnDefs, actions, hasSearch = true, hasEx
         }
     };
 
-    const onPageSizeChanged = useCallback((value: string | number) => {
+    const onPageSizeChanged = useCallback((value: string | number | boolean) => {
         if (!gridRef.current) return;
 
         const size = value === 'All'
@@ -98,7 +98,7 @@ const AgGridTable = <T,>({ rowData, columnDefs, actions, hasSearch = true, hasEx
                             value: size.toString(),
                         }))}
                         placeholder=""
-                        className="max-w-[80px]"
+                        className="max-w-[80px] py-1"
                         onChange={onPageSizeChanged}
                     />}
                 </div>

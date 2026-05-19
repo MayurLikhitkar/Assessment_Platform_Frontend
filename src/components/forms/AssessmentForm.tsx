@@ -30,10 +30,20 @@ const assessmentSchema = Yup.object({
     durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Duration is required'),
     totalMarks: Yup.number().min(1).required('Total marks is required'),
     passingMarks: Yup.number().min(1).required('Passing marks is required'),
-    startDate: Yup.date().nullable(),
-    endDate: Yup.date().nullable().min(Yup.ref('startDate'), 'End date must be after Start date'),
+    startDate: Yup.date()
+        .nullable()
+        .min(new Date(new Date().setHours(0, 0, 0, 0)), 'Start date cannot be in the past'),
+    endDate: Yup.date()
+        .nullable()
+        .when('startDate', (startDate: Date[], schema) => {
+            return startDate?.[0]
+                ? schema.min(startDate[0], 'End date must be after Start date')
+                : schema;
+        }),
     tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
     instructions: Yup.string().required('Instructions are required'),
+    isActive: Yup.boolean(),
+    isPublic: Yup.boolean(),
     requireWebcam: Yup.boolean(),
     requireMicrophone: Yup.boolean(),
     allowTabSwitch: Yup.boolean(),
@@ -89,10 +99,8 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         enableReinitialize: true,
         validationSchema: assessmentSchema,
         onSubmit: async (values) => {
-            const payload = {
-                ...values,
-            };
-            onSubmit(payload);
+            // console.info(values)
+            onSubmit(values);
         },
     });
 
@@ -213,6 +221,20 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
             <ContentBox className="space-y-5">
                 <div className="grid grid-cols-2 gap-5">
+                    <FormSelect
+                        id="isActive"
+                        name="isActive"
+                        label="Active"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
+                    <FormSelect
+                        id="isPublic"
+                        name="isPublic"
+                        label="Public"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
                     <FormDatePicker id="startDate" name="startDate" label="Start Date" formik={formik} />
                     <FormDatePicker id="endDate" name="endDate" label="End Date" formik={formik} />
                 </div>

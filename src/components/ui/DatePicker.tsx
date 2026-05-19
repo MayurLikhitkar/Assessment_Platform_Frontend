@@ -10,6 +10,7 @@ import {
 
 type BaseProps = {
     withTime?: boolean;
+    hasError?: boolean;
 };
 
 export type DatePickerProps = BaseProps &
@@ -18,34 +19,32 @@ export type DatePickerProps = BaseProps &
 
 const DatePicker: React.FC<DatePickerProps> = ({
     withTime = false,
+    hasError = false,
     ...props
 }) => {
-    const commonProps: DatePickerProps = {
+    const { slotProps: customSlotProps, ...restProps } = props;
+
+    const datePickerProps: DatePickerProps = {
         className: 'w-full',
         format: withTime ? 'DD-MM-YYYY HH:mm' : 'DD-MM-YYYY',
+        ...restProps,
         slotProps: {
+            ...customSlotProps,
             textField: {
                 fullWidth: true,
                 size: 'small',
                 className: [
-                    '[&_.MuiPickersOutlinedInput-root]:!rounded-lg',
-                    '[&_.MuiPickersOutlinedInput-notchedOutline]:!border-2',
-                    '[&_.MuiPickersOutlinedInput-notchedOutline]:!border-primary-light/50',
-                    '[&_.MuiPickersOutlinedInput-root.Mui-focused_.MuiPickersOutlinedInput-notchedOutline]:!border-primary-light',
-                    '[&_.MuiPickersOutlinedInput-root:hover_.MuiPickersOutlinedInput-notchedOutline]:!border-primary-light',
-                ].join(' '),
-                sx: {
-                    // '& .MuiPickersOutlinedInput-root': {
-                    //     borderRadius: '28px',
-                    // },
-                    // '& .MuiPickersOutlinedInput-notchedOutline': {
-                    //     borderColor: 'red',
-                    // },
-                    '&:hover .MuiPickersOutlinedInput-notchedOutline': {
-                        borderColor: 'var(--color-primary-light)',  // ✅ hover
-                    },
-                },
+                    '[&_.MuiPickersOutlinedInput-root]:rounded-lg!',
+                    '[&_.MuiPickersOutlinedInput-notchedOutline]:border-2!',
+                    !hasError && '[&_.MuiPickersOutlinedInput-notchedOutline]:border-primary-light/50!',
+                    !hasError && '[&_.MuiPickersOutlinedInput-root.Mui-focused_.MuiPickersOutlinedInput-notchedOutline]:border-primary-light!',
+                    !hasError && '[&_.MuiPickersOutlinedInput-root:hover_.MuiPickersOutlinedInput-notchedOutline]:border-primary-light!',
+                    hasError && '[&_.MuiPickersOutlinedInput-notchedOutline]:border-error-main!',
+                    hasError && '[&_.MuiPickersOutlinedInput-root.Mui-focused_.MuiPickersOutlinedInput-notchedOutline]:border-error-main!',
+                    hasError && '[&_.MuiPickersOutlinedInput-root:hover_.MuiPickersOutlinedInput-notchedOutline]:border-error-main!',
 
+                    '[&_.MuiPickersInputBase-sectionsContainer]:py-2.5!',
+                ].filter(Boolean).join(' ')
             },
             openPickerButton: {
                 sx: {
@@ -65,29 +64,17 @@ const DatePicker: React.FC<DatePickerProps> = ({
             },
         }
     };
-
-    const { slotProps: customSlotProps, ...restProps } = props;
-
-    const finalProps = {
-        ...commonProps,
-        ...restProps,
-        slotProps: {
-            ...customSlotProps,
-            ...commonProps.slotProps,
-        },
-    };
-
     if (withTime) {
         return (
             <MuiDateTimePicker
-                {...(finalProps as MuiDateTimePickerProps)}
+                {...(datePickerProps as MuiDateTimePickerProps)}
             />
         );
     }
 
     return (
         <MuiDatePicker
-            {...(finalProps as MuiDatePickerProps)}
+            {...(datePickerProps as MuiDatePickerProps)}
         />
     );
 };

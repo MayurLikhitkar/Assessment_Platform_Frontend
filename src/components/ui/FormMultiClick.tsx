@@ -5,7 +5,7 @@ import Label from './Label';
 
 interface FormMultiClickProps<FormValues, ItemType extends string | number> extends Omit<MultiClickProps<ItemType>, 'value' | 'onChange' | 'hasError'> {
     name: keyof FormValues & string;
-    id?: string;
+    id: keyof FormValues & string;
     formik: FormikProps<FormValues>;
     label?: string;
     required?: boolean;

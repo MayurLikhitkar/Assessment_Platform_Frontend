@@ -1,6 +1,5 @@
 import type { FormikProps } from 'formik';
 import moment, { type Moment } from 'moment';
-import { twMerge } from 'tailwind-merge';
 import DatePicker, { type DatePickerProps } from './DatePicker';
 import Label from './Label';
 
@@ -14,11 +13,6 @@ interface FormDatePickerProps<T> extends Omit<DatePickerProps, 'onChange' | 'val
     required?: boolean;
 }
 
-const errorStyles = [
-    '[&_.MuiOutlinedInput-notchedOutline]:!border-error-main',
-    '[&_.MuiFormHelperText-root]:!text-error-main',
-].join(' ');
-
 const FormDatePicker = <T,>({
     label,
     name,
@@ -30,9 +24,8 @@ const FormDatePicker = <T,>({
     ...props
 }: FormDatePickerProps<T>) => {
     const isTouched = formik.touched[name];
-    const error = formik.errors[name];
-    const hasError = Boolean(isTouched) && Boolean(error);
-    const errorMessage = hasError && typeof error === 'string' ? error : '';
+    const formError = formik.errors[name];
+    const errorMessage = isTouched && typeof formError === 'string' ? formError : undefined;
 
     const value = formik.values[name]
         ? moment(formik.values[name])
@@ -40,12 +33,8 @@ const FormDatePicker = <T,>({
 
     const handleChange = (newValue: Moment | null) => {
         formik.setFieldValue(name, newValue ? newValue.toDate() : null);
+        formik.setFieldTouched(name, true, false);
     };
-
-    const mergedClassName = twMerge(
-        'w-full',
-        hasError && errorStyles,
-    );
 
     return (
         <div className="w-full">
@@ -56,18 +45,12 @@ const FormDatePicker = <T,>({
                 value={value}
                 onChange={handleChange}
                 withTime={withTime}
-                className={mergedClassName}
-                slotProps={{
-                    textField: {
-                        error: hasError,
-                        helperText: errorMessage,
-                        onBlur: () => formik.setFieldTouched(name, true, true),
-                        id: id,
-                        name: name,
-                    },
-                }}
+                hasError={Boolean(errorMessage)}
                 {...props}
             />
+            {errorMessage && (
+                <div className="text-sm text-error-main mt-1">{errorMessage}</div>
+            )}
         </div>
     );
 };

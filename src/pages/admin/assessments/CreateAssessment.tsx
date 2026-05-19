@@ -34,9 +34,11 @@ const CreateAssessment: React.FC = () => {
         description: '',
         type: [],
         difficulty: AssessmentDifficulty.BEGINNER,
-        durationInMinutes: 60,
-        totalMarks: 100,
-        passingMarks: 50,
+        durationInMinutes: 0,
+        totalMarks: 0,
+        passingMarks: 0,
+        startDate: undefined,
+        endDate: undefined,
         tags: [],
         instructions: '',
         requireWebcam: false,
@@ -46,6 +48,8 @@ const CreateAssessment: React.FC = () => {
         maxTabSwitches: 0,
         allowFullscreenExit: false,
         maxFullscreenExits: 0,
+        isActive: false,
+        isPublic: false,
     };
 
     return (

@@ -65,7 +65,7 @@ const MultiInput = <T extends string | number>({
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleAddItem}
                     placeholder={placeholder}
-                    className={hasError ? 'ring-error-main!' : ''}
+                    className={hasError ? 'border-error-main!' : ''}
                 />
                 <Button type="button" variant="primary" size="sm" onClick={handleAddItem} disabled={!inputValue.trim()}>
                     Add

@@ -13,6 +13,7 @@ type Option = {
 interface FormSelectProps<T> extends Omit<ReactSelectProps<Option, false, GroupBase<Option>>, 'value' | 'onChange'> {
     label: string
     name: keyof T & string,
+    id: keyof T & string,
     placeholder?: string,
     formik: FormikProps<T>,
     options: Option[],
@@ -25,7 +26,6 @@ const FormSelect = <T,>({
     placeholder,
     label,
     name,
-    className,
     options,
     formik,
     withLabel = true,
@@ -38,7 +38,7 @@ const FormSelect = <T,>({
         ? formik.errors[name] : '';
 
     return (
-        <div className={className}>
+        <div className='w-full'>
             {withLabel && (
                 <Label htmlFor={id} label={label} required={required} />
             )}
