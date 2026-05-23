@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { ApiResponse, UserInterface } from '../types/types';
+import type { ApiResponse } from '../types/types';
 import api from '../services/axios/api';
-import type { AuthContextType, AuthState, LoginRequest, LoginResponse, RegisterRequest } from '../types/authTypes';
+import type { AuthContextType, AuthState, LoginRequest, LoginResponse, RegisterRequest, UserInterface } from '../types/authTypes';
 import { clearTokens, getAccessToken, getStoredUser, setStoredUser, setTokens } from '../services/tokenService';
 
 const AUTH_EVENTS = {

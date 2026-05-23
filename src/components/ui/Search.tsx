@@ -17,9 +17,7 @@ const Search: React.FC<SearchProps> = ({ value, handleClear, className, containe
                 value={value}
                 placeholder="Search"
                 className={twMerge(
-                    'w-full pl-9 pr-8 py-2 rounded-lg text-sm text-text-main bg-background-light',
-                    'border border-border-light/50 focus:outline-none focus:ring-2 focus:ring-primary-light/50',
-                    'placeholder:text-text-light transition-all duration-200',
+                    'px-10 py-2 border-border-light/70 rounded-lg!',
                     className
                 )}
                 {...props}
@@ -30,7 +28,7 @@ const Search: React.FC<SearchProps> = ({ value, handleClear, className, containe
                     onClick={handleClear}
                     variant='outline'
                     aria-label="Clear search"
-                    className="absolute right-2 p-0.5 text-primary-light hover:bg-primary-light/10 rounded transition-colors"
+                    className="absolute right-2 p-0.5 text-primary-light"
                 >
                     <MdClose className="text-lg" />
                 </Button>

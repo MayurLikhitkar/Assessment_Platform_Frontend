@@ -11,7 +11,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import FormMultiInput from '../ui/FormMultiInput';
 import FormMultiClick from '../ui/FormMultiClick';
-import { ContentBox } from '../ui/Page';
+import { ContentBox, PageFooter } from '../ui/Page';
 
 import { QuestionType, Difficulty, DatabaseType, ProgrammingLanguage } from '../../types/questionTypes';
 import type { QuestionInterface } from '../../types/questionTypes';
@@ -292,7 +292,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                                             value={option.text}
                                             onChange={(e) => updateDynamicList('options', index, 'text', e.target.value)}
                                             placeholder={`Option ${index + 1}`}
-                                            className={Array.isArray(formik.errors.options) && (formik.errors.options as unknown as Record<string, string>[])[index]?.text ? 'ring-error-main! ring-2' : ''}
+                                            className={Array.isArray(formik.errors.options) && (formik.errors.options as unknown as Record<string, string>[])[index]?.text ? 'border-error-main!' : ''}
                                         />
                                     </div>
                                     <Button type="button" variant='icon' className='text-error-main shrink-0' onClick={() => removeDynamicItem('options', index)}>
@@ -427,19 +427,21 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 />
             </ContentBox>
 
-            <div className="flex items-center justify-end gap-3 mt-6">
+            <PageFooter>
                 <Button variant="outline" onClick={handleCancel} type="button">
                     Cancel
                 </Button>
                 <Button
                     type="submit"
                     variant="primary"
+                    form='question-form'
                     loading={isLoading}
                     loadingText={isEditMode ? "Updating..." : "Creating..."}
+                    disabled={!formik.dirty || formik.isSubmitting}
                 >
                     {isEditMode ? "Update Question" : "Create Question"}
                 </Button>
-            </div>
+            </PageFooter>
         </form>
     );
 };
