@@ -37,9 +37,9 @@ export interface AssessmentInterface {
     requireWebcam: boolean;
     requireMicrophone: boolean;
     allowTabSwitch: boolean;
-    maxTabSwitches: number;
+    maxTabSwitches?: number;
     allowFullscreenExit: boolean;
-    maxFullscreenExits: number;
+    maxFullscreenExits?: number;
     enableRecording: boolean;
 
     createdAt: Date;

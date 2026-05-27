@@ -16,7 +16,6 @@ import { ContentBox, PageFooter } from '../ui/Page';
 import { QuestionType, Difficulty, DatabaseType, ProgrammingLanguage } from '../../types/questionTypes';
 import type { QuestionInterface } from '../../types/questionTypes';
 
-
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
     type: Yup.string()
@@ -88,11 +87,11 @@ const questionValidationSchema = Yup.object().shape({
     }),
 
     // --- CODING Validation ---
-    timeLimitInMinutes: Yup.number().when('type', {
-        is: QuestionType.CODING,
-        then: (schema) => schema.min(1, 'Minimum 1 minute').max(180, 'Maximum 180 minutes').required('Time limit is required'),
-        otherwise: (schema) => schema.notRequired(),
-    }),
+    timeLimitInSeconds: Yup.number()
+        .min(5, 'Minimum 5 seconds')
+        .max(18000, 'Maximum 18000 seconds')
+        .integer('Time limit must be a whole number')
+        .required('Time limit is required'),
     allowedLanguages: Yup.array().when('type', {
         is: QuestionType.CODING,
         then: (schema) => schema.of(Yup.string().oneOf(Object.values(ProgrammingLanguage))).min(1, 'At least one programming language must be selected').required('Languages are required for coding questions'),
@@ -100,7 +99,7 @@ const questionValidationSchema = Yup.object().shape({
     }),
     memoryLimitInMB: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 MB').max(128, 'Maximum 128 MB').required('Memory limit is required'),
+        then: (schema) => schema.typeError('Must be a number').min(128, 'Minimum 128 MB').max(512, 'Maximum 512 MB').required('Memory limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     constraints: Yup.array().when('type', {
@@ -183,7 +182,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
             if (payload.type !== QuestionType.MCQ) delete payload.options;
             if (payload.type !== QuestionType.CODING) {
                 delete payload.testCases;
-                delete payload.timeLimitInMinutes;
                 delete payload.memoryLimitInMB;
                 delete payload.constraints;
                 delete payload.allowedLanguages;
@@ -196,7 +194,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
             if (payload.type !== QuestionType.SUBJECTIVE) {
                 delete payload.maxLength;
                 delete payload.minLength;
-                delete payload.subjectiveAnswer;
                 delete payload.expectedKeywords;
             }
 
@@ -244,7 +241,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                     label="Question Type"
                     options={Object.values(QuestionType).map(t => ({ label: t.toUpperCase(), value: t }))}
                     formik={formik}
-                    disabled={isEditMode} // Cannot change type upon edit
                     required
                 />
                 <FormSelect
@@ -257,6 +253,14 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 />
                 <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
                 <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
+                <FormInput id="timeLimitInSeconds" name="timeLimitInSeconds" label="Time Limit (Seconds)" type="number" min={5} max={18000} formik={formik} required />
+                <FormSelect
+                    id="isActive"
+                    name="isActive"
+                    label="Active"
+                    options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                    formik={formik}
+                />
             </ContentBox>
 
             <ContentBox className="grid gap-6">
@@ -329,7 +333,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                     />
 
                     <div className="grid grid-cols-2 gap-4">
-                        <FormInput id="timeLimitInMinutes" name="timeLimitInMinutes" label="Time Limit (Minutes)" type="number" formik={formik} />
                         <FormInput id="memoryLimitInMB" name="memoryLimitInMB" label="Memory Limit (MB)" type="number" formik={formik} />
                     </div>
 

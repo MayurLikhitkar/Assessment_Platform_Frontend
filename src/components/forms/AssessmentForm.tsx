@@ -128,21 +128,12 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
     const columnDefs = useMemo<ColDef<QuestionInterface>[]>(() => [
         {
-            headerName: '',
-            maxWidth: 10,
-            filter: false,
-            sortable: false,
-        },
-        {
             headerName: 'Question',
             field: 'question',
             minWidth: 150,
-            flex: 3,
-            cellClass: 'font-semibold',
-            cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
-                if (!params.data) return null;
-                return params.data.question;
-            },
+            flex: 1,
+            cellClass: 'font-semibold text-text-main',
+            valueFormatter: (params) => params.value ?? 'N/A',
         },
         {
             headerName: 'Difficulty',
@@ -325,7 +316,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         </div>
 
                         <AgGridTable<QuestionInterface>
-                            rowData={filteredQuestions}
+                            rowData={filteredQuestions.filter(q => q.isActive)}
                             columnDefs={columnDefs}
                             onSelectionChanged={onSelectionChanged}
                             rowSelection={{ mode: 'multiRow', checkboxes: true, headerCheckbox: true }}

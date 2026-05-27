@@ -10,6 +10,7 @@ import AgGridTable from '../../../components/common/AgGridTable';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 import ActionCell from '../../../components/common/ActionCell';
 import DataLoader from '../../../components/common/DataLoader';
+import moment from 'moment';
 
 const AdminAssessments: React.FC = () => {
     const navigate = useNavigate();
@@ -31,7 +32,7 @@ const AdminAssessments: React.FC = () => {
             minWidth: 100,
             cellClass: 'font-semibold',
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return 'N/A';
+                if (!params.data?.title) return 'N/A';
                 return params.data.title;
             },
         },
@@ -40,14 +41,14 @@ const AdminAssessments: React.FC = () => {
             field: 'type',
             minWidth: 100,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return 'N/A';
+                if (!params.data?.type) return 'N/A';
                 const type = params.data.type;
                 return (
                     <div className="space-x-2">
                         {type.map((type, index) => (
                             <span
                                 key={index + 1}
-                                className="bg-secondary-main/10 text-secondary-main px-2 py-0.5 rounded text-xs uppercase font-semibold"
+                                className="bg-secondary-light/20 text-secondary-main px-2 py-0.5 rounded text-xs uppercase font-semibold"
                             >
                                 {type}
                             </span>
@@ -61,13 +62,13 @@ const AdminAssessments: React.FC = () => {
             field: 'difficulty',
             minWidth: 130,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data) return 'N/A';
+                if (!params.data?.difficulty) return 'N/A';
                 const difficulty = params.data.difficulty;
                 const colorMap = {
-                    beginner: 'text-success-main bg-success-main/10',
-                    intermediate: 'text-primary-main bg-primary-main/10',
-                    advanced: 'text-warn-main bg-warn-main/10',
-                    expert: 'text-error-main bg-error-main/10',
+                    beginner: 'text-success-main bg-success-main/20',
+                    intermediate: 'text-primary-main bg-primary-main/20',
+                    advanced: 'text-warn-main bg-warn-main/20',
+                    expert: 'text-error-main bg-error-main/20',
                 };
                 return (
                     <span className={`${colorMap[difficulty]} px-2 py-0.5 rounded text-xs capitalize font-semibold`}>
@@ -80,18 +81,32 @@ const AdminAssessments: React.FC = () => {
             headerName: 'Start Date',
             field: 'startDate',
             minWidth: 150,
-            valueGetter: (params) => {
+            valueGetter: (params) => {  // ← ADD THIS
                 if (!params.data?.startDate) return 'N/A';
-                return new Date(params.data.startDate).toLocaleString();
+                return moment(params.data.startDate).format('DD MMM YYYY h:mm A');
+            },
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data?.startDate) return 'N/A';
+                return <div>
+                    <span className='font-medium'>{moment(params.data.startDate).format('DD MMM YYYY')}</span>
+                    <span className='bg-secondary-main/20 text-secondary-dark px-2 py-0.5 rounded font-semibold ml-1'>{moment(params.data.startDate).format('h:mm A')}</span>
+                </div>;
             },
         },
         {
             headerName: 'End Date',
             field: 'endDate',
             minWidth: 150,
-            valueGetter: (params) => {
+            valueGetter: (params) => {  // ← ADD THIS
                 if (!params.data?.endDate) return 'N/A';
-                return new Date(params.data.endDate).toLocaleString();
+                return moment(params.data.endDate).format('DD MMM YYYY h:mm A');
+            },
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data?.endDate) return 'N/A';
+                return <div>
+                    <span className='font-medium'>{moment(params.data.endDate).format('DD MMM YYYY')}</span>
+                    <span className='bg-error-main/20 text-error-dark px-2 py-0.5 rounded font-semibold ml-1'>{moment(params.data.endDate).format('h:mm A')}</span>
+                </div>;
             },
         },
         {
@@ -107,19 +122,18 @@ const AdminAssessments: React.FC = () => {
             headerName: 'Duration (Mins)',
             field: 'durationInMinutes',
             minWidth: 150,
+            valueFormatter: (params) => params.value ?? 'N/A',
         },
         {
             headerName: 'Marks',
             field: 'totalMarks',
             minWidth: 100,
+            valueFormatter: (params) => params.value ?? 'N/A',
         },
         {
             headerName: 'Questions',
             minWidth: 100,
-            valueGetter: (params) => {
-                if (!params.data) return 0;
-                return params.data.questions.length || 0;
-            },
+            valueFormatter: (params) => String(params.data?.questions?.length || 'N/A'),
         },
         {
             headerName: 'Status',
@@ -139,15 +153,24 @@ const AdminAssessments: React.FC = () => {
             },
         },
         {
+            headerName: 'Created On',
+            field: 'createdAt',
+            minWidth: 150,
+            valueGetter: (params) => {  // ← ADD THIS
+                if (!params.data?.createdAt) return 'N/A';
+                return moment(params.data.createdAt).format('DD MMM, YYYY');
+            },
+        },
+        {
             headerName: 'Actions',
             maxWidth: 120,
             filter: false,
             sortable: false,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                const { data } = params;
-                if (!data) return 'N/A';
+                if (!params.data?.id) return 'N/A';
+                const id = params.data.id;
                 return <ActionCell
-                    onEdit={() => navigate(`/admin/assessments/edit/${data.id}`)}
+                    onEdit={() => navigate(`/admin/assessments/edit/${id}`)}
                 />
             },
         },

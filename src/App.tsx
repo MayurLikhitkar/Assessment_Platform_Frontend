@@ -67,6 +67,7 @@ function App() {
                 <Route path="/admin/questions" element={<AdminQuestions />} />
                 <Route path="/admin/questions/create" element={<CreateQuestion />} />
                 <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
+                <Route path="/admin/profile" element={<Profile />} />
               </Route>
 
               {/* 404 Route */}

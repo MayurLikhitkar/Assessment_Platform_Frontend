@@ -52,18 +52,18 @@ const AdminQuestions: React.FC = () => {
             headerName: 'Question',
             field: 'question',
             minWidth: 250,
-            flex: 3,
+            cellClass: 'font-medium text-text-main',
+            valueFormatter: (params) => params.value ?? 'N/A',
         },
         {
             headerName: 'Type',
             field: 'type',
             minWidth: 110,
-            flex: 1,
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
-                if (!params.data) return null;
+                if (!params.data?.type) return null;
                 const type = params.data.type;
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase `}>
+                    <span className={`px-2.5 py-1 rounded text-xs font-semibold uppercase text-text-main bg-muted-main/50`}>
                         {type}
                     </span>
                 );
@@ -74,7 +74,7 @@ const AdminQuestions: React.FC = () => {
             field: 'difficulty',
             minWidth: 130,
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
-                if (!params.data) return null;
+                if (!params.data?.difficulty) return null;
                 const difficulty = params.data.difficulty;
                 const colorMap = {
                     easy: 'text-success-main bg-success-main/10',
@@ -92,28 +92,25 @@ const AdminQuestions: React.FC = () => {
             headerName: 'Marks',
             field: 'marks',
             minWidth: 80,
-            flex: 0.5,
+            valueFormatter: (params) => params.value ?? 'N/A',
         },
         {
             headerName: 'Tags',
             field: 'tags',
             minWidth: 180,
-            flex: 2,
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
-                if (!params.data) return null;
+                if (!params.data?.tags) return null;
                 const tags = params.data.tags;
                 return (
-                    <div className="flex flex-wrap gap-1">
-                        {tags?.slice(0, 3).map((tag) => (
-                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-main">
+                    <div className="space-x-2">
+                        {tags.map((tag, index) => (
+                            <span
+                                key={index + 1}
+                                className="bg-secondary-light/20 text-secondary-main px-2 py-0.5 rounded text-xs uppercase font-semibold"
+                            >
                                 {tag}
                             </span>
                         ))}
-                        {(tags?.length || 0) > 3 && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted-light text-text-light">
-                                +{(tags?.length || 0) - 3}
-                            </span>
-                        )}
                     </div>
                 );
             },
@@ -122,12 +119,11 @@ const AdminQuestions: React.FC = () => {
             headerName: 'Status',
             field: 'isActive',
             minWidth: 100,
-            flex: 0.7,
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
-                if (!params.data) return null;
+                if (!params.data) return 'N/A';
                 const isActive = params.data.isActive;
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isActive
+                    <span className={`px-2.5 py-1 rounded text-xs font-medium ${isActive
                         ? 'bg-success-light/40 text-success-dark'
                         : 'bg-error-light/40 text-error-dark'
                         }`}>

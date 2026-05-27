@@ -43,7 +43,7 @@ const CreateQuestion: React.FC = () => {
             { text: '', isCorrect: false },
             { text: '', isCorrect: false }
         ],
-        timeLimitInMinutes: 30,
+        timeLimitInSeconds: 30,
         memoryLimitInMB: 256,
         testCases: [],
         constraints: [],

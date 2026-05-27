@@ -34,8 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
         { path: '/admin/users', label: 'User Management', icon: <MdPeople className="text-xl" /> },
         { path: '/admin/assessments', label: 'Assessments', icon: <MdDashboard className="text-xl" /> },
         { path: '/admin/questions', label: 'Question Bank', icon: <MdCode className="text-xl" /> },
-        { path: '/admin/reports', label: 'Reports', icon: <MdQueryStats className="text-xl" /> },
-        { path: '/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },
+        { path: '/admin/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },
     ];
 
     const isUserAdmin = isAdmin(user?.role);

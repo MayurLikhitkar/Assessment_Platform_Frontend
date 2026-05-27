@@ -61,11 +61,11 @@ export interface QuestionInterface {
     updatedBy: string;
     createdAt: Date;
     updatedAt: Date;
+    negativeMarks: number;
+    answerExplanation: string;
 
     // Type-specific fields (using discriminators or union types)
     options?: Option[];
-    negativeMarks: number;
-    answerExplanation: string;
 
     language?: ProgrammingLanguage;
     allowedLanguages?: ProgrammingLanguage[];
@@ -73,7 +73,7 @@ export interface QuestionInterface {
     testCases?: TestCase[];
     constraints?: string[];
     hints?: string[];
-    timeLimitInMinutes: number; // in minutes
+    timeLimitInSeconds: number; // in seconds
     memoryLimitInMB: number; // in MB
 
     databaseType?: DatabaseType;
@@ -85,7 +85,6 @@ export interface QuestionInterface {
     minLength?: number;
     expectedKeywords?: string[];
     evaluationRubric?: EvaluationRubric[];
-    subjectiveAnswer?: string;
 }
 
 export interface TestCaseFormValue {

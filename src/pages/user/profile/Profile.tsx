@@ -16,7 +16,7 @@ import Confirmation from '../../../components/modal/Confirmation';
 import { BsFillPatchQuestionFill } from "react-icons/bs";
 import InfoField from '../../../components/ui/InfoField';
 import Label from '../../../components/ui/Label';
-import { Page } from '../../../components/ui/Page';
+import { Page, PageBody } from '../../../components/ui/Page';
 import FormMultiInput from '../../../components/ui/FormMultiInput';
 
 const ProfileSchema = Yup.object().shape({
@@ -128,345 +128,347 @@ const Profile: React.FC = () => {
 
     return (
         <Page>
-            {/* Header */}
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-text-dark">
-                    Profile Settings
-                </h1>
-                {activeTab === 0 && !editMode && (
-                    <Button variant='primary'
-                        onClick={() => setEditMode(true)}
-                    >
-                        <MdEdit />
-                        Edit
-                    </Button>
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                {/* Left Column - Profile Info */}
-                <div className="md:col-span-4 space-y-4">
-                    <div className="bg-background-light rounded-lg shadow-md p-6 text-center">
-                        <h2 className="text-xl font-bold text-text-dark">
-                            {profileData.data.fullName}
-                        </h2>
-                        <p className="text-text-light mb-2">
-                            {profileData.data.email}
-                        </p>
-
-                        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-main text-white mb-4">
-                            {profileData.data.role.toUpperCase()}
-                        </span>
-
-                        <hr className="my-4 border-border-light" />
-
-                        {/* Account Stats */}
-                        <div className="space-y-3 text-left">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-text-light">
-                                    Member Since:
-                                </span>
-                                <span className="font-medium text-text-dark">
-                                    {new Date(profileData.data.createdAt).toLocaleDateString()}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                                <span className="text-text-light">
-                                    Last Login:
-                                </span>
-                                <span className="font-medium text-text-dark">
-                                    {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm items-center">
-                                <span className="text-text-light">
-                                    Account Status:
-                                </span>
-                                <span
-                                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${profileData.data.status === 'active' ? 'bg-success-light text-success-dark' : 'bg-error-light text-error-dark'
-                                        }`}
-                                >
-                                    {profileData.data.status.toUpperCase()}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Proctoring Settings Card */}
-                    <div className="bg-background-light rounded-lg shadow-md p-6">
-                        <h3 className="text-lg font-bold text-text-dark mb-3 flex items-center gap-2">
-                            <MdSecurity className="text-lg" />
-                            Proctoring Settings
-                        </h3>
-
-                        <div className="space-y-3">
-                            <label className="flex items-center justify-between cursor-pointer">
-                                <span className="text-text-dark">Require Webcam</span>
-                                <div className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        name="requireWebcam"
-                                        checked={profileFormik.values.requireWebcam}
-                                        onChange={profileFormik.handleChange}
-                                        disabled={!editMode}
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
-                                </div>
-                            </label>
-
-                            <label className="flex items-center justify-between cursor-pointer">
-                                <span className="text-text-dark">Require Microphone</span>
-                                <div className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        name="requireMicrophone"
-                                        checked={profileFormik.values.requireMicrophone}
-                                        onChange={profileFormik.handleChange}
-                                        disabled={!editMode}
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
-                                </div>
-                            </label>
-
-                            <p className="text-xs text-text-light mt-2">
-                                These settings apply to all your assessments unless overridden by specific assessment settings.
-                            </p>
-                        </div>
-                    </div>
+            <PageBody className='py-7'>
+                {/* Header */}
+                <div className="flex justify-between items-center">
+                    <h1 className="text-3xl font-bold text-text-dark">
+                        Profile Settings
+                    </h1>
+                    {activeTab === 0 && !editMode && (
+                        <Button variant='primary'
+                            onClick={() => setEditMode(true)}
+                        >
+                            <MdEdit />
+                            Edit
+                        </Button>
+                    )}
                 </div>
 
-                {/* Right Column - Forms */}
-                <div className="md:col-span-8">
-                    <div className="bg-background-light rounded-lg shadow-md p-6">
-                        {/* Tabs */}
-                        <div className="flex space-x-4">
-                            <TabButton
-                                label="Personal Info"
-                                icon={<MdPerson className="text-lg" />}
-                                isActive={activeTab === 0}
-                                onClick={() => setActiveTab(0)}
-                            />
-                            <TabButton
-                                label="Security"
-                                icon={<MdSecurity className="text-lg" />}
-                                isActive={activeTab === 1}
-                                onClick={() => setActiveTab(1)}
-                            />
-                            <TabButton
-                                label="Assessment History"
-                                icon={<MdHistory className="text-lg" />}
-                                isActive={activeTab === 2}
-                                onClick={() => setActiveTab(2)}
-                            />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {/* Left Column - Profile Info */}
+                    <div className="md:col-span-4 space-y-4">
+                        <div className="bg-background-light rounded-lg shadow-md p-6 text-center">
+                            <h2 className="text-xl font-bold text-text-dark">
+                                {profileData.data.fullName}
+                            </h2>
+                            <p className="text-text-light mb-2">
+                                {profileData.data.email}
+                            </p>
 
-                        {/* Personal Info Tab */}
-                        {activeTab === 0 && (
-                            <div className="mt-6">
-                                <form onSubmit={profileFormik.handleSubmit}>
-                                    {editMode ?
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <FormInput
-                                                id="fullName"
-                                                name="fullName"
-                                                label="Full Name"
-                                                type="text"
-                                                placeholder="John Doe"
-                                                formik={profileFormik}
-                                                disabled={!editMode}
-                                            />
+                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-main text-white mb-4">
+                                {profileData.data.role.toUpperCase()}
+                            </span>
 
-                                            <FormInput
-                                                id="email"
-                                                name="email"
-                                                label="Work Email"
-                                                type="email"
-                                                inputMode="email"
-                                                placeholder="john.doe@company.com"
-                                                formik={profileFormik}
-                                                disabled={!editMode}
-                                            />
+                            <hr className="my-4 border-border-light" />
 
-                                            <FormInput
-                                                id="phone"
-                                                name="phone"
-                                                label="Phone Number"
-                                                type="tel"
-                                                inputMode="tel"
-                                                placeholder="123-456-7890"
-                                                formik={profileFormik}
-                                                disabled={!editMode}
-                                            />
+                            {/* Account Stats */}
+                            <div className="space-y-3 text-left">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-text-light">
+                                        Member Since:
+                                    </span>
+                                    <span className="font-medium text-text-dark">
+                                        {new Date(profileData.data.createdAt).toLocaleDateString()}
+                                    </span>
+                                </div>
 
-                                            <FormInput
-                                                id="experience"
-                                                name="experience"
-                                                label="Experience (years)"
-                                                type="number"
-                                                placeholder="1"
-                                                inputMode='decimal'
-                                                formik={profileFormik}
-                                                disabled={!editMode}
-                                            />
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-text-light">
+                                        Last Login:
+                                    </span>
+                                    <span className="font-medium text-text-dark">
+                                        {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
+                                    </span>
+                                </div>
 
-                                            <FormMultiInput
-                                                className="md:col-span-2"
-                                                id="skills"
-                                                name="skills"
-                                                label="Skills"
-                                                placeholder="Add a skill and press Enter"
-                                                formik={profileFormik}
-                                            />
-                                        </div> :
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <InfoField
-                                                label="Full Name"
-                                                value={profileData.data.fullName}
-                                            />
-
-                                            <InfoField
-                                                label="Work Email"
-                                                value={profileData.data.email}
-                                            />
-
-                                            <InfoField
-                                                label="Phone Number"
-                                                value={profileData.data.phone || 'N/A'}
-                                            />
-
-                                            <InfoField
-                                                label="Experience (years)"
-                                                value={profileData.data.experience || 'N/A'}
-                                            />
-
-                                            <div className="mb-2">
-                                                <Label label='Skills' />
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    {profileData.data.skills && profileData.data.skills.length > 0 ? profileData.data.skills.map((skill, index) => (
-                                                        <span key={index + 1} className="px-2 rounded-md font-medium bg-primary-main border border-primary-light/50 text-text-inverse">
-                                                            {skill}
-                                                        </span>
-                                                    )) : (
-                                                        <span className="text-gray-500">No skills added</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                    {editMode && (
-                                        <div className="flex justify-end space-x-2 mt-6">
-                                            <Button
-                                                variant='outline'
-                                                onClick={() => {
-                                                    setEditMode(false);
-                                                    profileFormik.resetForm();
-                                                }}
-                                            >
-                                                <MdCancel className='text-error-main group-hover:text-error-dark text-lg' />
-                                                Cancel
-                                            </Button>
-                                            <Button
-                                                type="submit"
-                                                disabled={profileFormik.isSubmitting || !profileFormik.dirty || updateMutation.isPending}
-                                            >
-                                                <MdSave />
-                                                {profileFormik.isSubmitting ? 'Saving...' : 'Save Changes'}
-                                            </Button>
-                                        </div>
-                                    )}
-                                </form>
-                            </div>
-                        )}
-
-                        {/* Security Tab */}
-                        {activeTab === 1 && (
-                            <div className="mt-6">
-                                <form onSubmit={passwordFormik.handleSubmit}>
-                                    <div className="space-y-6">
-                                        <FormInput
-                                            id="currentPassword"
-                                            name="currentPassword"
-                                            label="Current Password"
-                                            type="password"
-                                            placeholder="*********"
-                                            formik={passwordFormik}
-                                        />
-                                        <FormInput
-                                            id="newPassword"
-                                            name="newPassword"
-                                            label="New Password"
-                                            type="password"
-                                            placeholder="*********"
-                                            formik={passwordFormik}
-                                        />
-                                        <FormInput
-                                            id="confirmPassword"
-                                            name="confirmPassword"
-                                            label="Current Password"
-                                            type="password"
-                                            placeholder="*********"
-                                            formik={passwordFormik}
-                                        />
-
-                                        <div className="flex justify-end">
-                                            <Button
-                                                type="submit"
-                                                disabled={passwordFormik.isSubmitting || !passwordFormik.dirty || changePasswordMutation.isPending}
-                                            >
-                                                <MdSave />
-                                                {passwordFormik.isSubmitting ? 'Changing...' : 'Change Password'}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </form>
-
-                                <hr className="my-6 border-primary-light" />
-
-                                {/* Security Settings */}
-                                <h3 className="text-lg font-bold text-text-dark mb-4">
-                                    Security Settings
-                                </h3>
-
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant='secondary'
-                                        // onClick={() => toast('Two-factor authentication coming soon')}
-                                        onClick={() => setModal(true)}
+                                <div className="flex justify-between text-sm items-center">
+                                    <span className="text-text-light">
+                                        Account Status:
+                                    </span>
+                                    <span
+                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${profileData.data.status === 'active' ? 'bg-success-light text-success-dark' : 'bg-error-light text-error-dark'
+                                            }`}
                                     >
-                                        Enable Two-Factor Authentication
-                                    </Button>
-                                    <Button
-                                        variant='danger'
-                                        onClick={() => toast.success('Logged out successfully')}
-                                    >
-                                        Logout
-                                    </Button>
+                                        {profileData.data.status.toUpperCase()}
+                                    </span>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Assessment History Tab */}
-                        {activeTab === 2 && (
-                            <div className="mt-6">
-                                <p className="text-text-dark mb-4">
-                                    Your assessment history and performance analytics will appear here.
+                        {/* Proctoring Settings Card */}
+                        <div className="bg-background-light rounded-lg shadow-md p-6">
+                            <h3 className="text-lg font-bold text-text-dark mb-3 flex items-center gap-2">
+                                <MdSecurity className="text-lg" />
+                                Proctoring Settings
+                            </h3>
+
+                            <div className="space-y-3">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-text-dark">Require Webcam</span>
+                                    <div className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            name="requireWebcam"
+                                            checked={profileFormik.values.requireWebcam}
+                                            onChange={profileFormik.handleChange}
+                                            disabled={!editMode}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-text-dark">Require Microphone</span>
+                                    <div className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            name="requireMicrophone"
+                                            checked={profileFormik.values.requireMicrophone}
+                                            onChange={profileFormik.handleChange}
+                                            disabled={!editMode}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
+                                    </div>
+                                </label>
+
+                                <p className="text-xs text-text-light mt-2">
+                                    These settings apply to all your assessments unless overridden by specific assessment settings.
                                 </p>
                             </div>
-                        )}
+                        </div>
+                    </div>
+
+                    {/* Right Column - Forms */}
+                    <div className="md:col-span-8">
+                        <div className="bg-background-light rounded-lg shadow-md p-6">
+                            {/* Tabs */}
+                            <div className="flex space-x-4">
+                                <TabButton
+                                    label="Personal Info"
+                                    icon={<MdPerson className="text-lg" />}
+                                    isActive={activeTab === 0}
+                                    onClick={() => setActiveTab(0)}
+                                />
+                                <TabButton
+                                    label="Security"
+                                    icon={<MdSecurity className="text-lg" />}
+                                    isActive={activeTab === 1}
+                                    onClick={() => setActiveTab(1)}
+                                />
+                                <TabButton
+                                    label="Assessment History"
+                                    icon={<MdHistory className="text-lg" />}
+                                    isActive={activeTab === 2}
+                                    onClick={() => setActiveTab(2)}
+                                />
+                            </div>
+
+                            {/* Personal Info Tab */}
+                            {activeTab === 0 && (
+                                <div className="mt-6">
+                                    <form onSubmit={profileFormik.handleSubmit}>
+                                        {editMode ?
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <FormInput
+                                                    id="fullName"
+                                                    name="fullName"
+                                                    label="Full Name"
+                                                    type="text"
+                                                    placeholder="John Doe"
+                                                    formik={profileFormik}
+                                                    disabled={!editMode}
+                                                />
+
+                                                <FormInput
+                                                    id="email"
+                                                    name="email"
+                                                    label="Work Email"
+                                                    type="email"
+                                                    inputMode="email"
+                                                    placeholder="john.doe@company.com"
+                                                    formik={profileFormik}
+                                                    disabled={!editMode}
+                                                />
+
+                                                <FormInput
+                                                    id="phone"
+                                                    name="phone"
+                                                    label="Phone Number"
+                                                    type="tel"
+                                                    inputMode="tel"
+                                                    placeholder="123-456-7890"
+                                                    formik={profileFormik}
+                                                    disabled={!editMode}
+                                                />
+
+                                                <FormInput
+                                                    id="experience"
+                                                    name="experience"
+                                                    label="Experience (years)"
+                                                    type="number"
+                                                    placeholder="1"
+                                                    inputMode='decimal'
+                                                    formik={profileFormik}
+                                                    disabled={!editMode}
+                                                />
+
+                                                <FormMultiInput
+                                                    className="md:col-span-2"
+                                                    id="skills"
+                                                    name="skills"
+                                                    label="Skills"
+                                                    placeholder="Add a skill and press Enter"
+                                                    formik={profileFormik}
+                                                />
+                                            </div> :
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <InfoField
+                                                    label="Full Name"
+                                                    value={profileData.data.fullName}
+                                                />
+
+                                                <InfoField
+                                                    label="Work Email"
+                                                    value={profileData.data.email}
+                                                />
+
+                                                <InfoField
+                                                    label="Phone Number"
+                                                    value={profileData.data.phone || 'N/A'}
+                                                />
+
+                                                <InfoField
+                                                    label="Experience (years)"
+                                                    value={profileData.data.experience || 'N/A'}
+                                                />
+
+                                                <div className="mb-2">
+                                                    <Label label='Skills' />
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {profileData.data.skills && profileData.data.skills.length > 0 ? profileData.data.skills.map((skill, index) => (
+                                                            <span key={index + 1} className="px-2 rounded-md font-medium bg-primary-main border border-primary-light/50 text-text-inverse">
+                                                                {skill}
+                                                            </span>
+                                                        )) : (
+                                                            <span className="text-gray-500">No skills added</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        {editMode && (
+                                            <div className="flex justify-end space-x-2 mt-6">
+                                                <Button
+                                                    variant='outline'
+                                                    onClick={() => {
+                                                        setEditMode(false);
+                                                        profileFormik.resetForm();
+                                                    }}
+                                                >
+                                                    <MdCancel className='text-error-main group-hover:text-error-dark text-lg' />
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={profileFormik.isSubmitting || !profileFormik.dirty || updateMutation.isPending}
+                                                >
+                                                    <MdSave />
+                                                    {profileFormik.isSubmitting ? 'Saving...' : 'Save Changes'}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </form>
+                                </div>
+                            )}
+
+                            {/* Security Tab */}
+                            {activeTab === 1 && (
+                                <div className="mt-6">
+                                    <form onSubmit={passwordFormik.handleSubmit}>
+                                        <div className="space-y-6">
+                                            <FormInput
+                                                id="currentPassword"
+                                                name="currentPassword"
+                                                label="Current Password"
+                                                type="password"
+                                                placeholder="*********"
+                                                formik={passwordFormik}
+                                            />
+                                            <FormInput
+                                                id="newPassword"
+                                                name="newPassword"
+                                                label="New Password"
+                                                type="password"
+                                                placeholder="*********"
+                                                formik={passwordFormik}
+                                            />
+                                            <FormInput
+                                                id="confirmPassword"
+                                                name="confirmPassword"
+                                                label="Current Password"
+                                                type="password"
+                                                placeholder="*********"
+                                                formik={passwordFormik}
+                                            />
+
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={passwordFormik.isSubmitting || !passwordFormik.dirty || changePasswordMutation.isPending}
+                                                >
+                                                    <MdSave />
+                                                    {passwordFormik.isSubmitting ? 'Changing...' : 'Change Password'}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <hr className="my-6 border-primary-light" />
+
+                                    {/* Security Settings */}
+                                    <h3 className="text-lg font-bold text-text-dark mb-4">
+                                        Security Settings
+                                    </h3>
+
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant='secondary'
+                                            // onClick={() => toast('Two-factor authentication coming soon')}
+                                            onClick={() => setModal(true)}
+                                        >
+                                            Enable Two-Factor Authentication
+                                        </Button>
+                                        <Button
+                                            variant='danger'
+                                            onClick={() => toast.success('Logged out successfully')}
+                                        >
+                                            Logout
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Assessment History Tab */}
+                            {activeTab === 2 && (
+                                <div className="mt-6">
+                                    <p className="text-text-dark mb-4">
+                                        Your assessment history and performance analytics will appear here.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <Confirmation
-                open={modal}
-                onClose={() => setModal(false)}
-                icon={BsFillPatchQuestionFill}
-                message='Are you sure you want to enable Two-Factor Authentication? This will add an extra layer of security to your account by requiring a verification code in addition to your password.'
-                onConfirm={() => { setModal(false); toast.success('2FA Setup initiated'); }}
-            />
+                <Confirmation
+                    open={modal}
+                    onClose={() => setModal(false)}
+                    icon={BsFillPatchQuestionFill}
+                    message='Are you sure you want to enable Two-Factor Authentication? This will add an extra layer of security to your account by requiring a verification code in addition to your password.'
+                    onConfirm={() => { setModal(false); toast.success('2FA Setup initiated'); }}
+                />
+            </PageBody>
         </Page>
     );
 };
