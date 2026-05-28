@@ -78,7 +78,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isCreateModalOpen, se
             title="Create New User"
             maxWidth="lg"
         >
-            <form onSubmit={formik.handleSubmit} className="space-y-4 pt-2">
+            <form onSubmit={formik.handleSubmit} id='create-user-form' className="space-y-4">
                 <FormInput
                     id="fullName"
                     name="fullName"
@@ -112,7 +112,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isCreateModalOpen, se
                     label="Assign Role"
                     placeholder="Select a role"
                     formik={formik}
-                    options={Object.values(UserRole).map(d => ({ label: d.replaceAll(/\b\w/g, c => c.toUpperCase()), value: d }))
+                    options={Object.values(UserRole).map(d => ({ label: d.replaceAll('_', ' ').replaceAll(/\b\w/g, c => c.toUpperCase()), value: d }))
                     }
                     required
                 />
@@ -124,29 +124,29 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isCreateModalOpen, se
                     placeholder="+1 234 567 8900"
                     formik={formik}
                 />
-
-                <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-border-light/50">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="md"
-                        onClick={() => {
-                            setIsCreateModalOpen(false);
-                            formik.resetForm();
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        size="md"
-                        loading={createMutation.isPending}
-                    >
-                        Create User
-                    </Button>
-                </div>
             </form>
+            <div className="flex justify-end gap-3 pt-5 mt-5 border-t border-border-light/50">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                        setIsCreateModalOpen(false);
+                        formik.resetForm();
+                    }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    type="submit"
+                    variant="primary"
+                    form='create-user-form'
+                    loadingText="Creating..."
+                    loading={createMutation.isPending}
+                    disabled={!formik.dirty || formik.isSubmitting}
+                >
+                    Create User
+                </Button>
+            </div>
         </Modal>
     );
 };

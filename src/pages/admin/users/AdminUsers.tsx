@@ -58,11 +58,11 @@ const AdminUsers: React.FC = () => {
             cellRenderer: (params: ICellRendererParams<UserInterface>) => {
                 if (!params.data?.role) return 'N/A';
                 const colorMap: Record<UserRole, string> = {
-                    [UserRole.SUPER_ADMIN]: 'text-error-dark bg-error-main/20',
-                    [UserRole.ADMIN]: 'text-secondary-main bg-secondary-main/20',
-                    [UserRole.EVALUATOR]: 'text-primary-main bg-primary-light/20',
-                    [UserRole.PROCTOR]: 'text-warn-dark bg-warn-main/20',
-                    [UserRole.USER]: 'text-text-main bg-muted-main',
+                    super_admin: 'text-error-dark bg-error-main/20',
+                    admin: 'text-secondary-main bg-secondary-main/20',
+                    evaluator: 'text-primary-main bg-primary-light/20',
+                    proctor: 'text-warn-dark bg-warn-main/20',
+                    user: 'text-text-main bg-muted-main',
                 };
                 const role = params.data.role;
                 return (
@@ -79,10 +79,10 @@ const AdminUsers: React.FC = () => {
             cellRenderer: (params: ICellRendererParams<UserInterface>) => {
                 if (!params.data?.status) return 'N/A';
                 const colorMap: Record<UserStatus, string> = {
-                    [UserStatus.INACTIVE]: 'text-error-dark bg-error-main/20',
-                    [UserStatus.ACTIVE]: 'text-success-main bg-success-main/20',
-                    [UserStatus.SUSPENDED]: 'text-primary-main bg-primary-light/20',
-                    [UserStatus.BANNED]: 'text-warn-dark bg-warn-main/20',
+                    inactive: 'text-error-dark bg-error-main/20',
+                    active: 'text-success-main bg-success-main/20',
+                    suspended: 'text-primary-main bg-primary-light/20',
+                    banned: 'text-warn-dark bg-warn-main/20',
                 };
                 const status = params.data.status;
                 return (

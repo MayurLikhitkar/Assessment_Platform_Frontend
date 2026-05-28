@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
 
     const userNavItems = [
         { path: '/dashboard', label: 'Dashboard', icon: <MdHome className="text-xl" /> },
-        { path: '/assessments', label: 'My Assessments', icon: <MdAssignment className="text-xl" /> },
+        { path: '/assessments', label: 'Assessments', icon: <MdAssignment className="text-xl" /> },
         { path: '/coding-practice', label: 'Coding Practice', icon: <MdCode className="text-xl" /> },
         { path: '/queries', label: 'SQL Practice', icon: <MdQueryStats className="text-xl" /> },
         { path: '/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },

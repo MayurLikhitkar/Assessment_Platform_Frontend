@@ -17,7 +17,7 @@ const Search: React.FC<SearchProps> = ({ value, handleClear, className, containe
                 value={value}
                 placeholder="Search"
                 className={twMerge(
-                    'px-10 py-2 border-border-light/70 rounded-lg!',
+                    'px-10 py-2 border-dark-light/15 rounded-lg!',
                     className
                 )}
                 {...props}

@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import Confirmation from '../../../components/modal/Confirmation';
 import { getQuestions, deleteQuestion } from '../../../services/axios/adminApi';
 import type { ApiResponse } from '../../../types/types';
-import type { QuestionInterface } from '../../../types/questionTypes';
+import type { Difficulty, QuestionInterface } from '../../../types/questionTypes';
 import { BsFillPatchQuestionFill } from 'react-icons/bs';
 import AgGridTable from '../../../components/common/AgGridTable';
 import Button from '../../../components/ui/Button';
@@ -76,7 +76,7 @@ const AdminQuestions: React.FC = () => {
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data?.difficulty) return null;
                 const difficulty = params.data.difficulty;
-                const colorMap = {
+                const colorMap: Record<Difficulty, string> = {
                     easy: 'text-success-main bg-success-main/10',
                     medium: 'text-primary-main bg-primary-main/10',
                     hard: 'text-error-main bg-error-main/10',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { MdPerson, MdSecurity, MdHistory, MdCancel, MdEdit, MdSave, } from 'react-icons/md';
+import { MdPerson, MdSecurity, MdCancel, MdEdit, MdSave, } from 'react-icons/md';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
@@ -39,7 +39,7 @@ const PasswordSchema = Yup.object().shape({
         .required('Please confirm your password'),
 });
 
-const Profile: React.FC = () => {
+const AdminProfile: React.FC = () => {
     const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState(0);
     const [editMode, setEditMode] = useState(false);
@@ -146,84 +146,38 @@ const Profile: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Left Column - Profile Info */}
-                    <div className="md:col-span-4 space-y-4">
-                        <div className="bg-background-light rounded-lg shadow-md p-6 text-center">
-                            <h2 className="text-xl font-bold text-text-dark">
-                                {profileData.data.fullName}
-                            </h2>
-                            <p className="text-text-light mb-2">
-                                {profileData.data.email}
-                            </p>
+                    <div className="md:col-span-4 bg-background-light rounded-lg shadow-md p-6 text-center">
+                        <h2 className="text-xl font-bold text-text-dark">
+                            {profileData.data.fullName}
+                        </h2>
+                        <p className="text-text-light mb-2">
+                            {profileData.data.email}
+                        </p>
 
-                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-main text-white mb-4">
-                                {profileData.data.role.toUpperCase()}
-                            </span>
+                        <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-primary-main text-white mb-4">
+                            {profileData.data.role.toUpperCase()}
+                        </span>
 
-                            <hr className="my-4 border-border-light" />
+                        <hr className="my-4 border-border-light" />
 
-                            {/* Account Stats */}
-                            <div className="space-y-3 text-left">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-text-light">
-                                        Member Since:
-                                    </span>
-                                    <span className="font-medium text-text-dark">
-                                        {new Date(profileData.data.createdAt).toLocaleDateString()}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-text-light">
-                                        Last Login:
-                                    </span>
-                                    <span className="font-medium text-text-dark">
-                                        {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
-                                    </span>
-                                </div>
+                        {/* Account Stats */}
+                        <div className="space-y-3 text-left">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-text-light">
+                                    Member Since:
+                                </span>
+                                <span className="font-medium text-text-dark">
+                                    {new Date(profileData.data.createdAt).toLocaleDateString()}
+                                </span>
                             </div>
-                        </div>
 
-                        {/* Proctoring Settings Card */}
-                        <div className="bg-background-light rounded-lg shadow-md p-6">
-                            <h3 className="text-lg font-bold text-text-dark mb-3 flex items-center gap-2">
-                                <MdSecurity className="text-lg" />
-                                Proctoring Settings
-                            </h3>
-
-                            <div className="space-y-3">
-                                <label className="flex items-center justify-between cursor-pointer">
-                                    <span className="text-text-dark">Require Webcam</span>
-                                    <div className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only peer"
-                                            name="requireWebcam"
-                                            checked={profileFormik.values.requireWebcam}
-                                            onChange={profileFormik.handleChange}
-                                            disabled={!editMode}
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
-                                    </div>
-                                </label>
-
-                                <label className="flex items-center justify-between cursor-pointer">
-                                    <span className="text-text-dark">Require Microphone</span>
-                                    <div className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only peer"
-                                            name="requireMicrophone"
-                                            checked={profileFormik.values.requireMicrophone}
-                                            onChange={profileFormik.handleChange}
-                                            disabled={!editMode}
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
-                                    </div>
-                                </label>
-
-                                <p className="text-xs text-text-light mt-2">
-                                    These settings apply to all your assessments unless overridden by specific assessment settings.
-                                </p>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-text-light">
+                                    Last Login:
+                                </span>
+                                <span className="font-medium text-text-dark">
+                                    {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -244,12 +198,6 @@ const Profile: React.FC = () => {
                                     icon={<MdSecurity className="text-lg" />}
                                     isActive={activeTab === 1}
                                     onClick={() => setActiveTab(1)}
-                                />
-                                <TabButton
-                                    label="Assessment History"
-                                    icon={<MdHistory className="text-lg" />}
-                                    isActive={activeTab === 2}
-                                    onClick={() => setActiveTab(2)}
                                 />
                             </div>
 
@@ -437,15 +385,6 @@ const Profile: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-
-                            {/* Assessment History Tab */}
-                            {activeTab === 2 && (
-                                <div className="mt-6">
-                                    <p className="text-text-dark mb-4">
-                                        Your assessment history and performance analytics will appear here.
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -461,4 +400,4 @@ const Profile: React.FC = () => {
     );
 };
 
-export default Profile;
+export default AdminProfile;

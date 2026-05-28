@@ -6,10 +6,10 @@ import {
     MdPersonOutline,
     MdLogout,
     MdSettingsApplications,
-    MdSearch,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 import { isAdmin, getHomePath } from '../../utils/roleUtils';
+import Search from '../ui/Search';
 
 interface NavbarProps {
     onMenuClick?: () => void;
@@ -55,40 +55,31 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     };
 
     return (
-        <header className="sticky top-0 z-9998 bg-background-light/80 backdrop-blur-md border-b border-border-light transition-all duration-200">
+        <header className="sticky top-0 z-9998 bg-background-light backdrop-blur-md border-b border-border-light transition-all duration-200">
             <div className="px-4 py-3 sm:px-6 lg:px-8 flex items-center justify-between w-full">
                 {/* Left side - Logo and Brand */}
-                <div className="flex items-center gap-4 sm:gap-8">
+                <div className="flex items-center gap-4">
                     <button
-                        className="p-2 -ml-2 text-text-main rounded-full hover:bg-muted-main/20 lg:hidden transition-colors"
+                        className="p-2 text-text-main rounded-full hover:bg-muted-main/20 lg:hidden transition-colors"
                         onClick={onMenuClick}
                         aria-label="open drawer"
                     >
                         <MdMenu className="text-2xl" />
                     </button>
 
-                    <Link to={getHomePath(user?.role)} className="flex items-center gap-3 group select-none">
-                        <div className="relative z-10 hidden sm:flex items-center gap-2">
-                            <span className="w-10 h-10 bg-primary-main/70 text-white backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
+                    <div className="relative z-10 hidden sm:flex items-center gap-2">
+                        <Link to={getHomePath(user?.role)} className="flex items-center gap-3 group select-none">
+                            <span className="w-10 h-10 bg-primary-main text-white backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
                                 A
                             </span>
-                            <span className="text-2xl font-bold tracking-tight text-text-dark">AssessPro</span>
-                        </div>
-                    </Link>
+                            <span className="text-2xl font-bold text-text-main">AssessPro</span>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Center - Search Bar */}
                 <div className="hidden md:flex flex-1 max-w-md mx-8">
-                    <div className="relative w-full group">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <MdSearch className="text-lg text-text-light group-focus-within:text-primary-main transition-colors" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search assessments..."
-                            className="w-full bg-muted-light/50 hover:bg-muted-light focus:bg-background-light border border-transparent focus:border-primary-light/30 rounded-full py-2 pl-10 pr-4 text-sm text-text-main placeholder-text-light/70 focus:ring-4 focus:ring-primary-light/10 transition-all duration-200 outline-none"
-                        />
-                    </div>
+                    <Search containerClassName='w-full' className='border-secondary-light/25 rounded-full!'/>
                 </div>
 
                 {/* Right side - User actions */}

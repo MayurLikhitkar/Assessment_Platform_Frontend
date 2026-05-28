@@ -14,60 +14,9 @@ import FormMultiInput from '../ui/FormMultiInput';
 import Button from '../ui/Button';
 import { ContentBox, PageFooter } from '../ui/Page';
 import { getQuestions } from '../../services/axios/adminApi';
-import type { QuestionInterface } from '../../types/questionTypes';
-import { type AssessmentInterface } from '../../types/assessmentTypes';
+import type { Difficulty, QuestionInterface } from '../../types/questionTypes';
+import { AssessmentDifficulty, AssessmentType, type AssessmentInterface } from '../../types/assessmentTypes';
 import AgGridTable from '../common/AgGridTable';
-
-// Validation Schema
-const assessmentSchema = Yup.object({
-    title: Yup.string().required('Title is required'),
-    description: Yup.string().required('Description is required'),
-    type: Yup.array()
-        .of(Yup.string().oneOf(['aptitude', 'coding', 'query', 'subjective', 'mcq']))
-        .min(1, 'Select at least one type')
-        .required('Type is required'),
-    difficulty: Yup.string().required('Difficulty is required'),
-    durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Duration is required'),
-    totalMarks: Yup.number().min(1).required('Total marks is required'),
-    passingMarks: Yup.number().min(1).required('Passing marks is required'),
-    startDate: Yup.date()
-        .nullable()
-        .min(new Date(new Date().setHours(0, 0, 0, 0)), 'Start date cannot be in the past'),
-    endDate: Yup.date()
-        .nullable()
-        .when('startDate', (startDate: Date[], schema) => {
-            return startDate?.[0]
-                ? schema.min(startDate[0], 'End date must be after Start date')
-                : schema;
-        }),
-    tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
-    instructions: Yup.string().required('Instructions are required'),
-    isActive: Yup.boolean(),
-    isPublic: Yup.boolean(),
-    requireWebcam: Yup.boolean(),
-    requireMicrophone: Yup.boolean(),
-    allowTabSwitch: Yup.boolean(),
-    maxTabSwitches: Yup.number().when('allowTabSwitch', {
-        is: true,
-        then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
-        otherwise: (schema) => schema.notRequired()
-    }),
-    allowFullscreenExit: Yup.boolean(),
-    maxFullscreenExits: Yup.number().when('allowFullscreenExit', {
-        is: true,
-        then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
-        otherwise: (schema) => schema.notRequired()
-    }),
-    enableRecording: Yup.boolean()
-});
-
-const typeOptions = [
-    { label: 'Aptitude', value: 'aptitude' },
-    { label: 'MCQ', value: 'mcq' },
-    { label: 'Coding', value: 'coding' },
-    { label: 'Query', value: 'query' },
-    { label: 'Subjective', value: 'subjective' },
-];
 
 interface AssessmentFormProps {
     initialValues: Partial<AssessmentInterface>;
@@ -93,6 +42,53 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     });
 
     const allQuestions: QuestionInterface[] = questionsData?.data || [];
+
+    // Validation Schema
+    const assessmentSchema = Yup.object({
+        title: Yup.string().required('Title is required'),
+        description: Yup.string().required('Description is required'),
+        type: Yup.array()
+            .of(Yup.string().oneOf(['aptitude', 'coding', 'query', 'subjective', 'mcq']))
+            .min(1, 'Select at least one type')
+            .required('Type is required'),
+        difficulty: Yup.string().required('Difficulty is required'),
+        durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Duration is required'),
+        totalMarks: Yup.number().min(1).required('Total marks is required'),
+        passingMarks: Yup.number().min(1).required('Passing marks is required'),
+        startDate: Yup.date()
+            .nullable()
+            .test('start-date-min', 'Start date cannot be in the past', function (value) {
+                if (isEditMode) return true;
+                if (!value) return true;
+                return value >= new Date(new Date().setHours(0, 0, 0, 0));
+            }),
+        endDate: Yup.date()
+            .nullable()
+            .when('startDate', (startDate: Date[], schema) => {
+                return startDate?.[0]
+                    ? schema.min(startDate[0], 'End date must be after Start date')
+                    : schema;
+            }),
+        tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
+        instructions: Yup.string().required('Instructions are required'),
+        isActive: Yup.boolean(),
+        isPublic: Yup.boolean(),
+        requireWebcam: Yup.boolean(),
+        requireMicrophone: Yup.boolean(),
+        allowTabSwitch: Yup.boolean(),
+        maxTabSwitches: Yup.number().when('allowTabSwitch', {
+            is: true,
+            then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
+            otherwise: (schema) => schema.notRequired()
+        }),
+        allowFullscreenExit: Yup.boolean(),
+        maxFullscreenExits: Yup.number().when('allowFullscreenExit', {
+            is: true,
+            then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
+            otherwise: (schema) => schema.notRequired()
+        }),
+        enableRecording: Yup.boolean()
+    });
 
     const formik = useFormik<Partial<AssessmentInterface>>({
         initialValues,
@@ -142,7 +138,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             cellRenderer: (params: ICellRendererParams<QuestionInterface>) => {
                 if (!params.data) return null;
                 const difficulty = params.data.difficulty;
-                const colorMap = {
+                const colorMap: Record<Difficulty, string> = {
                     easy: 'text-success-main bg-success-main/10',
                     medium: 'text-primary-main bg-primary-main/10',
                     hard: 'text-error-main bg-error-main/10',
@@ -185,7 +181,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                     id="type"
                     name="type"
                     label="Assessment Type"
-                    options={typeOptions}
+                    options={Object.values(AssessmentType).map(t => ({ label: t.replaceAll(/\b\w/g, c => c.toUpperCase()), value: t }))}
                     formik={formik}
                     required
                 />
@@ -194,12 +190,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         id="difficulty"
                         name="difficulty"
                         label="Difficulty"
-                        options={[
-                            { label: 'Beginner', value: 'beginner' },
-                            { label: 'Intermediate', value: 'intermediate' },
-                            { label: 'Advanced', value: 'advanced' },
-                            { label: 'Expert', value: 'expert' },
-                        ]}
+                        options={Object.values(AssessmentDifficulty).map(t => ({ label: t.replaceAll(/\b\w/g, c => c.toUpperCase()), value: t }))}
                         formik={formik}
                         placeholder="Select difficulty"
                         required
@@ -226,8 +217,8 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
                         formik={formik}
                     />
-                    <FormDatePicker id="startDate" name="startDate" label="Start Date" formik={formik} />
-                    <FormDatePicker id="endDate" name="endDate" label="End Date" formik={formik} />
+                    <FormDatePicker withTime id="startDate" name="startDate" label="Start Date" formik={formik} />
+                    <FormDatePicker withTime id="endDate" name="endDate" label="End Date" formik={formik} />
                 </div>
                 <FormMultiInput id="tags" name="tags" label="Tags" formik={formik} placeholder="Type and press enter" required />
 

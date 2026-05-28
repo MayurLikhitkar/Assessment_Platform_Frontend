@@ -5,7 +5,7 @@ import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
 import { getAdminAssessments } from '../../../services/axios/adminApi';
-import type { AssessmentInterface } from '../../../types/assessmentTypes';
+import type { AssessmentDifficulty, AssessmentInterface } from '../../../types/assessmentTypes';
 import AgGridTable from '../../../components/common/AgGridTable';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 import ActionCell from '../../../components/common/ActionCell';
@@ -64,7 +64,7 @@ const AdminAssessments: React.FC = () => {
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
                 if (!params.data?.difficulty) return 'N/A';
                 const difficulty = params.data.difficulty;
-                const colorMap = {
+                const colorMap: Record<AssessmentDifficulty, string> = {
                     beginner: 'text-success-main bg-success-main/20',
                     intermediate: 'text-primary-main bg-primary-main/20',
                     advanced: 'text-warn-main bg-warn-main/20',

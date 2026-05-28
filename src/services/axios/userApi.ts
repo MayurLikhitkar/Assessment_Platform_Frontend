@@ -1,9 +1,11 @@
-import type { ApiResponse, UserAssessmentInterface, UserInterface } from "../../types/types"
+import type { AssessmentInterface } from "../../types/assessmentTypes";
+import type { UserInterface } from "../../types/authTypes";
+import type { ApiResponse, UserAssessmentInterface } from "../../types/types"
 import api from "./api"
 
 export const getAssessments = async () => {
     try {
-        const response = await api.get<ApiResponse<UserAssessmentInterface[]>>('/assessments')
+        const response = await api.get<ApiResponse<AssessmentInterface[]>>('/assessments')
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
