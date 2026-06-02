@@ -1,11 +1,11 @@
-import type { AssessmentInterface } from "../../types/assessmentTypes";
+import type { AssessmentInterface, GetAssessmentsParams } from "../../types/assessmentTypes";
 import type { UserInterface } from "../../types/authTypes";
-import type { ApiResponse, UserAssessmentInterface } from "../../types/types"
+import type { ApiResponse } from "../../types/types"
 import api from "./api"
 
-export const getAssessments = async () => {
+export const getAssessments = async (params: GetAssessmentsParams = { isPublic: true, isActive: true }) => {
     try {
-        const response = await api.get<ApiResponse<AssessmentInterface[]>>('/assessments')
+        const response = await api.get<ApiResponse<AssessmentInterface[]>>('/assessments', { params })
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>

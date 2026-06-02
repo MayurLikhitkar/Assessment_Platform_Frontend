@@ -1,18 +1,18 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MdVisibility, MdAssignment, MdAccessTimeFilled, MdQuiz } from 'react-icons/md';
-import { FaSquareCheck, FaMicrophone, FaCalendarDay, FaPlay } from "react-icons/fa6";
+import { FaSquareCheck, FaMicrophone, FaCalendarDay, FaPlay, FaLock, FaChevronRight } from "react-icons/fa6";
 import { IoVideocam } from "react-icons/io5";
 import { TbBrowserX } from "react-icons/tb";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import DataLoader from '../../../components/common/DataLoader';
 import { getAssessments } from '../../../services/axios/userApi';
-import type { UserAssessmentInterface } from '../../../types/types';
 import Button from '../../../components/ui/Button';
 import { ContentBox, Page, PageBody, PageTitle } from '../../../components/ui/Page';
 import { type AssessmentInterface } from '../../../types/assessmentTypes';
 import moment from 'moment';
+import type { UserAssessmentInterface } from '../../../types/userAssessmentTypes';
 
 const completedAssessments: UserAssessmentInterface[] = [
     {
@@ -155,7 +155,7 @@ const Assessments: React.FC = () => {
     // Fetch user assessments
     const { data: allAssessments, isLoading: assessmentsLoading } = useQuery({
         queryKey: ['assessments'],
-        queryFn: () => getAssessments(),
+        queryFn: () => getAssessments({ startDate: new Date() }),
         enabled: !!user,
     });
 
@@ -183,6 +183,12 @@ const Assessments: React.FC = () => {
                         {assessments.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                                 {assessments?.map((assessment: AssessmentInterface) => {
+                                    const proctoringFeatures = [
+                                        { icon: IoVideocam, active: assessment.requireWebcam, label: 'Webcam' },
+                                        { icon: FaMicrophone, active: assessment.requireMicrophone, label: 'Mic' },
+                                        { icon: TbBrowserX, active: !assessment.allowTabSwitch, label: 'Tab Lock' },
+                                        { icon: FaLock, active: !assessment.allowFullscreenExit, label: 'Fullscreen' },
+                                    ];
                                     const passingPercent = Math.round(
                                         (assessment.passingMarks / assessment.totalMarks) * 100
                                     );
@@ -197,9 +203,9 @@ const Assessments: React.FC = () => {
                                             key={assessment.id}
                                             className="group flex flex-col gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                                             {/* Badges Row */}
-                                            <div className="flex flex-wrap items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2 font-semibold text-xs">
                                                 <span
-                                                    className={`px-2 py-1 rounded-md font-semibold text-xs capitalize ${colorMap[assessment.difficulty]}`}
+                                                    className={`px-2 py-1 rounded-md capitalize ${colorMap[assessment.difficulty]}`}
                                                 >
                                                     {assessment.difficulty}
                                                 </span>
@@ -207,7 +213,7 @@ const Assessments: React.FC = () => {
                                                 {assessment.type?.slice(0, 2).map((type, i) => (
                                                     <span
                                                         key={i}
-                                                        className="px-2 py-1 rounded-md text-xs font-semibold text-secondary-dark border border-secondary-light/30 uppercase"
+                                                        className="px-2 py-1 rounded-md text-text-light border border-secondary-light/30 uppercase"
                                                     >
                                                         {type}
                                                     </span>
@@ -223,25 +229,25 @@ const Assessments: React.FC = () => {
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
                                                     <MdQuiz className="w-5 h-5 text-secondary-dark" />
-                                                    <div className="font-bold text-text-main">{assessment.questions?.length || 0}</div>
+                                                    <div className="font-bold text-text-main/90">{assessment.questions?.length || 0}</div>
                                                     <div className="text-xs text-text-light font-semibold">Questions</div>
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
                                                     <MdAccessTimeFilled className="w-5 h-5 text-primary-light" />
-                                                    <div className="font-bold text-text-main">{assessment.durationInMinutes}</div>
+                                                    <div className="font-bold text-text-main/90">{assessment.durationInMinutes}</div>
                                                     <div className="text-xs text-text-light font-semibold">Minutes</div>
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
                                                     <FaSquareCheck className="w-5 h-5 text-success-dark" />
-                                                    <div className="font-bold text-text-main">{assessment.totalMarks}</div>
+                                                    <div className="font-bold text-text-main/90">{assessment.totalMarks}</div>
                                                     <div className="text-xs text-text-light font-semibold">Marks</div>
                                                 </div>
                                             </div>
 
                                             {/* Passing Criteria */}
-                                            <div className="">
+                                            {/* <div className="">
                                                 <div className="flex justify-between items-center text-sm mb-1">
                                                     <span className="text-text-light font-medium">Passing Score</span>
                                                     <span className="font-bold text-primary-main">
@@ -255,31 +261,7 @@ const Assessments: React.FC = () => {
                                                         style={{ width: `${passingPercent}%` }}
                                                     />
                                                 </div>
-                                            </div>
-
-                                            {/* Proctoring */}
-                                            {(assessment.requireWebcam || assessment.requireMicrophone || !assessment.allowTabSwitch) && (
-                                                <div className="flex items-center gap-2 pt-1">
-                                                    <span className="text-[11px] text-text-light uppercase tracking-wider font-medium">Proctored:</span>
-                                                    <div className="flex items-center gap-2">
-                                                        {assessment.requireWebcam && (
-                                                            <span className='p-1 bg-error-main/20 text-error-main rounded'>
-                                                                <IoVideocam className="w-4 h-4 rounded " />
-                                                            </span>
-                                                        )}
-                                                        {assessment.requireMicrophone && (
-                                                            <span className='p-1 bg-error-main/20 text-secondary-dark rounded'>
-                                                                <FaMicrophone className="w-4 h-4 rounded " />
-                                                            </span>
-                                                        )}
-                                                        {!assessment.allowTabSwitch && (
-                                                            <span className='p-1 bg-error-main/20 text-warn-dark rounded'>
-                                                                <TbBrowserX className="w-4 h-4 rounded" />
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
+                                            </div> */}
 
                                             {/* Date Window */}
                                             {(assessment.startDate || assessment.endDate) && <div className="flex items-center gap-2 text-xs text-text-main font-medium">
@@ -293,14 +275,31 @@ const Assessments: React.FC = () => {
                                             </div>}
 
                                             {/* CTA */}
-                                            <Button
+                                            <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                                                <div className="flex items-center gap-1">
+                                                    {proctoringFeatures.map((feat) => (
+                                                        <div
+                                                            key={feat.label}
+                                                            className={`p-1.5 rounded-lg ${feat.active ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-300'}`}
+                                                            title={feat.label}
+                                                        >
+                                                            <feat.icon className="w-3 h-3" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="flex items-center gap-1 text-slate-900 text-sm font-semibold group-hover:translate-x-0.5 transition-transform">
+                                                    View Details
+                                                    <FaChevronRight className="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                            {/* <Button
                                                 variant="primary"
                                                 className="group/btn"
                                                 onClick={() => navigate(`/assessment/${assessment.id}/take`)}
                                             >
                                                 <FaPlay className="text-base group-hover/btn:scale-110 transition-transform" />
                                                 Start
-                                            </Button>
+                                            </Button> */}
                                         </ContentBox>
                                     );
                                 })}

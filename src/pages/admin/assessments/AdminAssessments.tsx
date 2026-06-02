@@ -136,6 +136,23 @@ const AdminAssessments: React.FC = () => {
             valueFormatter: (params) => String(params.data?.questions?.length || 'N/A'),
         },
         {
+            headerName: 'Visibility',
+            field: 'isPublic',
+            minWidth: 120,
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data) return 'N/A';
+                const isPublic = params.data.isPublic;
+                return (
+                    <span className={`px-2.5 py-1 rounded text-xs font-medium ${isPublic
+                        ? 'text-primary-main bg-primary-main/15'
+                        : 'bg-secondary-main/20 text-secondary-dark'
+                        }`}>
+                        {isPublic ? 'Public' : 'Private'}
+                    </span>
+                );
+            },
+        },
+        {
             headerName: 'Status',
             field: 'isActive',
             minWidth: 120,

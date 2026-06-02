@@ -45,3 +45,18 @@ export interface AssessmentInterface {
     createdAt: Date;
     updatedAt: Date;
 }
+export type AssessmentSortableFields = Pick<AssessmentInterface, 'createdAt' | 'title' | 'difficulty' | 'durationInMinutes' | 'startDate' | 'endDate'>;
+
+export interface GetAssessmentsParams {
+    search?: string;
+    type?: AssessmentType;
+    difficulty?: AssessmentDifficulty;
+    isActive?: boolean;
+    isPublic?: boolean;
+    page?: number;
+    limit?: number;
+    startDate?: Date;
+    endDate?: Date;
+    sortBy?: keyof AssessmentSortableFields;
+    sortOrder?: 'asc' | 'desc';
+}
