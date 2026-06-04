@@ -11,9 +11,9 @@
     --color-primary-main: #ff4200;
     --color-primary-dark: #ff1e00;
 
-    --color-secondary-light: #60a5fa;
-    --color-secondary-main: #3b82f6;
-    --color-secondary-dark: #2563eb;
+    --color-secondary-light: #3b82f6;
+    --color-secondary-main: #2563eb;
+    --color-secondary-dark: #1249BF;
 
     --color-border-light: #e9d5ff;
     --color-border-main: #d8b4fe;
@@ -47,6 +47,7 @@
     --color-dark-light: #52525b;
     --color-dark-main: #3f3f46;
     --color-dark-dark: #27272a;
+
 }
 
 * {

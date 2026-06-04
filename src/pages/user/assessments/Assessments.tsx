@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MdVisibility, MdAssignment, MdAccessTimeFilled, MdQuiz } from 'react-icons/md';
-import { FaSquareCheck, FaMicrophone, FaCalendarDay, FaPlay, FaLock, FaChevronRight } from "react-icons/fa6";
+import { FaSquareCheck, FaMicrophone, FaCalendarDay, FaLock, FaCaretRight } from "react-icons/fa6";
 import { IoVideocam } from "react-icons/io5";
 import { TbBrowserX } from "react-icons/tb";
 import { useNavigate } from 'react-router-dom';
@@ -189,9 +189,11 @@ const Assessments: React.FC = () => {
                                         { icon: TbBrowserX, active: !assessment.allowTabSwitch, label: 'Tab Lock' },
                                         { icon: FaLock, active: !assessment.allowFullscreenExit, label: 'Fullscreen' },
                                     ];
-                                    const passingPercent = Math.round(
-                                        (assessment.passingMarks / assessment.totalMarks) * 100
-                                    );
+                                    const features = [
+                                        { icon: MdQuiz, value: assessment.questions?.length || 0, label: 'Questions' },
+                                        { icon: MdAccessTimeFilled, value: assessment.durationInMinutes, label: 'Minutes' },
+                                        { icon: FaSquareCheck, value: assessment.totalMarks, label: 'Marks' },
+                                    ];
                                     const colorMap = {
                                         beginner: 'text-text-inverse bg-success-main',
                                         intermediate: 'text-text-inverse bg-primary-light',
@@ -221,29 +223,19 @@ const Assessments: React.FC = () => {
                                             </div>
 
                                             {/* Title */}
-                                            <h3 className="text-lg font-bold text-secondary-main transition-colors duration-300 truncate">
+                                            <h3 className="text-lg font-bold text-secondary-dark transition-colors duration-300 truncate">
                                                 {assessment.title}
                                             </h3>
 
                                             {/* Stat Grid */}
                                             <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <MdQuiz className="w-5 h-5 text-secondary-dark" />
-                                                    <div className="font-bold text-text-main/90">{assessment.questions?.length || 0}</div>
-                                                    <div className="text-xs text-text-light font-semibold">Questions</div>
-                                                </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <MdAccessTimeFilled className="w-5 h-5 text-primary-light" />
-                                                    <div className="font-bold text-text-main/90">{assessment.durationInMinutes}</div>
-                                                    <div className="text-xs text-text-light font-semibold">Minutes</div>
-                                                </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <FaSquareCheck className="w-5 h-5 text-success-dark" />
-                                                    <div className="font-bold text-text-main/90">{assessment.totalMarks}</div>
-                                                    <div className="text-xs text-text-light font-semibold">Marks</div>
-                                                </div>
+                                                {features.map((feat) => (
+                                                    <div className="flex items-center gap-2" key={feat.label} title={feat.label}>
+                                                        <feat.icon className="w-4 h-4 text-secondary-dark" />
+                                                        <div className="font-bold text-text-main/90">{feat.value}</div>
+                                                        <div className="text-xs text-text-light font-semibold">{feat.label}</div>
+                                                    </div>
+                                                ))}
                                             </div>
 
                                             {/* Passing Criteria */}
@@ -275,31 +267,23 @@ const Assessments: React.FC = () => {
                                             </div>}
 
                                             {/* CTA */}
-                                            <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                                            <div className="flex items-center justify-between pt-3 border-t border-dark-light/20">
                                                 <div className="flex items-center gap-1">
                                                     {proctoringFeatures.map((feat) => (
                                                         <div
                                                             key={feat.label}
-                                                            className={`p-1.5 rounded-lg ${feat.active ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-300'}`}
+                                                            className={`p-1 rounded ${feat.active ? 'bg-secondary-main text-text-inverse' : 'bg-background-dark text-text-light/50'}`}
                                                             title={feat.label}
                                                         >
                                                             <feat.icon className="w-3 h-3" />
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div className="flex items-center gap-1 text-slate-900 text-sm font-semibold group-hover:translate-x-0.5 transition-transform">
+                                                <Button className="text-secondary-main gap-1" variant='text' onClick={() => navigate(`/assessment/${assessment.id}/take`)}>
                                                     View Details
-                                                    <FaChevronRight className="w-4 h-4" />
-                                                </div>
+                                                    <FaCaretRight className="w-4 h-4 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
+                                                </Button>
                                             </div>
-                                            {/* <Button
-                                                variant="primary"
-                                                className="group/btn"
-                                                onClick={() => navigate(`/assessment/${assessment.id}/take`)}
-                                            >
-                                                <FaPlay className="text-base group-hover/btn:scale-110 transition-transform" />
-                                                Start
-                                            </Button> */}
                                         </ContentBox>
                                     );
                                 })}

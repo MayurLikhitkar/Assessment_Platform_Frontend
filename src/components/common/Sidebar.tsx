@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-    MdHome,
     MdAssignment,
     MdCode,
     MdQueryStats,
@@ -12,6 +11,7 @@ import {
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 import { isAdmin } from '../../utils/roleUtils';
+import { LuLayoutDashboard } from 'react-icons/lu';
 
 interface SidebarProps {
     mobileOpen?: boolean;
@@ -22,19 +22,19 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     const { user } = useAuth();
 
     const userNavItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: <MdHome className="text-xl" /> },
-        { path: '/assessments', label: 'Assessments', icon: <MdAssignment className="text-xl" /> },
-        { path: '/coding-practice', label: 'Coding Practice', icon: <MdCode className="text-xl" /> },
-        { path: '/queries', label: 'SQL Practice', icon: <MdQueryStats className="text-xl" /> },
-        { path: '/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },
+        { path: '/dashboard', label: 'Dashboard', icon: LuLayoutDashboard },
+        { path: '/assessments', label: 'Assessments', icon: MdAssignment },
+        { path: '/coding-practice', label: 'Coding Practice', icon: MdCode },
+        { path: '/queries', label: 'SQL Practice', icon: MdQueryStats },
+        { path: '/profile', label: 'Profile', icon: MdPerson },
     ];
 
     const adminNavItems = [
-        { path: '/admin', label: 'Admin Dashboard', icon: <MdAdminPanelSettings className="text-xl" /> },
-        { path: '/admin/users', label: 'User Management', icon: <MdPeople className="text-xl" /> },
-        { path: '/admin/assessments', label: 'Assessments', icon: <MdDashboard className="text-xl" /> },
-        { path: '/admin/questions', label: 'Question Bank', icon: <MdCode className="text-xl" /> },
-        { path: '/admin/profile', label: 'Profile', icon: <MdPerson className="text-xl" /> },
+        { path: '/admin', label: 'Admin Dashboard', icon: MdAdminPanelSettings },
+        { path: '/admin/users', label: 'User Management', icon: MdPeople },
+        { path: '/admin/assessments', label: 'Assessments', icon: MdDashboard },
+        { path: '/admin/questions', label: 'Question Bank', icon: MdCode },
+        { path: '/admin/profile', label: 'Profile', icon: MdPerson },
     ];
 
     const isUserAdmin = isAdmin(user?.role);
@@ -53,14 +53,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
                         key={item.path}
                         to={item.path}
                         className={({ isActive }) =>
-                            `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1 ${isActive
+                            `flex items-center px-4 py-3 gap-3 text-sm font-medium rounded-lg transition-colors mb-1 ${isActive
                                 ? 'bg-primary-light/10 text-primary-main'
                                 : 'text-text-main hover:bg-muted-light'
                             }`
                         }
                         onClick={onClose}
                     >
-                        <span className="mr-3">{item.icon}</span>
+                        <item.icon className="text-xl" />
                         {item.label}
                     </NavLink>
                 ))}
