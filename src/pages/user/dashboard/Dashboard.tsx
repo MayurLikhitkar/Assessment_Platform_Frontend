@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from "framer-motion";
 import { useQuery } from '@tanstack/react-query';
 import {
     MdArrowForward,
@@ -90,29 +91,33 @@ const Dashboard: React.FC = () => {
                     <DataLoader />
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {statCards.map((card) => (
-                            <ContentBox
+                        {statCards.map((card, index) => (
+                            <motion.div
                                 key={card.label}
-                                className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-5 hover:shadow-md transition-shadow cursor-pointer group text-left w-full"
-                                onClick={() => card.link !== '#' && navigate(card.link)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-text-light">{card.label}</p>
-                                        <h3 className="text-2xl font-bold text-text-dark mt-1">
-                                            {card.value}
-                                        </h3>
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: index * 0.08 }}>
+                                <ContentBox
+                                    className="bg-background-light rounded-xl shadow-sm border border-border-light/30 p-5 hover:shadow-md transition-shadow cursor-pointer group text-left w-full h-full"
+                                    onClick={() => card.link !== '#' && navigate(card.link)}>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-text-light">{card.label}</p>
+                                            <h3 className="text-2xl font-bold text-text-dark mt-1">
+                                                {card.value}
+                                            </h3>
+                                        </div>
+                                        <div className={`p-3 rounded-xl ${card.bgColor} ${card.iconColor}`}>
+                                            {card.icon}
+                                        </div>
                                     </div>
-                                    <div className={`p-3 rounded-xl ${card.bgColor} ${card.iconColor}`}>
-                                        {card.icon}
-                                    </div>
-                                </div>
-                                {card.link !== '#' && (
-                                    <div className="mt-3 flex items-center text-xs text-primary-main font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                        View details <MdArrowForward className="ml-1 text-sm" />
-                                    </div>
-                                )}
-                            </ContentBox>
+                                    {card.link !== '#' && (
+                                        <div className="mt-3 flex items-center text-xs text-primary-main font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                            View details <MdArrowForward className="ml-1 text-sm" />
+                                        </div>
+                                    )}
+                                </ContentBox>
+                            </motion.div>
                         ))}
                     </div>
                 )}

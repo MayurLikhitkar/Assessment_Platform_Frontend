@@ -13,6 +13,16 @@ export const getAssessments = async (params: GetAssessmentsParams = { isPublic: 
     }
 }
 
+export const getAssessment = async (id: string | number) => {
+    try {
+        const response = await api.get<ApiResponse<AssessmentInterface>>(`/assessments/${id}`)
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+}
+
 export const updateProfile = async (data: Partial<UserInterface>) => {
     try {
         const response = await api.put<ApiResponse<UserInterface>>('/auth/profile', data)

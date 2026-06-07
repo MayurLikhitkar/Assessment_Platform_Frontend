@@ -3,13 +3,14 @@ export enum ProgrammingLanguage {
     TYPESCRIPT = 'typescript',
     PYTHON = 'python',
     JAVA = 'java',
-    CPP = 'c++',
-    CSHARP = 'c#',
+    CPP = 'cpp',
+    CSHARP = 'csharp',
     R = 'r',
     SQL = 'sql',
     HTML = 'html',
     CSS = 'css'
 }
+
 export enum QuestionType {
     MCQ = 'mcq',
     CODING = 'coding',
@@ -41,66 +42,49 @@ export interface Option {
     isCorrect: boolean;
 }
 
-export interface EvaluationRubric {
-    criteria: string;
-    maxScore: number;
-    description?: string;
-}
-
 export interface QuestionInterface {
     _id: string;
     id: number;
     type: QuestionType;
     question: string;
     questionExplanation: string;
+    answerExplanation: string;
+    negativeMarks: number;
     marks: number;
     difficulty: Difficulty;
+    timeLimitInSeconds?: number; // in seconds
     tags: string[];
     isActive: boolean;
     createdBy: string;
     updatedBy: string;
     createdAt: Date;
     updatedAt: Date;
-    negativeMarks: number;
-    answerExplanation: string;
 
-    // Type-specific fields (using discriminators or union types)
+    // mcq fields
     options?: Option[];
+    isMultiSelect?: boolean;
 
-    language?: ProgrammingLanguage;
-    allowedLanguages?: ProgrammingLanguage[];
-    starterCode?: Map<ProgrammingLanguage, string>;
+    // coding fields
+    programmingLanguages?: ProgrammingLanguage[];
+    starterCode?: Partial<Record<ProgrammingLanguage, string>>;
+    solutionCode?: Partial<Record<ProgrammingLanguage, string>>;
     testCases?: TestCase[];
     constraints?: string[];
     hints?: string[];
-    timeLimitInSeconds: number; // in seconds
-    memoryLimitInMB: number; // in MB
+    memoryLimitInMB?: number;
 
+    // query fields
     databaseType?: DatabaseType;
     databaseSchema?: string;
     sampleData?: string;
-    expectedQuery?: string;
+    expectedQuery: string;
+    allowedKeywords?: string[];
+    forbiddenKeywords?: string[];
 
-    maxLength?: number;
+    // subjective fields
     minLength?: number;
+    maxLength?: number;
+    wordLimit?: number;
     expectedKeywords?: string[];
-    evaluationRubric?: EvaluationRubric[];
-}
-
-export interface TestCaseFormValue {
-    input: string;
-    expectedOutput: string;
-    isPublic: boolean;
-    points: number;
-}
-
-export interface RubricFormValue {
-    criteria: string;
-    maxScore: number;
-    description: string;
-}
-
-export interface StarterCodeEntry {
-    language: ProgrammingLanguage;
-    code: string;
+    sampleAnswer?: string;
 }

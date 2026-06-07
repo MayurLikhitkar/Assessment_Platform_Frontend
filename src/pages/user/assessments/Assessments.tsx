@@ -155,7 +155,7 @@ const Assessments: React.FC = () => {
     // Fetch user assessments
     const { data: allAssessments, isLoading: assessmentsLoading } = useQuery({
         queryKey: ['assessments'],
-        queryFn: () => getAssessments({ startDate: new Date() }),
+        queryFn: () => getAssessments(),
         enabled: !!user,
     });
 
@@ -279,7 +279,7 @@ const Assessments: React.FC = () => {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <Button className="text-secondary-main gap-1" variant='text' onClick={() => navigate(`/assessment/${assessment.id}/take`)}>
+                                                <Button className="text-secondary-main gap-1" variant='text' onClick={() => navigate(`/assessment/${assessment.id}`)}>
                                                     View Details
                                                     <FaCaretRight className="w-4 h-4 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
                                                 </Button>

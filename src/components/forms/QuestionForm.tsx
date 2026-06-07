@@ -39,12 +39,16 @@ const questionValidationSchema = Yup.object().shape({
         .min(0, 'Cannot be less than 0')
         .max(Yup.ref('marks'), 'Negative marks cannot exceed total marks')
         .default(0),
+    timeLimitInSeconds: Yup.number()
+        .min(5, 'Minimum 5 seconds')
+        .max(7200, 'Maximum 7200 seconds')
+        .integer('Time limit must be a whole number')
+        .required('Time limit is required'),
     difficulty: Yup.string()
         .oneOf(Object.values(Difficulty), 'Invalid difficulty')
         .required('Difficulty is required'),
-    tags: Yup.array().of(Yup.string().trim().min(1, 'Tag cannot be empty')).min(1, 'At least one tag is required'),
     answerExplanation: Yup.string().trim().max(2000, 'Answer Explanation must not exceed 2000 characters'),
-    hints: Yup.array().of(Yup.string().trim().min(1, 'Hint cannot be empty')),
+    tags: Yup.array().of(Yup.string().trim().min(1, 'Tag cannot be empty')).min(1, 'At least one tag is required'),
 
     // --- MCQ Validation ---
     options: Yup.array().when('type', {
@@ -87,14 +91,9 @@ const questionValidationSchema = Yup.object().shape({
     }),
 
     // --- CODING Validation ---
-    timeLimitInSeconds: Yup.number()
-        .min(5, 'Minimum 5 seconds')
-        .max(18000, 'Maximum 18000 seconds')
-        .integer('Time limit must be a whole number')
-        .required('Time limit is required'),
-    allowedLanguages: Yup.array().when('type', {
+    programmingLanguages: Yup.array().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.of(Yup.string().oneOf(Object.values(ProgrammingLanguage))).min(1, 'At least one programming language must be selected').required('Languages are required for coding questions'),
+        then: (schema) => schema.of(Yup.string().oneOf(Object.values(ProgrammingLanguage))).min(1, 'At least one programming language required').required('Languages are required for coding questions'),
         otherwise: (schema) => schema.notRequired(),
     }),
     memoryLimitInMB: Yup.number().when('type', {
@@ -102,9 +101,14 @@ const questionValidationSchema = Yup.object().shape({
         then: (schema) => schema.typeError('Must be a number').min(128, 'Minimum 128 MB').max(512, 'Maximum 512 MB').required('Memory limit is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
+    hints: Yup.array().when('type', {
+        is: QuestionType.CODING,
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Hint cannot be empty')).max(3, 'Maximum 3 hints allowed').notRequired(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
     constraints: Yup.array().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.of(Yup.string().trim().min(1, 'Constraint cannot be empty')).min(1, 'At least one constraint is required'),
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Constraint cannot be empty')).max(3, 'Maximum 3 constraints allowed').notRequired(),
         otherwise: (schema) => schema.notRequired(),
     }),
     testCases: Yup.array().when('type', {
@@ -135,8 +139,28 @@ const questionValidationSchema = Yup.object().shape({
         then: (schema) => schema.trim().min(5, 'Query must be at least 5 characters').max(500, 'Query must not exceed 500 characters').required('Expected query is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
+    sampleData: Yup.string().when('type', {
+        is: QuestionType.QUERY,
+        then: (schema) => schema.trim().max(10000, 'Sample Data must not exceed 10000 characters').notRequired(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    allowedKeywords: Yup.array().when('type', {
+        is: QuestionType.QUERY,
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Keyword cannot be empty')).notRequired(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    forbiddenKeywords: Yup.array().when('type', {
+        is: QuestionType.QUERY,
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Keyword cannot be empty')).notRequired(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
 
     // --- SUBJECTIVE Validation ---
+    wordLimit: Yup.number().when('type', {
+        is: QuestionType.SUBJECTIVE,
+        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 words').required('Word limit is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
     minLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
         then: (schema) => schema.typeError('Must be a number').min(10, 'Minimum 10 words').required('Min length is required'),
@@ -150,6 +174,11 @@ const questionValidationSchema = Yup.object().shape({
     expectedKeywords: Yup.array().when('type', {
         is: QuestionType.SUBJECTIVE,
         then: (schema) => schema.of(Yup.string().trim().min(1, 'Keyword cannot be empty')).min(1, 'At least one keyword is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    sampleAnswer: Yup.string().when('type', {
+        is: QuestionType.SUBJECTIVE,
+        then: (schema) => schema.trim().max(10000, 'Sample Answer must not exceed 10000 characters').notRequired(),
         otherwise: (schema) => schema.notRequired(),
     }),
 });
@@ -179,22 +208,33 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
             console.log("Submitting values: ", values);
             // Clean up payload based on type before sending
             const payload = { ...values };
-            if (payload.type !== QuestionType.MCQ) delete payload.options;
+            if (payload.type !== QuestionType.MCQ) {
+                delete payload.options;
+                delete payload.isMultiSelect;
+            }
             if (payload.type !== QuestionType.CODING) {
                 delete payload.testCases;
                 delete payload.memoryLimitInMB;
                 delete payload.constraints;
-                delete payload.allowedLanguages;
+                delete payload.programmingLanguages;
+                delete payload.hints;
+                delete payload.starterCode;
+                delete payload.solutionCode;
             }
             if (payload.type !== QuestionType.QUERY) {
                 delete payload.databaseType;
                 delete payload.expectedQuery;
                 delete payload.databaseSchema;
+                delete payload.sampleData;
+                delete payload.allowedKeywords;
+                delete payload.forbiddenKeywords;
             }
             if (payload.type !== QuestionType.SUBJECTIVE) {
                 delete payload.maxLength;
                 delete payload.minLength;
+                delete payload.wordLimit;
                 delete payload.expectedKeywords;
+                delete payload.sampleAnswer;
             }
 
             onSubmit(payload);
@@ -321,8 +361,8 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                     <h3 className="font-semibold text-text-main">Coding Environment Specs</h3>
 
                     <FormMultiClick
-                        id="allowedLanguages"
-                        name="allowedLanguages"
+                        id="programmingLanguages"
+                        name="programmingLanguages"
                         label="Allowed Languages"
                         options={Object.values(ProgrammingLanguage).map(lang => ({
                             label: lang.toUpperCase(),

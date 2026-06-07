@@ -1,5 +1,6 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
     MdAssignment,
     MdCode,
@@ -20,6 +21,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     const { user } = useAuth();
+    const location = useLocation();
 
     const userNavItems = [
         { path: '/dashboard', label: 'Dashboard', icon: LuLayoutDashboard },
@@ -42,28 +44,38 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
 
     const drawerContent = (
         <div className="h-full flex flex-col p-4">
-            <div className="mb-4 px-2">
-                <h3 className="text-xs font-bold text-text-light uppercase tracking-wider">
-                    {isUserAdmin ? 'Admin Panel' : 'User Menu'}
-                </h3>
-            </div>
             <nav className="space-y-1">
-                {navItems.map((item) => (
-                    <NavLink
-                        key={item.path}
-                        to={item.path}
-                        className={({ isActive }) =>
-                            `flex items-center px-4 py-3 gap-3 text-sm font-medium rounded-lg transition-colors mb-1 ${isActive
-                                ? 'bg-primary-light/10 text-primary-main'
-                                : 'text-text-main hover:bg-muted-light'
-                            }`
-                        }
-                        onClick={onClose}
-                    >
-                        <item.icon className="text-xl" />
-                        {item.label}
-                    </NavLink>
-                ))}
+                {navItems.map((item) => {
+                    const isActive =
+                        location.pathname === item.path ||
+                        (item.path !== '/' && location.pathname.startsWith(item.path));
+                    return (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 group ${isActive
+                                ? 'bg-muted-main'
+                                : 'hover:bg-muted-light'
+                                }`}
+                            onClick={onClose}>
+                            <item.icon title={item.label}
+                                className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive
+                                    ? 'text-primary-main'
+                                    : 'text-text-dark'
+                                    }`}
+                            />
+                            <span className="whitespace-nowrap" >
+                                {item.label}
+                            </span>
+                            {isActive && (
+                                <motion.div
+                                    layoutId="activeIndicator"
+                                    className="ml-auto w-1 h-5 rounded-full bg-primary-main"
+                                />
+                            )}
+                        </NavLink>
+                    )
+                })}
             </nav>
         </div>
     );

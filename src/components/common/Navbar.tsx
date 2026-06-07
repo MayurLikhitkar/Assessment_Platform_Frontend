@@ -8,8 +8,9 @@ import {
     MdSettingsApplications,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
-import { isAdmin, getHomePath } from '../../utils/roleUtils';
+import { getHomePath } from '../../utils/roleUtils';
 import Search from '../ui/Search';
+import Button from '../ui/Button';
 
 interface NavbarProps {
     onMenuClick?: () => void;
@@ -49,11 +50,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
         setIsMenuOpen(false);
     };
 
-    const handleAdminPanel = () => {
-        navigate('/admin');
-        setIsMenuOpen(false);
-    };
-
     return (
         <header className="sticky top-0 z-9998 bg-background-light backdrop-blur-md border-b border-border-light transition-all duration-200">
             <div className="px-4 py-3 sm:px-6 lg:px-8 flex items-center justify-between w-full">
@@ -79,7 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
                 {/* Center - Search Bar */}
                 <div className="hidden md:flex flex-1 max-w-md mx-8">
-                    <Search containerClassName='w-full' className='border-secondary-light/25 rounded-full!'/>
+                    <Search containerClassName='w-full' className='border-secondary-light/25 rounded-full!' />
                 </div>
 
                 {/* Right side - User actions */}
@@ -140,44 +136,38 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
                     {/* User menu */}
                     <div title="Account settings" className="relative" ref={menuRef}>
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className={`flex items-center gap-3 p-1.5 pr-3 rounded-full transition-all duration-200 border ${isMenuOpen ? 'bg-background-light border-primary-light/50 shadow-sm ring-2 ring-primary-light/20' : 'border-transparent hover:bg-muted-light hover:border-border-light'}`}
-                        >
-                            <div className="w-8 h-8 rounded-full bg-secondary-main text-white flex items-center justify-center text-sm font-bold ring-2 ring-background-light shrink-0 uppercase">
-                                {user?.fullName?.[0] || 'U'}
-                            </div>
-                            <div className="hidden md:flex flex-col items-start text-left">
-                                <span className="text-text-main font-semibold leading-none text-sm">
+                        <Button variant='text' onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                            <div className="hidden md:flex flex-col text-right font-semibold">
+                                <span className="text-text-main text-sm">
                                     {user?.fullName}
                                 </span>
-                                <span className="text-text-light text-[10px] font-medium mt-0.5 uppercase tracking-wide">
+                                <span className="text-text-light uppercase text-xs">
                                     {user?.role?.replace('_', ' ')}
                                 </span>
                             </div>
-                        </button>
+                            <div className="w-8 h-8 rounded-md bg-secondary-main text-text-inverse flex items-center justify-center font-bold uppercase">
+                                {user?.fullName?.[0] || 'U'}
+                            </div>
+                        </Button>
 
                         {/* User Dropdown */}
                         {isMenuOpen && (
-                            <div className="absolute right-0 mt-2 w-[220px] rounded-xl border border-border-light shadow-lg shadow-black/5 bg-background-light overflow-hidden z-50 origin-top-right">
-                                <div className="px-4 py-3 md:hidden">
-                                    <p className="text-sm font-bold text-text-main">{user?.fullName}</p>
-                                    <p className="text-xs text-text-light capitalize mt-0.5">{user?.role?.replace('_', ' ')}</p>
+                            <div className="absolute right-0 w-[220px] rounded-lg border border-border-light shadow-lg bg-background-light overflow-hidden z-50 origin-top-right">
+                                <div className="px-4 py-3 md:hidden font-semibold">
+                                    <p className="text-text-main text-sm">
+                                        {user?.fullName}
+                                    </p>
+                                    <p className="text-text-light uppercase text-xs">
+                                        {user?.role?.replace('_', ' ')}
+                                    </p>
                                 </div>
                                 <div className="h-px bg-border-light md:hidden mb-1"></div>
 
                                 <div className="p-1">
-                                    {isAdmin(user?.role) ? (
-                                        <button onClick={handleAdminPanel} className="w-full flex items-center gap-3 py-2.5 px-3 text-sm text-text-main hover:bg-muted-light rounded-lg transition-colors">
-                                            <MdSettingsApplications className="text-lg text-text-light" />
-                                            Admin Panel
-                                        </button>
-                                    ) : (
-                                        <button onClick={handleProfile} className="w-full flex items-center gap-3 py-2.5 px-3 text-sm text-text-main hover:bg-muted-light rounded-lg transition-colors">
-                                            <MdPersonOutline className="text-lg text-text-light" />
-                                            Profile
-                                        </button>
-                                    )}
+                                    <button onClick={handleProfile} className="w-full flex items-center gap-3 py-2.5 px-3 text-sm text-text-main hover:bg-muted-light rounded-lg transition-colors">
+                                        <MdPersonOutline className="text-lg text-text-light" />
+                                        Profile
+                                    </button>
                                     <button onClick={() => setIsMenuOpen(false)} className="w-full flex items-center gap-3 py-2.5 px-3 text-sm text-text-main hover:bg-muted-light rounded-lg transition-colors">
                                         <MdSettingsApplications className="text-lg text-text-light" />
                                         Settings

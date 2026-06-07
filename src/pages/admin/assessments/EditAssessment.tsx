@@ -26,7 +26,7 @@ const EditAssessment: React.FC = () => {
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['assessment', id],
-        queryFn: () => getAssessmentById(id as string),
+        queryFn: () => getAssessmentById(id as string | number),
         enabled: !!id,
     });
 
