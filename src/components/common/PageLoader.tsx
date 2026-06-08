@@ -15,7 +15,7 @@ const PageLoader: React.FC<PageLoaderProps> = ({ text, fullScreen = false }) => 
             <div className="flex flex-col items-center gap-4">
                 <div className="relative flex items-center justify-center">
                     <div className="absolute w-16 h-16 bg-primary-main/20 rounded-full animate-ping"></div>
-                    <div className="relative w-12 h-12 bg-primary-main/80 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30 text-white text-2xl">
+                    <div className="relative w-12 h-12 bg-primary-main/80 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30 text-text-inverse text-2xl">
                         A
                     </div>
                 </div>

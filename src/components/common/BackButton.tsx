@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdKeyboardBackspace } from 'react-icons/md';
 
-type ButtonVariant = 'ghost' | 'outline' | 'solid' | 'soft';
+type ButtonVariant = 'ghost' | 'outline' | 'solid' | 'soft' | 'glass';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface BackButtonProps {
@@ -31,7 +31,7 @@ const BackButton: React.FC<BackButtonProps> = ({
     };
 
     // 1. Base Styles (Layout, Animation, Focus)
-    const baseStyles = "group inline-flex items-center justify-center font-medium transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-light disabled:opacity-50 cursor-pointer";
+    const baseStyles = "group inline-flex items-center justify-center font-medium transition-all duration-200 active:scale-95 focus:outline-none disabled:opacity-50 cursor-pointer";
 
     // 2. Size Variants
     const sizeStyles = {
@@ -43,16 +43,21 @@ const BackButton: React.FC<BackButtonProps> = ({
     // 3. Visual Variants (Using your App.css variables)
     const variantStyles = {
         // Subtle, blends into background. Good for headers.
-        ghost: "text-text-main hover:text-primary-main hover:bg-muted-main/50 rounded-full",
+        ghost: "text-text-light hover:text-primary-main hover:bg-muted-main/50 rounded-lg",
+
+        glass:
+            "bg-background-main border border-border-light shadow-sm hover:shadow-sm text-text-main hover:text-primary-main rounded-lg",
 
         // Has a border. Good for cards or isolated sections.
         outline: "border border-border-main text-text-main hover:border-primary-main hover:text-primary-main bg-transparent rounded-lg",
 
         // High emphasis. Uses your primary brand color.
-        solid: "bg-primary-main text-text-inverse hover:bg-primary-dark shadow-sm hover:shadow-md rounded-lg",
+        solid:
+            "bg-primary-main text-text-inverse shadow-md hover:bg-primary-dark hover:shadow-lg rounded-lg",
+
 
         // Softer background. Good for modern, airy UIs.
-        soft: "bg-background-dark text-text-main hover:bg-primary-light/20 hover:text-primary-dark rounded-lg",
+        soft: "bg-primary-main/10 text-primary-dark hover:bg-primary-main/20 rounded-lg",
     };
 
     // Helper to determine icon size based on button size
@@ -67,7 +72,7 @@ const BackButton: React.FC<BackButtonProps> = ({
         >
             {/* The Arrow Icon with a slide animation on hover */}
             <MdKeyboardBackspace
-                className={`${iconSize} transition-transform duration-200 group-hover:scale-120`}
+                className={iconSize}
             />
 
             {/* Conditional Label Rendering */}

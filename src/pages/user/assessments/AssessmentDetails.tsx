@@ -7,14 +7,14 @@ import { getAssessment } from '../../../services/axios/userApi';
 import toast from 'react-hot-toast';
 import DataLoader from '../../../components/common/DataLoader';
 import {
-    RiTimeLine, RiAwardLine, RiCheckboxCircleLine, RiGroupLine, RiCalendarLine, RiAlertLine, RiPlayFill, RiCloseCircleLine,
-    RiHistoryLine,
+    RiTimeLine, RiAwardLine, RiGroupLine, RiCalendarLine, RiAlertLine,
 } from "react-icons/ri";
-import { MdEdit, MdOutlineSettings } from 'react-icons/md';
-import { FaMicrophone, FaLock, } from "react-icons/fa6";
-import { IoVideocam } from "react-icons/io5";
+import { MdOutlineCancel } from 'react-icons/md';
+import { FaMicrophone, FaLock, FaRegSquareCheck, } from "react-icons/fa6";
+import { IoShareSocial, IoVideocam } from "react-icons/io5";
 import { TbBrowserX } from "react-icons/tb";
 import moment from 'moment';
+import BackButton from '../../../components/common/BackButton';
 
 const AssessmentDetails: React.FC = () => {
     const { id } = useParams();
@@ -51,6 +51,10 @@ const AssessmentDetails: React.FC = () => {
     return (
         <Page>
             <PageBody>
+                <div>
+                    <BackButton variant='glass' size='md' />
+                    <Button variant='icon'><IoShareSocial /></Button>
+                </div>
                 {isLoading ? (
                     <DataLoader />
                 ) : assessment ? (
@@ -133,65 +137,40 @@ const AssessmentDetails: React.FC = () => {
                         </div>
 
                         {/* Right Column: Settings & Sidebar */}
-                        <div className="space-y-8">
-                            {/* Main CTA */}
-                            <div
-                                className="bg-background-inverse rounded-3xl p-8 text-text-inverse shadow-2xl shadow-black/20"
-                            >
-                                <h3 className="text-xl font-black mb-2">Ready to Go?</h3>
-                                <p className="text-sm text-text-inverse/60 mb-8 leading-relaxed">Ensure your camera and microphone are working before starting the session.</p>
+                        <div className="space-y-5">
+                            <ContentBox className="bg-dark-dark text-text-inverse space-y-3">
+                                <h3 className="text-xl font-semibold">Ready to Go?</h3>
+                                <p className="text-text-inverse/60">Ensure your camera and microphone are working before starting the session.</p>
 
-                                <div className="space-y-3">
-                                    <button className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-primary-main text-text-inverse rounded-2xl font-black hover:bg-primary-dark transition-all shadow-lg shadow-primary-main/30 group">
-                                        <RiPlayFill className="w-6 h-6" />
-                                        START ASSESSMENT
-                                    </button>
-                                    <button className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/10 text-text-inverse rounded-2xl font-bold hover:bg-white/20 transition-all border border-white/5">
-                                        <MdEdit className="w-5 h-5" />
-                                        EDIT DETAILS
-                                    </button>
-                                </div>
-                            </div>
+                                <Button className='w-full' size='md'>
+                                    START
+                                </Button>
+                            </ContentBox>
 
                             {/* Proctoring Status */}
-                            <div className="bg-background-light rounded-3xl border border-muted-light p-6 shadow-sm overflow-hidden relative">
-                                <div className="absolute top-0 right-0 p-4">
-                                    <MdOutlineSettings className="w-5 h-5 text-muted-dark hover:text-text-dark transition-colors cursor-pointer" />
-                                </div>
-                                <h3 className="text-lg font-bold text-text-dark mb-6">Security Settings</h3>
+                            <ContentBox>
+                                <h3 className="text-lg font-bold mb-3">Security Settings</h3>
 
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     {proctoringFeatures.map((feat) => (
-                                        <div key={feat.label} className="flex items-start gap-4">
-                                            <div className={`p-3 rounded-xl shrink-0 ${feat.active ? 'bg-background-inverse text-primary-main' : 'bg-background-main text-muted-dark border border-muted-light'}`}>
-                                                <feat.icon className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <p className={`text-sm font-bold ${feat.active ? 'text-text-dark' : 'text-text-light'}`}>{feat.label}</p>
-                                                    {feat.active ? (
-                                                        <RiCheckboxCircleLine className="w-4 h-4 text-success-main" />
-                                                    ) : (
-                                                        <RiCloseCircleLine className="w-4 h-4 text-muted-dark" />
-                                                    )}
-                                                </div>
-                                            </div>
+                                        <div
+                                            key={feat.label}
+                                            className={`flex items-center gap-3 p-4 rounded-xl border ${feat.active
+                                                ? "bg-dark-dark text-text-inverse"
+                                                : "bg-background-main border-muted-main text-text-light"
+                                                }`}
+                                        >
+                                            <feat.icon className="w-5 h-5 shrink-0" />
+                                            <p className="flex-1 text-sm font-semibold">{feat.label}</p>
+                                            {feat.active ? (
+                                                <FaRegSquareCheck className="w-5 h-5 shrink-0" />
+                                            ) : (
+                                                <MdOutlineCancel className="w-5 h-5 shrink-0" />
+                                            )}
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-
-                            {/* Author info */}
-                            <div className="bg-background-main rounded-3xl p-6 border border-muted-light flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-background-inverse flex items-center justify-center text-primary-main font-black text-xl shadow-lg shadow-black/10">
-                                    {assessment.createdBy.split(" ").map(n => n[0]).join("")}
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-primary-main uppercase tracking-widest mb-0.5">Assessment Lead</p>
-                                    <p className="text-base font-black text-text-dark">{assessment.createdBy}</p>
-                                    <p className="text-xs text-text-light">Updated {moment(assessment.updatedAt).fromNow()}</p>
-                                </div>
-                            </div>
+                            </ContentBox>
                         </div>
                     </div>
                 ) : (

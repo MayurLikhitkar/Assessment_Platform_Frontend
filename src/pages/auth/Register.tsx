@@ -231,7 +231,7 @@ const Register: React.FC = () => {
                                             {strength <= 2 ? 'Weak' : strength <= 4 ? 'Medium' : 'Strong'}
                                         </span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                    <div className="h-1.5 w-full bg-background-main rounded-full overflow-hidden">
                                         <div
                                             className={`h-full transition-all duration-300 ${getStrengthColor(strength)}`}
                                             style={{ width: `${(strength / 5) * 100}%` }}
@@ -243,16 +243,16 @@ const Register: React.FC = () => {
                             <div className="bg-secondary-light/10 border border-secondary-main/20 rounded-lg p-3">
                                 <p className="text-xs text-secondary-dark font-medium mb-1">Password must contain:</p>
                                 <ul className="text-xs text-text-main space-y-0.5">
-                                    <li className={`flex items-center gap-2 ${formik.values.password.length >= 8 ? 'text-green-600' : 'text-text-light'}`}>
+                                    <li className={`flex items-center gap-2 ${formik.values.password.length >= 8 ? 'text-success-main' : 'text-text-light'}`}>
                                         <span className="">{formik.values.password.length >= 8 ? <GoDotFill /> : <GoDot />}</span> At least 8 characters
                                     </li>
-                                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(formik.values.password) ? 'text-green-600' : 'text-text-light'}`}>
+                                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(formik.values.password) ? 'text-success-main' : 'text-text-light'}`}>
                                         <span className="">{/[A-Z]/.test(formik.values.password) ? <GoDotFill /> : <GoDot />}</span> One uppercase letter
                                     </li>
-                                    <li className={`flex items-center gap-2 ${/[a-z]/.test(formik.values.password) ? 'text-green-600' : 'text-text-light'}`}>
+                                    <li className={`flex items-center gap-2 ${/[a-z]/.test(formik.values.password) ? 'text-success-main' : 'text-text-light'}`}>
                                         <span className="">{/[a-z]/.test(formik.values.password) ? <GoDotFill /> : <GoDot />}</span> One lowercase letter
                                     </li>
-                                    <li className={`flex items-center gap-2 ${/\d/.test(formik.values.password) ? 'text-green-600' : 'text-text-light'}`}>
+                                    <li className={`flex items-center gap-2 ${/\d/.test(formik.values.password) ? 'text-success-main' : 'text-text-light'}`}>
                                         <span className="">{/\d/.test(formik.values.password) ? <GoDotFill /> : <GoDot />}</span> One number
                                     </li>
                                 </ul>

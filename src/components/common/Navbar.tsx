@@ -65,7 +65,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
                     <div className="relative z-10 hidden sm:flex items-center gap-2">
                         <Link to={getHomePath(user?.role)} className="flex items-center gap-3 group select-none">
-                            <span className="w-10 h-10 bg-primary-main text-white backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
+                            <span className="w-10 h-10 bg-primary-main text-text-inverse backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
                                 A
                             </span>
                             <span className="text-2xl font-bold text-text-main">AssessPro</span>
@@ -96,7 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
                         {/* Notification Dropdown */}
                         {isNotificationOpen && (
-                            <div className="absolute right-0 mt-2 w-[320px] rounded-xl border border-border-light shadow-lg shadow-black/5 bg-background-light overflow-hidden z-50 origin-top-right">
+                            <div className="absolute right-0 mt-2 w-[320px] rounded-xl border border-border-light shadow-lg bg-background-light overflow-hidden z-50 origin-top-right">
                                 <div className="px-4 py-3 border-b border-border-light bg-muted-light/30">
                                     <span className="text-sm font-bold text-text-main">Notifications</span>
                                 </div>

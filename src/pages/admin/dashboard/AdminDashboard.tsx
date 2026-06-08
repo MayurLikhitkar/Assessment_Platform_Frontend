@@ -110,7 +110,7 @@ const AdminDashboard: React.FC = () => {
                                 onClick={() => navigate(action.path)}
                                 className="flex items-center gap-4 p-5 hover:border-primary-light/40 hover:shadow-md transition-all group cursor-pointer"
                             >
-                                <div className="p-3 rounded-xl bg-primary-light/10 text-primary-main group-hover:bg-primary-main group-hover:text-white transition-colors">
+                                <div className="p-3 rounded-xl bg-primary-light/10 text-primary-main group-hover:bg-primary-main group-hover:text-text-inverse transition-colors">
                                     {action.icon}
                                 </div>
                                 <div className="flex-1">

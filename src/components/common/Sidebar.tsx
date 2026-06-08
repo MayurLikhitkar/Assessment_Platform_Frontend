@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
                     <button
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 border-none cursor-default w-full h-full p-0 m-0"
+                        className="fixed inset-0 bg-background-inverse/50 backdrop-blur-sm animate-in fade-in duration-200 border-none cursor-default w-full h-full p-0 m-0"
                         onClick={onClose}
                         aria-label="Close menu"
                         tabIndex={-1}

@@ -155,7 +155,7 @@ const Profile: React.FC = () => {
                                 {profileData.data.email}
                             </p>
 
-                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-main text-white mb-4">
+                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-main text-text-inverse mb-4">
                                 {profileData.data.role.toUpperCase()}
                             </span>
 
@@ -202,7 +202,7 @@ const Profile: React.FC = () => {
                                             onChange={profileFormik.handleChange}
                                             disabled={!editMode}
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
+                                        <div className="w-11 h-6 bg-background-main peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-background-light after:border-muted-dark after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
                                     </div>
                                 </label>
 
@@ -217,7 +217,7 @@ const Profile: React.FC = () => {
                                             onChange={profileFormik.handleChange}
                                             disabled={!editMode}
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
+                                        <div className="w-11 h-6 bg-background-main peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-background-light after:border-muted-dark after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-main"></div>
                                     </div>
                                 </label>
 
@@ -340,7 +340,7 @@ const Profile: React.FC = () => {
                                                                 {skill}
                                                             </span>
                                                         )) : (
-                                                            <span className="text-gray-500">No skills added</span>
+                                                            <span className="text-text-light">No skills added</span>
                                                         )}
                                                     </div>
                                                 </div>
