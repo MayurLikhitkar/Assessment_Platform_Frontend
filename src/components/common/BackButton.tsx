@@ -1,14 +1,11 @@
-import React from 'react';
+import React, { type ButtonHTMLAttributes, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdKeyboardBackspace } from 'react-icons/md';
 
 type ButtonVariant = 'ghost' | 'outline' | 'solid' | 'soft' | 'glass';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface BackButtonProps {
-    className?: string;
-    onClick?: () => void;
-    label?: string; // Optional text label (e.g., "Go Back")
+interface BackButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: ButtonVariant;
     size?: ButtonSize;
 }
@@ -16,15 +13,15 @@ interface BackButtonProps {
 const BackButton: React.FC<BackButtonProps> = ({
     className = '',
     onClick,
-    label,
+    children,
     variant = 'ghost',
     size = 'sm'
 }) => {
     const navigate = useNavigate();
 
-    const handleClick = () => {
+    const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
         if (onClick) {
-            onClick();
+            onClick(e);
         } else {
             navigate(-1);
         }
@@ -64,20 +61,18 @@ const BackButton: React.FC<BackButtonProps> = ({
     const iconSize = size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-2xl' : 'text-xl';
 
     return (
-        <button
-            type="button"
-            onClick={handleClick}
-            className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
-            aria-label={label || "Go back"}
-        >
-            {/* The Arrow Icon with a slide animation on hover */}
-            <MdKeyboardBackspace
-                className={iconSize}
-            />
-
-            {/* Conditional Label Rendering */}
-            {label && <span>{label}</span>}
-        </button>
+        <div className='flex items-center gap-2'>
+            <button
+                type="button"
+                onClick={handleClick}
+                className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+            >
+                <MdKeyboardBackspace
+                    className={iconSize}
+                />
+            </button>
+            {children}
+        </div>
     );
 };
 

@@ -51,9 +51,9 @@ const AssessmentDetails: React.FC = () => {
     return (
         <Page>
             <PageBody>
-                <div>
-                    <BackButton variant='glass' size='md' />
-                    <Button variant='icon'><IoShareSocial /></Button>
+                <div className='flex items-center justify-between w-full'>
+                    <BackButton variant='glass' size='md' ><span className='font-semibold'>Back</span></BackButton>
+                    <Button variant='icon' className='bg-background-main border border-border-light shadow-sm hover:shadow-sm text-text-main hover:text-primary-main rounded-lg' size='md'><IoShareSocial className='w-5 h-5' /></Button>
                 </div>
                 {isLoading ? (
                     <DataLoader />
