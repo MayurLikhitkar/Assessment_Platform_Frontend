@@ -5,7 +5,7 @@ import { MdDownload, MdFilterListOff } from 'react-icons/md';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
-import { paginationOptions } from '../../utils/config';
+import { paginationOptions } from '../../config/config';
 import Search from '../ui/Search';
 
 // ModuleRegistry.registerModules([AllCommunityModule]);

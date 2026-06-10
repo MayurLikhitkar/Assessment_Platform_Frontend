@@ -73,7 +73,7 @@ const Modal: React.FC<ModalProps> = ({
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
-                    <h2 className="text-xl font-semibold text-text-dark">{title}</h2>
+                    <h2 className="text-xl font-semibold text-text-main">{title}</h2>
                     <Button
                         onClick={onClose}
                         variant="icon"

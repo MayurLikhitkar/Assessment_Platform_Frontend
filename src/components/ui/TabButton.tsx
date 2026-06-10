@@ -13,7 +13,7 @@ const TabButton: React.FC<TabButtonProps> = ({ label, icon, isActive, onClick })
         <Button variant='underline'
             className={isActive
                 ? 'text-primary-main'
-                : 'text-text-light hover:text-text-dark'
+                : 'text-text-light hover:text-text-main'
             }
             onClick={onClick}
         >

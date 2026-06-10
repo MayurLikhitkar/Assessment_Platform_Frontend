@@ -82,7 +82,7 @@ const AdminDashboard: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-text-light">{card.label}</p>
-                                        <h3 className="text-2xl font-bold text-text-dark mt-1">
+                                        <h3 className="text-2xl font-bold text-text-main mt-1">
                                             {card.value}
                                         </h3>
                                     </div>
@@ -102,7 +102,7 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Quick Actions */}
                 <div>
-                    <h2 className="text-xl font-bold text-text-dark mb-4">Quick Actions</h2>
+                    <h2 className="text-xl font-bold text-text-main mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {quickActions.map((action) => (
                             <ContentBox
@@ -114,7 +114,7 @@ const AdminDashboard: React.FC = () => {
                                     {action.icon}
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-text-dark">{action.label}</h3>
+                                    <h3 className="font-semibold text-text-main">{action.label}</h3>
                                     <p className="text-sm text-text-light mt-0.5">{action.description}</p>
                                 </div>
                                 <MdArrowForward className="text-text-light group-hover:text-primary-main transition-colors" />
@@ -125,7 +125,7 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Recent Activity Placeholder */}
                 <ContentBox>
-                    <h2 className="text-xl font-bold text-text-dark mb-4">Recent Activity</h2>
+                    <h2 className="text-xl font-bold text-text-main mb-4">Recent Activity</h2>
                     <div className="text-center py-10">
                         <MdTrendingUp className="text-muted-dark text-5xl mb-3" />
                         <p className="text-text-light">Activity tracking coming soon</p>

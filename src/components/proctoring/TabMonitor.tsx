@@ -133,7 +133,7 @@ const TabMonitor: React.FC<TabMonitorProps> = ({
                             <div className="p-4 bg-warn-light/20 text-warn-main rounded-full">
                                 <MdWarning className="text-4xl" />
                             </div>
-                            <h2 className="text-2xl font-bold text-text-dark">
+                            <h2 className="text-2xl font-bold text-text-main">
                                 Return to Assessment
                             </h2>
                             <div className="space-y-2 text-text-main">

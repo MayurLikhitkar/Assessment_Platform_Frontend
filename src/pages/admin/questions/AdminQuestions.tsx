@@ -176,7 +176,7 @@ const AdminQuestions: React.FC = () => {
                                     <MdQuiz className="text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-text-dark">{questions.length}</p>
+                                    <p className="text-2xl font-bold text-text-main">{questions.length}</p>
                                     <p className="text-sm text-text-light">Total Questions</p>
                                 </div>
                             </div>
@@ -185,7 +185,7 @@ const AdminQuestions: React.FC = () => {
                                     <MdQuiz className="text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
+                                    <p className="text-2xl font-bold text-text-main">{activeCount}</p>
                                     <p className="text-sm text-text-light">Active</p>
                                 </div>
                             </div>
@@ -194,7 +194,7 @@ const AdminQuestions: React.FC = () => {
                                     <MdQuiz className="text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
+                                    <p className="text-2xl font-bold text-text-main">{inactiveCount}</p>
                                     <p className="text-sm text-text-light">Inactive</p>
                                 </div>
                             </div>

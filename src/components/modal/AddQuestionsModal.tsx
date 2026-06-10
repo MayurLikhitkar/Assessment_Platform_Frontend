@@ -92,7 +92,7 @@ const AddQuestionsModal: React.FC<AddQuestionsModalProps> = ({ isOpen, onClose, 
                 if (!params.data) return null;
                 return (
                     <div>
-                        <p className="text-sm font-medium text-text-dark line-clamp-2">{params.data.question}</p>
+                        <p className="text-sm font-medium text-text-main line-clamp-2">{params.data.question}</p>
                         <div className="flex gap-1 mt-1">
                             {params.data.tags?.slice(0, 2).map((tag) => (
                                 <span key={tag} className="text-[10px] bg-muted-light/60 text-text-light px-1.5 py-0.5 rounded-full">{tag}</span>

@@ -70,7 +70,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                     : schema;
             }),
         tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
-        instructions: Yup.string().required('Instructions are required'),
+        instructions: Yup.string(),
         isActive: Yup.boolean(),
         isPublic: Yup.boolean(),
         requireWebcam: Yup.boolean(),
@@ -222,12 +222,12 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 </div>
                 <FormMultiInput id="tags" name="tags" label="Tags" formik={formik} placeholder="Type and press enter" required />
 
-                <FormTextArea id="instructions" name="instructions" label="Instructions" rows={4} formik={formik} required />
+                <FormTextArea id="instructions" name="instructions" label="Instructions" rows={4} formik={formik} />
 
             </ContentBox>
 
             <ContentBox>
-                <h2 className="text-lg font-semibold text-text-dark mb-4 border-b border-border-light/50 pb-2">
+                <h2 className="text-lg font-semibold text-text-main mb-4 border-b border-border-light/50 pb-2">
                     Proctoring Settings
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
@@ -277,7 +277,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
             <ContentBox className='space-y-6'>
                 <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-semibold text-text-dark">Assessment Questions</h2>
+                    <h2 className="text-lg font-semibold text-text-main">Assessment Questions</h2>
                     {!isAddingQuestions && (
                         <Button
                             type="button"
@@ -294,7 +294,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 {isAddingQuestions ? (
                     <div className="space-y-4 border border-border-light bg-background-main rounded-lg p-4">
                         <div className="flex justify-between items-center">
-                            <h3 className="font-medium text-text-dark">Select Questions from Bank</h3>
+                            <h3 className="font-medium text-text-main">Select Questions from Bank</h3>
                             <Button
                                 type="button"
                                 onClick={() => setIsAddingQuestions(false)}

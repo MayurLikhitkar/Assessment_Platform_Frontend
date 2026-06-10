@@ -131,7 +131,7 @@ const Profile: React.FC = () => {
             <PageBody className='py-7'>
                 {/* Header */}
                 <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-text-dark">
+                    <h1 className="text-3xl font-bold text-text-main">
                         Profile Settings
                     </h1>
                     {activeTab === 0 && !editMode && (
@@ -148,7 +148,7 @@ const Profile: React.FC = () => {
                     {/* Left Column - Profile Info */}
                     <div className="md:col-span-4 space-y-4">
                         <div className="bg-background-light rounded-lg shadow-md p-6 text-center">
-                            <h2 className="text-xl font-bold text-text-dark">
+                            <h2 className="text-xl font-bold text-text-main">
                                 {profileData.data.fullName}
                             </h2>
                             <p className="text-text-light mb-2">
@@ -167,7 +167,7 @@ const Profile: React.FC = () => {
                                     <span className="text-text-light">
                                         Member Since:
                                     </span>
-                                    <span className="font-medium text-text-dark">
+                                    <span className="font-medium text-text-main">
                                         {new Date(profileData.data.createdAt).toLocaleDateString()}
                                     </span>
                                 </div>
@@ -176,7 +176,7 @@ const Profile: React.FC = () => {
                                     <span className="text-text-light">
                                         Last Login:
                                     </span>
-                                    <span className="font-medium text-text-dark">
+                                    <span className="font-medium text-text-main">
                                         {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
                                     </span>
                                 </div>
@@ -185,14 +185,14 @@ const Profile: React.FC = () => {
 
                         {/* Proctoring Settings Card */}
                         <div className="bg-background-light rounded-lg shadow-md p-6">
-                            <h3 className="text-lg font-bold text-text-dark mb-3 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-text-main mb-3 flex items-center gap-2">
                                 <MdSecurity className="text-lg" />
                                 Proctoring Settings
                             </h3>
 
                             <div className="space-y-3">
                                 <label className="flex items-center justify-between cursor-pointer">
-                                    <span className="text-text-dark">Require Webcam</span>
+                                    <span className="text-text-main">Require Webcam</span>
                                     <div className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             type="checkbox"
@@ -207,7 +207,7 @@ const Profile: React.FC = () => {
                                 </label>
 
                                 <label className="flex items-center justify-between cursor-pointer">
-                                    <span className="text-text-dark">Require Microphone</span>
+                                    <span className="text-text-main">Require Microphone</span>
                                     <div className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             type="checkbox"
@@ -416,7 +416,7 @@ const Profile: React.FC = () => {
                                     <hr className="my-6 border-primary-light" />
 
                                     {/* Security Settings */}
-                                    <h3 className="text-lg font-bold text-text-dark mb-4">
+                                    <h3 className="text-lg font-bold text-text-main mb-4">
                                         Security Settings
                                     </h3>
 
@@ -441,7 +441,7 @@ const Profile: React.FC = () => {
                             {/* Assessment History Tab */}
                             {activeTab === 2 && (
                                 <div className="mt-6">
-                                    <p className="text-text-dark mb-4">
+                                    <p className="text-text-main mb-4">
                                         Your assessment history and performance analytics will appear here.
                                     </p>
                                 </div>

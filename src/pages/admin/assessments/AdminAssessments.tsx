@@ -220,7 +220,7 @@ const AdminAssessments: React.FC = () => {
                                     <MdAssignment className="text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-text-dark">{assessments.length}</p>
+                                    <p className="text-2xl font-bold text-text-main">{assessments.length}</p>
                                     <p className="text-sm text-text-light">Total Assessments</p>
                                 </div>
                             </div>
@@ -229,7 +229,7 @@ const AdminAssessments: React.FC = () => {
                                     <MdAssignment className="text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-text-dark">{activeCount}</p>
+                                    <p className="text-2xl font-bold text-text-main">{activeCount}</p>
                                     <p className="text-sm text-text-light">Active</p>
                                 </div>
                             </div>
@@ -238,7 +238,7 @@ const AdminAssessments: React.FC = () => {
                                     <MdAssignment className="text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-text-dark">{inactiveCount}</p>
+                                    <p className="text-2xl font-bold text-text-main">{inactiveCount}</p>
                                     <p className="text-sm text-text-light">Inactive</p>
                                 </div>
                             </div>

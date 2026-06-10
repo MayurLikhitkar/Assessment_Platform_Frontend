@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm font-medium text-text-light">{card.label}</p>
-                                            <h3 className="text-2xl font-bold text-text-dark mt-1">
+                                            <h3 className="text-2xl font-bold text-text-main mt-1">
                                                 {card.value}
                                             </h3>
                                         </div>
@@ -136,7 +136,7 @@ const Dashboard: React.FC = () => {
                                 <div key={assessment.id} className="bg-background-light border border-border-light rounded-lg hover:shadow-md transition-shadow overflow-hidden">
                                     <div className="p-4 cursor-pointer hover:bg-muted-light/50 transition-colors h-full">
                                         <div className="flex justify-between items-start mb-4">
-                                            <h3 className="text-lg font-bold text-text-dark">
+                                            <h3 className="text-lg font-bold text-text-main">
                                                 {assessment.title || 'Unknown Title'}
                                             </h3>
                                             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted-light text-text-light border border-border-light capitalize">
@@ -171,7 +171,7 @@ const Dashboard: React.FC = () => {
 
                 {/* Recent Activity */}
                 {/* <div className="bg-background-light rounded-xl shadow-sm p-6">
-                <h2 className="text-xl font-bold text-text-dark mb-4">
+                <h2 className="text-xl font-bold text-text-main mb-4">
                     Recent Activity
                 </h2>
                 <div className="space-y-4">
@@ -181,7 +181,7 @@ const Dashboard: React.FC = () => {
                             className="flex items-center justify-between p-4 border border-border-light rounded-lg hover:bg-muted-light/50 transition-colors"
                         >
                             <div>
-                                <p className="font-medium text-text-dark">
+                                <p className="font-medium text-text-main">
                                     {assessment.assessment?.title || 'Unknown Title'}
                                 </p>
                                 <p className="text-sm text-text-light">
@@ -189,7 +189,7 @@ const Dashboard: React.FC = () => {
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="font-bold text-text-dark">
+                                <p className="font-bold text-text-main">
                                     {assessment.score || '--'}/{assessment.totalMarks}
                                 </p>
                                 <span

@@ -131,7 +131,7 @@ const AdminProfile: React.FC = () => {
             <PageBody className='py-7'>
                 {/* Header */}
                 <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-text-dark">
+                    <h1 className="text-3xl font-bold text-text-main">
                         Profile Settings
                     </h1>
                     {activeTab === 0 && !editMode && (
@@ -147,7 +147,7 @@ const AdminProfile: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Left Column - Profile Info */}
                     <div className="md:col-span-4 bg-background-light rounded-lg shadow-md p-6 text-center">
-                        <h2 className="text-xl font-bold text-text-dark">
+                        <h2 className="text-xl font-bold text-text-main">
                             {profileData.data.fullName}
                         </h2>
                         <p className="text-text-light mb-2">
@@ -166,7 +166,7 @@ const AdminProfile: React.FC = () => {
                                 <span className="text-text-light">
                                     Member Since:
                                 </span>
-                                <span className="font-medium text-text-dark">
+                                <span className="font-medium text-text-main">
                                     {new Date(profileData.data.createdAt).toLocaleDateString()}
                                 </span>
                             </div>
@@ -175,7 +175,7 @@ const AdminProfile: React.FC = () => {
                                 <span className="text-text-light">
                                     Last Login:
                                 </span>
-                                <span className="font-medium text-text-dark">
+                                <span className="font-medium text-text-main">
                                     {profileData.data.lastLogin ? new Date(profileData.data.lastLogin).toLocaleString() : 'Never'}
                                 </span>
                             </div>
@@ -364,7 +364,7 @@ const AdminProfile: React.FC = () => {
                                     <hr className="my-6 border-primary-light" />
 
                                     {/* Security Settings */}
-                                    <h3 className="text-lg font-bold text-text-dark mb-4">
+                                    <h3 className="text-lg font-bold text-text-main mb-4">
                                         Security Settings
                                     </h3>
 

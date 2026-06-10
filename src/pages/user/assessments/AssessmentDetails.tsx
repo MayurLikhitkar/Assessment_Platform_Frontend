@@ -7,14 +7,15 @@ import { getAssessment } from '../../../services/axios/userApi';
 import toast from 'react-hot-toast';
 import DataLoader from '../../../components/common/DataLoader';
 import {
-    RiTimeLine, RiAwardLine, RiGroupLine, RiCalendarLine, RiAlertLine,
+    RiTimeLine, RiAwardLine, RiGroupLine, RiCalendarLine, RiAlertLine, RiShieldCheckLine,
 } from "react-icons/ri";
-import { MdOutlineCancel } from 'react-icons/md';
+import { MdLibraryAddCheck, MdOutlineCalendarToday, MdOutlineCancel, MdQuiz, MdRefresh } from 'react-icons/md';
 import { FaMicrophone, FaLock, FaRegSquareCheck, } from "react-icons/fa6";
-import { IoShareSocial, IoVideocam } from "react-icons/io5";
-import { TbBrowserX } from "react-icons/tb";
+import { IoShareSocial, IoVideocam, IoWifi } from "react-icons/io5";
+import { TbAlertTriangleFilled, TbBrowserX } from "react-icons/tb";
 import moment from 'moment';
 import BackButton from '../../../components/common/BackButton';
+import { BsRecordCircle } from 'react-icons/bs';
 
 const AssessmentDetails: React.FC = () => {
     const { id } = useParams();
@@ -43,10 +44,12 @@ const AssessmentDetails: React.FC = () => {
     ];
 
     const stats = [
-        { icon: RiTimeLine, label: "Duration", value: `${assessment?.durationInMinutes} mins`, color: "text-secondary-main", bg: "bg-secondary-light/10" },
-        { icon: RiAwardLine, label: "Total Marks", value: `${assessment?.totalMarks} marks`, color: "text-primary-main", bg: "bg-primary-light/10" },
-        { icon: RiGroupLine, label: "Questions", value: assessment?.questions.length, color: "text-accent-main", bg: "bg-accent-light/10" },
+        { icon: RiTimeLine, label: "Duration", value: `${assessment?.durationInMinutes} mins` },
+        { icon: RiAwardLine, label: "Total Marks", value: `${assessment?.totalMarks} marks` },
+        { icon: MdQuiz, label: "Questions", value: assessment?.questions.length },
     ]
+
+    const hasProctoring = assessment?.requireWebcam || assessment?.requireMicrophone || assessment?.allowTabSwitch === false || assessment?.allowFullscreenExit === false || assessment?.enableRecording;
 
     return (
         <Page>
@@ -75,7 +78,7 @@ const AssessmentDetails: React.FC = () => {
                                     {assessment.title}
                                 </h1>
 
-                                <p className="text-lg">
+                                <p className="text-base">
                                     {assessment.description}
                                 </p>
 
@@ -83,9 +86,9 @@ const AssessmentDetails: React.FC = () => {
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                     {stats.map((stat) => (
                                         <div key={stat.label} className="p-4 bg-background-main rounded-xl border border-border-light">
-                                            <div className="flex items-center gap-2 text-dark-light mb-2">
+                                            <div className="flex items-center gap-2 text-text-light mb-2">
                                                 <stat.icon className="w-4 h-4" />
-                                                <span className="text-[11px] font-bold uppercase tracking-wide">{stat.label}</span>
+                                                <span className="text-xs font-bold uppercase">{stat.label}</span>
                                             </div>
                                             <p className="text-lg font-bold text-text-main">{stat.value}</p>
                                         </div>
@@ -99,8 +102,8 @@ const AssessmentDetails: React.FC = () => {
                                         { label: 'End Date', value: moment(assessment.endDate).format('DD MMM YYYY') },
                                     ].map(({ label, value }) => (
                                         <div key={label} className="flex items-center gap-3 p-4 bg-background-main rounded-xl border border-border-light">
-                                            <div className="w-10 h-10 rounded-lg bg-background-light flex items-center justify-center shadow-sm border border-border-light">
-                                                <RiCalendarLine className="w-5 h-5 text-dark-light" />
+                                            <div className="p-2 rounded-lg bg-background-light flex items-center justify-center shadow-sm border border-border-light">
+                                                <MdOutlineCalendarToday className="w-5 h-5 text-dark-light" />
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-dark-light uppercase tracking-wide">{label}</p>
@@ -113,16 +116,70 @@ const AssessmentDetails: React.FC = () => {
 
                             {/* Instructions Card */}
                             <ContentBox>
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary-light/10 text-primary-main">
-                                        <RiAlertLine className="w-5 h-5" />
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 flex items-center justify-center rounded-lg bg-primary-light/15 text-primary-main">
+                                        <TbAlertTriangleFilled className="w-5 h-5" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-text-dark">Candidate Instructions</h3>
+                                    <h3 className="text-xl font-bold text-text-main">General Instructions</h3>
                                 </div>
-                                <div className="prose prose-sm max-w-none text-text-main">
-                                    <p className="leading-relaxed bg-background-main p-6 rounded-2xl border border-muted-light border-dashed">
-                                        {assessment.instructions}
-                                    </p>
+                                <div className="text-text-main whitespace-pre-wrap space-y-6 mt-3">
+                                    {/* 1. General Rules */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-base font-bold text-text-main flex items-center gap-2">
+                                            General Guidelines
+                                        </h4>
+                                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-text-light">
+                                            {[
+                                                { color: 'text-secondary-main', icon: IoWifi, label: 'Wifi', value: 'Ensure a stable internet connection before starting.' },
+                                                { color: 'text-warn-main', icon: RiTimeLine, label: 'Duration', value: 'The timer cannot be paused once the assessment begins.' },
+                                                { color: 'text-error-main', icon: MdRefresh, label: 'Refresh', value: 'Do not refresh or close the browser window.' },
+                                                { color: 'text-success-main', icon: MdLibraryAddCheck, label: 'Answers', value: 'Submit your answers before the time expires.' },
+                                            ].map(rule => (
+                                                <div key={rule.label} className="flex items-center gap-3 p-3 rounded-lg border border-border-light">
+                                                    <rule.icon className={`w-5 h-5 shrink-0 ${rule.color}`} />
+                                                    <span>{rule.value}</span>
+                                                </div>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* 2. Proctoring Rules (Only if any proctoring feature is enabled) */}
+                                    {hasProctoring && (
+                                        <div className="space-y-3">
+                                            <h4 className="text-base font-bold text-text-main flex items-center gap-2">
+                                                Proctoring & Security
+                                            </h4>
+                                            <ul className="space-y-2 text-sm text-text-light">
+                                                {[
+                                                    { condition: assessment.requireWebcam, color: 'text-dark-light', icon: IoVideocam, label: 'Webcam', value: 'Webcam access is required and must remain unobstructed.', },
+                                                    { condition: assessment.requireMicrophone, color: 'text-dark-light', icon: FaMicrophone, label: 'Microphone', value: 'Microphone must be enabled in a quiet environment.', },
+                                                    { condition: assessment.allowTabSwitch === false, color: 'text-dark-light', icon: TbBrowserX, label: 'Tab Switch', value: 'Switching browser tabs or applications is strictly prohibited.', },
+                                                    { condition: assessment.allowFullscreenExit === false, color: 'text-dark-light', icon: FaLock, label: 'Fullscreen', value: 'Exiting fullscreen mode will trigger a warning.', },
+                                                    { condition: assessment.enableRecording, color: 'text-error-main', icon: BsRecordCircle, label: 'Recording', value: 'Your screen and video session will be recorded for monitoring.', className: 'animate-pulse', },
+                                                ]
+                                                    .filter(rule => rule.condition)
+                                                    .map(rule => (
+                                                        <div key={rule.label} className="flex items-center gap-3">
+                                                            <rule.icon className={`w-5 h-5 shrink-0 ${rule.color} ${rule.className ?? ''}`} />
+                                                            <span>{rule.value}</span>
+                                                        </div>
+                                                    ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* 3. Academic Integrity */}
+                                    <div className="p-4 rounded-xl bg-primary-light/5 border border-primary-light/20">
+                                        <div className="flex gap-3">
+                                            <RiShieldCheckLine className="w-6 h-6 text-primary-main shrink-0" />
+                                            <div>
+                                                <h4 className="font-bold text-text-main text-sm">Academic Integrity</h4>
+                                                <p className="text-sm text-text-light mt-1">
+                                                    By starting this assessment, you agree to follow all rules. Any violation or use of unfair means may result in immediate termination and disqualification.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </ContentBox>
 

@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
                             <item.icon title={item.label}
                                 className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive
                                     ? 'text-primary-main'
-                                    : 'text-text-dark'
+                                    : 'text-text-main'
                                     }`}
                             />
                             <span className="whitespace-nowrap" >

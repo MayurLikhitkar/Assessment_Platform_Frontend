@@ -295,7 +295,7 @@ const Assessments: React.FC = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-bold text-text-dark mb-1">No assessments available</h3>
+                                <h3 className="text-lg font-bold text-text-main mb-1">No assessments available</h3>
                                 <p className="text-sm text-text-light max-w-xs leading-relaxed">
                                     Check back later or contact your administrator to get assigned new assessments.
                                 </p>
@@ -307,7 +307,7 @@ const Assessments: React.FC = () => {
                 {/* Completed Assessments */}
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-text-dark">
+                        <h2 className="text-xl font-bold text-text-main">
                             Completed Assessments
                         </h2>
                         <span className="px-3 py-1 rounded-full text-sm bg-success-light text-success-dark">
@@ -321,7 +321,7 @@ const Assessments: React.FC = () => {
                                 <div key={assessment.id} className="bg-background-light rounded-lg shadow-md h-full flex flex-col">
                                     <div className="p-4 space-y-4 flex-1">
                                         <div className="flex justify-between items-start">
-                                            <h3 className="text-lg font-bold text-text-dark">
+                                            <h3 className="text-lg font-bold text-text-main">
                                                 assessment.title
                                             </h3>
                                             <span
@@ -338,19 +338,19 @@ const Assessments: React.FC = () => {
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-text-light">Score:</span>
-                                                <span className="font-medium text-text-dark">
+                                                <span className="font-medium text-text-main">
                                                     {assessment.score || 0}/{assessment.totalMarks}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-text-light">Completed:</span>
-                                                <span className="font-medium text-text-dark">
+                                                <span className="font-medium text-text-main">
                                                     {assessment.completedAt ? new Date(assessment.completedAt).toLocaleDateString() : '—'}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-text-light">Time Spent:</span>
-                                                <span className="font-medium text-text-dark">
+                                                <span className="font-medium text-text-main">
                                                     {assessment.timeSpent ? `${Math.floor(assessment.timeSpent / 60)}m ${assessment.timeSpent % 60}s` : '—'}
                                                 </span>
                                             </div>

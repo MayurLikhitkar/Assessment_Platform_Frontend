@@ -5,7 +5,7 @@ import AuthLayout from './layouts/AuthLayout';
 import Register from './pages/auth/Register';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
-import { TOASTER_PROPS } from './utils/config';
+import { TOASTER_PROPS } from './config/config';
 import { QueryClientProvider } from '@tanstack/react-query';
 import queryClient from './services/queryClient';
 import { LocalizationProvider } from '@mui/x-date-pickers';

@@ -57,7 +57,7 @@ const CreateQuestion: React.FC = () => {
             <PageHeader>
                 <BackButton variant='outline' />
                 <div>
-                    <h1 className="text-2xl font-semibold text-text-dark">Create Question</h1>
+                    <h1 className="text-2xl font-semibold text-text-main">Create Question</h1>
                     <p className="text-sm text-text-light">Fill in the details to create a new question</p>
                 </div>
             </PageHeader>
