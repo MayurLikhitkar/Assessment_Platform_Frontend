@@ -64,8 +64,8 @@ const Dashboard: React.FC = () => {
             label: 'Avg. Score',
             value: '—',
             icon: <MdTrendingUp className="text-2xl" />,
-            bgColor: 'bg-accent-light/20',
-            iconColor: 'text-accent-main',
+            bgColor: 'bg-warn-light/20',
+            iconColor: 'text-warn-main',
             link: '#',
         },
     ];

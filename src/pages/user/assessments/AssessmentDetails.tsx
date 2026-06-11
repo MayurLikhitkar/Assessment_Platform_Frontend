@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
 import { ContentBox, Page, PageBody } from '../../../components/ui/Page';
 import Button from '../../../components/ui/Button';
@@ -7,7 +7,7 @@ import { getAssessment } from '../../../services/axios/userApi';
 import toast from 'react-hot-toast';
 import DataLoader from '../../../components/common/DataLoader';
 import {
-    RiTimeLine, RiAwardLine, RiGroupLine, RiCalendarLine, RiAlertLine, RiShieldCheckLine,
+    RiTimeLine, RiAwardLine,
 } from "react-icons/ri";
 import { MdLibraryAddCheck, MdOutlineCalendarToday, MdOutlineCancel, MdQuiz, MdRefresh } from 'react-icons/md';
 import { FaMicrophone, FaLock, FaRegSquareCheck, } from "react-icons/fa6";
@@ -15,11 +15,13 @@ import { IoShareSocial, IoVideocam, IoWifi } from "react-icons/io5";
 import { TbAlertTriangleFilled, TbBrowserX } from "react-icons/tb";
 import moment from 'moment';
 import BackButton from '../../../components/common/BackButton';
-import { BsRecordCircle } from 'react-icons/bs';
+import { BsRecordCircle, BsShieldCheck } from 'react-icons/bs';
+import Confirmation from '../../../components/modal/Confirmation';
 
 const AssessmentDetails: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [start, setStart] = useState(false);
 
     useEffect(() => {
         if (!id) {
@@ -50,6 +52,16 @@ const AssessmentDetails: React.FC = () => {
     ]
 
     const hasProctoring = assessment?.requireWebcam || assessment?.requireMicrophone || assessment?.allowTabSwitch === false || assessment?.allowFullscreenExit === false || assessment?.enableRecording;
+
+    const handleStartConfirm = () => {
+        setStart(false);
+        document.documentElement.requestFullscreen().catch(() => {
+            // Fullscreen request failed (e.g. browser blocked it), proceed anyway
+        }).finally(() => {
+            navigate(`/assessment/${assessment?.id}/take`);
+        });
+    };
+
 
     return (
         <Page>
@@ -169,15 +181,13 @@ const AssessmentDetails: React.FC = () => {
                                     )}
 
                                     {/* 3. Academic Integrity */}
-                                    <div className="p-4 rounded-xl bg-primary-light/5 border border-primary-light/20">
-                                        <div className="flex gap-3">
-                                            <RiShieldCheckLine className="w-6 h-6 text-primary-main shrink-0" />
-                                            <div>
-                                                <h4 className="font-bold text-text-main text-sm">Academic Integrity</h4>
-                                                <p className="text-sm text-text-light mt-1">
-                                                    By starting this assessment, you agree to follow all rules. Any violation or use of unfair means may result in immediate termination and disqualification.
-                                                </p>
-                                            </div>
+                                    <div className="p-4 rounded-xl bg-accent-light/5 text-text-main border border-accent-light/20 flex gap-3 items-center">
+                                        <BsShieldCheck className="w-7 h-7 text-accent-main shrink-0" />
+                                        <div>
+                                            <h4 className="font-bold">Academic Integrity</h4>
+                                            <p className="text-sm mt-1">
+                                                By starting this assessment, you agree to follow all rules. Any violation or use of unfair means may result in immediate termination and disqualification.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -186,7 +196,7 @@ const AssessmentDetails: React.FC = () => {
                             {/* Tags */}
                             <div className="flex flex-wrap gap-2">
                                 {assessment.tags.map((tag) => (
-                                    <span key={tag} className="px-4 py-2 rounded-xl bg-background-inverse text-text-inverse text-xs font-bold hover:bg-primary-main transition-colors cursor-default">
+                                    <span key={tag} className="px-2 py-1 rounded-md bg-background-inverse text-text-inverse text-sm font-semibold hover:bg-primary-main transition-colors">
                                         #{tag}
                                     </span>
                                 ))}
@@ -195,34 +205,35 @@ const AssessmentDetails: React.FC = () => {
 
                         {/* Right Column: Settings & Sidebar */}
                         <div className="space-y-5">
-                            <ContentBox className="bg-dark-dark text-text-inverse space-y-3">
+                            <ContentBox className=" text-text-main space-y-3">
                                 <h3 className="text-xl font-semibold">Ready to Go?</h3>
-                                <p className="text-text-inverse/60">Ensure your camera and microphone are working before starting the session.</p>
+                                <p className="">Ensure your camera and microphone are working before starting the session.</p>
 
-                                <Button className='w-full' size='md'>
-                                    START
+                                {/* <Button className='w-full' size='md' onClick={() => navigate(`/assessment/${assessment.id}/take`)}> */}
+                                <Button variant='custom' className='w-full bg-secondary-main text-text-inverse rounded-lg tracking-wider' size='md' onClick={() => setStart(true)}>
+                                    START ASSESSMENT
                                 </Button>
                             </ContentBox>
 
                             {/* Proctoring Status */}
                             <ContentBox>
-                                <h3 className="text-lg font-bold mb-3">Security Settings</h3>
+                                <h3 className="text-lg font-bold mb-3">Proctoring</h3>
 
                                 <div className="space-y-2">
                                     {proctoringFeatures.map((feat) => (
                                         <div
                                             key={feat.label}
-                                            className={`flex items-center gap-3 p-4 rounded-xl border ${feat.active
-                                                ? "bg-dark-dark text-text-inverse"
-                                                : "bg-background-main border-muted-main text-text-light"
+                                            className={`flex bg-background-main border-muted-main items-center gap-3 p-4 rounded-xl border ${feat.active
+                                                ? "text-text-main"
+                                                : " text-text-light/60"
                                                 }`}
                                         >
                                             <feat.icon className="w-5 h-5 shrink-0" />
                                             <p className="flex-1 text-sm font-semibold">{feat.label}</p>
                                             {feat.active ? (
-                                                <FaRegSquareCheck className="w-5 h-5 shrink-0" />
+                                                <FaRegSquareCheck className="w-5 h-5 shrink-0 text-success-main" />
                                             ) : (
-                                                <MdOutlineCancel className="w-5 h-5 shrink-0" />
+                                                <MdOutlineCancel className="w-5 h-5 shrink-0 text-error-main" />
                                             )}
                                         </div>
                                     ))}
@@ -234,6 +245,45 @@ const AssessmentDetails: React.FC = () => {
                     <div className="flex justify-center py-10 text-error-main">Assessment not found</div>
                 )}
             </PageBody>
+            <Confirmation
+                maxWidth='2xl'
+                title='Assessment Warning'
+                isOpen={start}
+                onClose={() => setStart(false)}
+                onConfirm={handleStartConfirm}>
+                <div className="space-y-4 text-left">
+                    <p className="text-text-main font-medium">
+                        You are about to start the assessment. Please confirm you understand
+                        the following:
+                    </p>
+                    <ul className="space-y-2 text-sm text-text-main list-disc pl-4">
+                        <li>
+                            The timer will begin immediately and <strong>cannot be paused</strong>.
+                        </li>
+                        <li>
+                            Do not refresh, close, or navigate away from this page.
+                        </li>
+                        {hasProctoring && (
+                            <>
+                                <li>
+                                    Proctoring is <strong>enabled</strong>. Your webcam, microphone, and screen may be monitored.
+                                </li>
+                                <li>
+                                    Switching tabs or exiting fullscreen will trigger warnings and may result in termination.
+                                </li>
+                            </>
+                        )}
+                        <li>
+                            Ensure a stable internet connection before proceeding.
+                        </li>
+                    </ul>
+                    <div className="border border-warn-light/50 bg-warn-light/15 rounded-md p-3 text-sm">
+                        By clicking "Start Assessment", you agree to abide by all rules and
+                        acknowledge that any violation may result in disqualification.
+                    </div>
+                </div>
+            </Confirmation>
+
         </Page>
     )
 }

@@ -39,7 +39,7 @@ const TakeAssessment: React.FC = () => {
                 answerTimers.current[q.questionId] = 0;
             });
         },
-        onError: (error: any) => {
+        onError: (error) => {
             toast.error(error.response?.data?.message || 'Failed to start assessment');
             navigate('/assessments');
         },

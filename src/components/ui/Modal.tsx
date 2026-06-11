@@ -76,8 +76,8 @@ const Modal: React.FC<ModalProps> = ({
                     <h2 className="text-xl font-semibold text-text-main">{title}</h2>
                     <Button
                         onClick={onClose}
-                        variant="icon"
-                        // className="text-text-light hover:text-error-main hover:bg-error-light/10"
+                        variant="custom"
+                        className="text-text-main hover:shadow-sm p-1.5 border border-border-light"
                         aria-label="Close modal"
                     >
                         <MdClose className="text-xl" />

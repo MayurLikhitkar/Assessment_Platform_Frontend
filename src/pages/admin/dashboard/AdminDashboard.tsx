@@ -52,8 +52,8 @@ const AdminDashboard: React.FC = () => {
             label: 'New This Week',
             value: '—',
             icon: <MdPersonAdd className="text-2xl" />,
-            bgColor: 'bg-accent-light/20',
-            iconColor: 'text-accent-main',
+            bgColor: 'bg-warn-light/20',
+            iconColor: 'text-warn-main',
             link: '#',
         },
     ];
