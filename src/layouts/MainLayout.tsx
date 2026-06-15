@@ -3,7 +3,6 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
-import Container from '../components/common/Container';
 import PageLoader from '../components/common/PageLoader';
 import { isAdmin, getHomePath } from '../utils/roleUtils';
 
@@ -30,9 +29,7 @@ const MainLayout = () => {
             <div className='flex flex-1 overflow-hidden'>
                 <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
                 <main className='flex-1 overflow-y-auto'>
-                    <Container>
-                        <Outlet />
-                    </Container>
+                    <Outlet />
                 </main>
             </div>
         </div>

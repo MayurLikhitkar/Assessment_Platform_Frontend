@@ -128,7 +128,7 @@ const Profile: React.FC = () => {
 
     return (
         <Page>
-            <PageBody className='py-7'>
+            <PageBody className='pt-10'>
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold text-text-main">
@@ -450,7 +450,8 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
                 <Confirmation
-                    open={modal}
+                    isOpen={modal}
+                    title=''
                     onClose={() => setModal(false)}
                     icon={BsFillPatchQuestionFill}
                     message='Are you sure you want to enable Two-Factor Authentication? This will add an extra layer of security to your account by requiring a verification code in addition to your password.'

@@ -163,7 +163,7 @@ const Assessments: React.FC = () => {
 
     return (
         <Page>
-            <PageBody className='py-5'>
+            <PageBody className='pt-10'>
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <PageTitle title="Assessments" icon={MdAssignment} />
@@ -173,13 +173,6 @@ const Assessments: React.FC = () => {
                     <DataLoader />
                 ) : (
                     <div className="space-y-8">
-                        {/* Modern Header */}
-                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                            <h2 className="text-2xl font-bold text-primary-light">
-                                Assessments
-                            </h2>
-                        </div>
-
                         {assessments.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                                 {assessments?.map((assessment: AssessmentInterface) => {

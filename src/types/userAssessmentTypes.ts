@@ -1,3 +1,5 @@
+import type { QuestionType } from "./questionTypes";
+
 export enum AssessmentStatus {
     ASSIGNED = 'assigned',
     IN_PROGRESS = 'in_progress',
@@ -14,6 +16,19 @@ export enum VoilationType {
     NO_AUDIO = 'no_audio',
 }
 
+export interface UserAssessmentAnswerInterface {
+    questionId: string,
+    type: QuestionType,
+    submittedAt: Date,
+    timeSpentInSeconds: number,
+    answerMCQ?: string,
+    answerCoding?: string,
+    answerQuery?: string,
+    answerSubjective?: string,
+    marksObtained: number,
+    createdAt: Date,
+    updatedAt: Date,
+}
 
 export interface UserAssessmentInterface {
     _id: string;
@@ -26,7 +41,7 @@ export interface UserAssessmentInterface {
     timeSpentInSeconds: number;
     score: number;
     totalMarks: number;
-    answers: any[];
+    answers: UserAssessmentAnswerInterface[];
 
     // Proctoring data
     recordingUrl?: string;

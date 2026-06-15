@@ -48,7 +48,7 @@ const AssessmentDetails: React.FC = () => {
     const stats = [
         { icon: RiTimeLine, label: "Duration", value: `${assessment?.durationInMinutes} mins` },
         { icon: RiAwardLine, label: "Total Marks", value: `${assessment?.totalMarks} marks` },
-        { icon: MdQuiz, label: "Questions", value: assessment?.questions.length },
+        { icon: MdQuiz, label: "Questions", value: assessment?.questions?.length },
     ]
 
     const hasProctoring = assessment?.requireWebcam || assessment?.requireMicrophone || assessment?.allowTabSwitch === false || assessment?.allowFullscreenExit === false || assessment?.enableRecording;
