@@ -12,7 +12,7 @@ interface PageTitleProps extends HTMLAttributes<HTMLDivElement> {
 
 export const Page: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
     return (
-        <div className={twMerge(`min-h-full space-y-4 pb-4`, className)} {...props}>
+        <div className={twMerge(`min-h-screen space-y-4 pb-4`, className)} {...props}>
             {children}
         </div>
     )

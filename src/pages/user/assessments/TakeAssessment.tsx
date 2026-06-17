@@ -4,16 +4,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '../../../services/axios/api';
 import toast from 'react-hot-toast';
-import { getAssessment } from '../../../services/axios/userApi';
+import { getAssessment, getAssessmentQuestions, startAssessment } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
 import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckboxCircleLine, RiFlagLine, RiQuestionLine, RiSendPlaneLine, RiShieldCheckLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
+import DataLoader from '../../../components/common/DataLoader';
 
 const TakeAssessment: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
+
     const [answers, setAnswers] = useState<UserAssessmentAnswerInterface[]>([]);
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -38,7 +40,20 @@ const TakeAssessment: React.FC = () => {
         enabled: !!id,
     });
 
+    const { data: assessmentQuestions, isLoading: isLoadingAssessmentQuestions } = useQuery({
+        queryKey: ['assessment-questions', id],
+        queryFn: () => getAssessmentQuestions(id as string | number),
+        enabled: !!id,
+    });
+
+    const difficultyStyle: Record<string, string> = {
+        easy: "bg-success-light/30 text-success-dark border-success-light",
+        medium: "bg-warn-light/30 text-warn-dark border-warn-light",
+        hard: "bg-error-light/30 text-error-dark border-error-light",
+    };
+
     const assessment = assessmentData?.data;
+    const questions = assessmentQuestions?.data ?? [];
 
     useEffect(() => {
         stepStartRef.current = Date.now();
@@ -65,29 +80,31 @@ const TakeAssessment: React.FC = () => {
     useEffect(() => {
         stepStartRef.current = Date.now();
         return () => {
-            const qId = assessment?.questions[activeStep]?.id;
+            const qId = questions[activeStep]?.id;
             if (qId !== undefined) {
                 const elapsed = Math.floor((Date.now() - stepStartRef.current) / 1000);
                 answerTimers.current[qId] = (answerTimers.current[qId] ?? 0) + elapsed;
             }
         };
-    }, [activeStep, assessment?.questions]);
+    }, [activeStep, questions]);
 
-    const currentQuestion = assessment?.questions[activeStep];
-    const currentAnswer = answers.find((a) => a.questionId === currentQuestion);
+    const currentQuestion = questions[activeStep];
+    const currentAnswer = answers.find(
+        (a) => a.questionId === currentQuestion?._id
+    );
 
     const startMutation = useMutation({
-        mutationFn: () => api.post(`/assessments/${id}/start`),
+        mutationFn: () => startAssessment(assessment?._id as string),
         onSuccess: (data) => {
             setUserAssessmentId(data.userAssessmentId);
             setSessionId(data.sessionId);
+            setQuestions(assessment?.questions || []);
             setStartTime(new Date());
-            setTimeLeft(data.assessment.duration * 60); // Convert to seconds
-            setTimeLeft(data.assessment.duration * 60);
+            setTimeLeft((assessment?.durationInMinutes ?? 0) * 60);
             setStarted(true);
             // Initialize answer timers
-            data.assessment.questions.forEach((q) => {
-                answerTimers.current[q.questionId] = 0;
+            (assessment?.questions || []).forEach((q) => {
+                answerTimers.current[q] = 0;
             });
         },
         onError: (error) => {
@@ -105,15 +122,15 @@ const TakeAssessment: React.FC = () => {
     });
 
     const handleAnswerChange = useCallback(
-        (questionId: number, value: Answer["answer"]) => {
+        (questionId: string, value: Partial<UserAssessmentAnswerInterface>) => {
             setAnswers((prev) => {
                 const existing = prev.findIndex((a) => a.questionId === questionId);
                 if (existing >= 0) {
                     const next = [...prev];
-                    next[existing] = { questionId, answer: value };
+                    next[existing] = { questionId, ...value };
                     return next;
                 }
-                return [...prev, { questionId, answer: value }];
+                return [...prev, { questionId, ...value }];
             });
         },
         []
@@ -131,12 +148,10 @@ const TakeAssessment: React.FC = () => {
         return <>Something went wrong</>
     }
 
-    const totalQuestions = assessment.questions.length;
-
     return (
         <Page>
             <div className="min-h-screen bg-background-main flex flex-col">
-                <ContentBox className="sticky top-0 z-40 p-1">
+                <ContentBox className="sticky top-0 z-40 px-4 py-2">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between h-16 gap-4">
                             {/* Title */}
@@ -145,7 +160,7 @@ const TakeAssessment: React.FC = () => {
                                     {assessment?.title}
                                 </h1>
                                 <p className="text-xs text-text-light">
-                                    Question {activeStep + 1} of {assessment?.questions?.length}
+                                    Question {activeStep + 1} of {questions.length}
                                 </p>
                             </div>
 
@@ -162,8 +177,7 @@ const TakeAssessment: React.FC = () => {
                                 {/* Answered count */}
                                 <div className="hidden sm:flex flex-col items-center leading-none">
                                     <span className="text-sm font-bold text-text-main">
-                                        {/* {answers.length}/{totalQuestions} */}
-                                        {answers.length}/{totalQuestions}
+                                        {answers.length}/{questions.length}
                                     </span>
                                     <span className="text-[10px] text-text-light uppercase tracking-wider">
                                         Answered
@@ -198,7 +212,7 @@ const TakeAssessment: React.FC = () => {
                         <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
                             <div
                                 className="h-full bg-primary-main rounded-full transition-all duration-500"
-                                style={{ width: `${(answers.length / totalQuestions) * 100}%` }}
+                                style={{ width: `${(answers.length / questions.length) * 100}%` }}
                             />
                         </div>
                     </div>
@@ -213,11 +227,360 @@ const TakeAssessment: React.FC = () => {
                             {violations.length > 1 ? "s" : ""} detected. Excessive violations
                             may terminate your session.
                         </span>
+
                     </div>
                 )}
 
                 {/* ── Main Layout ─────────────────────────────────────── */}
                 {/* {Paste here} */}
+                <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* ── Question Navigator (sidebar) ─────────────────── */}
+                        {isLoadingAssessmentQuestions ? <DataLoader /> : (<aside className="lg:col-span-1">
+                            <div className="sticky top-24 bg-background-light rounded-2xl border border-border-light p-4 space-y-4">
+                                <h3 className="text-sm font-bold text-text-main">Questions</h3>
+
+                                <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-1.5">
+                                    {assessment?.questions.map((q, index) => {
+                                        const isAnswered = answers.some(
+                                            (a) => a.questionId === q
+                                        );
+                                        const isCurrent = index === activeStep;
+                                        const isFlagged = flagged.has(q);
+
+                                        return (
+                                            <button
+                                                key={q}
+                                                onClick={() => setActiveStep(index)}
+                                                title={`Q${index + 1} · ${q}`}
+                                                className={`relative w-full aspect-square rounded-lg text-xs font-bold flex items-center justify-center transition-all active:scale-95 border
+                        ${isCurrent
+                                                        ? "bg-primary-main text-text-inverse border-primary-dark shadow-sm"
+                                                        : isAnswered
+                                                            ? "bg-success-light/40 text-success-dark border-success-light"
+                                                            : "bg-muted-light text-text-light border-border-light hover:bg-muted-main"
+                                                    }`}
+                                            >
+                                                {isAnswered && !isCurrent ? (
+                                                    <RiCheckboxCircleLine className="w-4 h-4" />
+                                                ) : (
+                                                    index + 1
+                                                )}
+                                                {isFlagged && (
+                                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-warn-main border border-background-light" />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Legend */}
+                                <div className="space-y-1.5 pt-1 border-t border-border-light">
+                                    {[
+                                        {
+                                            cls: "bg-primary-main",
+                                            label: "Current",
+                                        },
+                                        {
+                                            cls: "bg-success-light/40 border border-success-light",
+                                            label: "Answered",
+                                        },
+                                        {
+                                            cls: "bg-muted-light border border-border-light",
+                                            label: "Unanswered",
+                                        },
+                                        {
+                                            cls: "bg-warn-main",
+                                            label: "Flagged",
+                                        },
+                                    ].map((l) => (
+                                        <div key={l.label} className="flex items-center gap-2">
+                                            <span
+                                                className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
+                                            />
+                                            <span className="text-xs text-text-light">{l.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Proctoring status */}
+                                <div className="pt-1 border-t border-border-light space-y-1.5">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-text-light flex items-center gap-1">
+                                        <RiShieldCheckLine className="w-3.5 h-3.5" />
+                                        Proctoring
+                                    </p>
+                                    {assessment?.enableRecording && (
+                                        <div className="flex items-center gap-1.5 text-xs text-error-main font-semibold">
+                                            <BsRecordCircle className="w-3.5 h-3.5 animate-pulse" />
+                                            Recording active
+                                        </div>
+                                    )}
+                                    {!assessment?.allowTabSwitch && (
+                                        <div className="flex items-center gap-1.5 text-xs text-text-light">
+                                            <RiShieldCheckLine className="w-3.5 h-3.5 text-primary-main" />
+                                            Tab lock enabled
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </aside>)}
+
+                        {/* ── Question Area ────────────────────────────────── */}
+                        {isLoadingAssessmentQuestions ? <DataLoader /> : (<main className="lg:col-span-3 space-y-4">
+                            <div className="bg-background-light rounded-2xl border border-border-light shadow-sm overflow-hidden">
+                                {/* Question header */}
+                                <div className="px-6 pt-6 pb-4 border-b border-border-light">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                        <div className="space-y-2">
+                                            <h2 className="text-lg font-bold text-text-main">
+                                                Question {activeStep + 1}
+                                            </h2>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {/* Type chip */}
+                                                <span className="bg-accent-main/10 text-accent-main border-accent-main/20">
+                                                    {currentQuestion?.type?.toUpperCase()}
+                                                </span>
+                                                {/* Marks chip */}
+                                                <span className="bg-muted-light text-text-light border-border-main">
+                                                    {currentQuestion?.marks}{" "}
+                                                    {currentQuestion?.marks === 1 ? "mark" : "marks"}
+                                                </span>
+                                                {/* Difficulty chip */}
+                                                <span
+                                                    className={difficultyStyle[currentQuestion?.difficulty]}
+                                                >
+                                                    {currentQuestion?.difficulty}
+                                                </span>
+                                                {/* Flagged chip */}
+                                                {flagged.has(currentQuestion?._id) && (
+                                                    <span className="bg-warn-light/30 text-warn-dark border-warn-light">
+                                                        Flagged
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Time spent */}
+                                        <div className="flex items-center gap-1.5 text-xs text-text-light font-mono shrink-0">
+                                            <RiTimeLine className="w-3.5 h-3.5" />
+                                            Time spent:{" "}
+                                            formatTime(
+                                            answerTimers.current[currentQuestion._id] ?? 0
+                                            )
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Question content + answer */}
+                                <div className="px-6 py-6 space-y-6">
+                                    {/* Question text */}
+                                    <p className="text-base text-text-main whitespace-pre-line leading-relaxed">
+                                        {currentQuestion?.question}
+                                    </p>
+
+                                    {/* ── MCQ ── */}
+                                    {currentQuestion?.type === "mcq" && (
+                                        <div className="space-y-3">
+                                            <p className="text-xs font-bold text-text-light uppercase tracking-wider">
+                                                {currentQuestion.isMultiSelect
+                                                    ? "Select all that apply"
+                                                    : "Select one option"}
+                                            </p>
+                                            <div className="space-y-2">
+                                                {currentQuestion.options?.map((option) => {
+                                                    const isSelected = currentQuestion.isMultiSelect
+                                                        ? Array.isArray(currentAnswer?.answerMCQ) &&
+                                                        currentAnswer.answerMCQ.includes(
+                                                            option._id
+                                                        )
+                                                        : currentAnswer?.answerMCQ === option._id;
+
+                                                    return (
+                                                        <label
+                                                            key={option._id}
+                                                            className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all select-none
+                              ${isSelected
+                                                                    ? "bg-primary-main/8 border-primary-main/40 text-text-main"
+                                                                    : "bg-background-main border-border-light text-text-light hover:border-border-dark hover:bg-muted-light"
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type={
+                                                                    currentQuestion.isMultiSelect
+                                                                        ? "checkbox"
+                                                                        : "radio"
+                                                                }
+                                                                name={`q-${currentQuestion._id}`}
+                                                                value={option._id}
+                                                                checked={isSelected}
+                                                                className="accent-primary-main w-4 h-4"
+                                                                onChange={() => {
+                                                                    if (currentQuestion.isMultiSelect) {
+                                                                        const prev = Array.isArray(
+                                                                            currentAnswer?.answerMCQ
+                                                                        )
+                                                                            ? (currentAnswer.answerMCQ)
+                                                                            : [];
+                                                                        const next = isSelected
+                                                                            ? prev.filter((id) => id !== option._id)
+                                                                            : [...prev, option._id];
+                                                                        handleAnswerChange(
+                                                                            currentQuestion._id,
+                                                                            next
+                                                                        );
+                                                                    } else {
+                                                                        handleAnswerChange(
+                                                                            currentQuestion._id,
+                                                                            option._id
+                                                                        );
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <span className="text-sm font-medium">
+                                                                {option.text}
+                                                            </span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ── Coding ── */}
+                                    {currentQuestion?.type === "coding" && (
+                                        <div className="space-y-3">
+                                            {/* <SimpleCodeEditor
+                                                language={currentQuestion.language}
+                                                starterCode={
+                                                    currentQuestion.starterCode?.[
+                                                    currentQuestion.language ?? ""
+                                                    ]
+                                                }
+                                                value={
+                                                    typeof currentAnswer?.answer === "string"
+                                                        ? currentAnswer.answer
+                                                        : ""
+                                                }
+                                                onChange={(code) =>
+                                                    handleAnswerChange(currentQuestion.questionId, code)
+                                                }
+                                            />
+
+                                            {currentQuestion.constraints && (
+                                                <div className="flex items-start gap-2.5 p-4 rounded-xl bg-secondary-main/8 border border-secondary-main/20 text-sm text-text-main">
+                                                    <RiInformationLine className="w-4 h-4 mt-0.5 shrink-0 text-secondary-main" />
+                                                    <div>
+                                                        <p className="font-bold text-secondary-main text-xs uppercase tracking-wider mb-1">
+                                                            Constraints
+                                                        </p>
+                                                        <p className="whitespace-pre-line text-text-light">
+                                                            {currentQuestion.constraints}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )} */}
+                                        </div>
+                                    )}
+
+                                    {/* ── Subjective ── */}
+                                    {currentQuestion?.type === "subjective" && (
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-bold text-text-light uppercase tracking-wider">
+                                                Your Answer
+                                            </p>
+                                            <textarea
+                                                rows={8}
+                                                placeholder="Type your answer here…"
+                                                value={
+                                                    typeof currentAnswer?.answerSubjective === "string"
+                                                        ? currentAnswer.answerSubjective
+                                                        : ""
+                                                }
+                                                onChange={(e) =>
+                                                    handleAnswerChange(
+                                                        currentQuestion?._id,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full rounded-xl border border-border-main bg-background-main text-text-main text-sm p-4 resize-y outline-none focus:border-primary-main focus:ring-2 focus:ring-primary-main/20 transition-all placeholder:text-text-light/50 min-h-[180px]"
+                                            />
+                                            <p className="text-xs text-text-light text-right">
+                                                {typeof currentAnswer?.answerSubjective === "string"
+                                                    ? currentAnswer.answerSubjective.length
+                                                    : 0}{" "}
+                                                characters
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Navigation footer */}
+                                <div className="px-6 py-4 border-t border-border-light flex items-center justify-between gap-3">
+                                    {/* Previous */}
+                                    <button
+                                        onClick={() => setActiveStep((s) => s - 1)}
+                                        disabled={activeStep === 0}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border-main text-text-light text-sm font-semibold hover:bg-muted-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        <RiArrowLeftLine className="w-4 h-4" />
+                                        Previous
+                                    </button>
+
+                                    {/* Right group */}
+                                    <div className="flex items-center gap-2">
+                                        {/* Flag */}
+                                        <button
+                                            // onClick={toggleFlag}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-95 ${flagged.has(currentQuestion?._id)
+                                                ? "bg-warn-light/30 border-warn-light text-warn-dark"
+                                                : "border-border-main text-text-light hover:bg-muted-light"
+                                                }`}
+                                        >
+                                            <RiFlagLine className="w-4 h-4" />
+                                            <span className="hidden sm:inline">
+                                                {flagged.has(currentQuestion?._id)
+                                                    ? "Unflag"
+                                                    : "Flag"}
+                                            </span>
+                                        </button>
+
+                                        {/* Next / Submit */}
+                                        {activeStep < questions.length - 1 ? (
+                                            <button
+                                                onClick={() => setActiveStep((s) => s + 1)}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-main text-text-inverse text-sm font-bold hover:bg-primary-dark active:scale-95 transition-all"
+                                            >
+                                                Next
+                                                <RiArrowRightLine className="w-4 h-4" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => setShowSubmitDialog(true)}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-success-main text-white text-sm font-bold hover:bg-success-dark active:scale-95 transition-all"
+                                            >
+                                                <RiSendPlaneLine className="w-4 h-4" />
+                                                Submit Assessment
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Skipped questions reminder */}
+                            {answers.length < questions.length && (
+                                <div className="flex items-start gap-2.5 p-4 rounded-xl bg-warn-light/15 border border-warn-light/40 text-sm text-warn-dark">
+                                    <RiQuestionLine className="w-4 h-4 mt-0.5 shrink-0" />
+                                    <span>
+                                        <strong>{questions.length - answers.length}</strong> question
+                                        {questions.length - answers.length > 1 ? "s" : ""} still
+                                        unanswered.
+                                    </span>
+                                </div>
+                            )}
+                        </main>)}
+                    </div>
+                </div>
+
             </div>
         </Page>
     )
