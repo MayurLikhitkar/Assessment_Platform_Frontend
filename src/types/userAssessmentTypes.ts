@@ -18,7 +18,7 @@ export enum VoilationType {
 
 export interface UserAssessmentAnswerInterface {
     questionId: string,
-    type: QuestionType,
+    questionType: QuestionType,
     timeSpentInSeconds: number,
     answerMCQ?: string[],
     answerCoding?: string,

@@ -5,26 +5,23 @@ import { toast } from 'react-hot-toast';
 import Input from './Input';
 import Button from './Button';
 
-export interface MultiInputProps<T extends string | number> {
-    name?: string;
+export interface MultiInputProps<T extends string | number> extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
     value: T[];
     onChange: (newValue: T[]) => void;
     placeholder?: string;
     parser?: (val: string) => T | undefined; // Optional function to parse the string input to type T
-    className?: string;
-    id?: string;
     hasError?: boolean;
 }
 
 const MultiInput = <T extends string | number>({
-    name,
     value = [],
     onChange,
     placeholder = 'Add item and press Enter',
     parser,
+    hasError,
     className,
     id,
-    hasError,
+    ...props
 }: MultiInputProps<T>) => {
     const [inputValue, setInputValue] = useState('');
 
@@ -55,12 +52,12 @@ const MultiInput = <T extends string | number>({
     };
 
     return (
-        <div className={twMerge('w-full', className)}>
+        <div className={twMerge('w-full', className)}{...props}>
             <div className="flex gap-2">
                 <Input
                     type="text"
                     id={id}
-                    name={name}
+                    name={id}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleAddItem}

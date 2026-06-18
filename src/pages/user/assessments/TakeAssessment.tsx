@@ -10,13 +10,35 @@ import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckboxCircleLine, R
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
+import { Difficulty, QuestionType } from '../../../types/questionTypes';
+import MultiChoice from '../../../components/ui/MultiChoice';
+import TextArea from '../../../components/ui/TextArea';
+import Button from '../../../components/ui/Button';
+import { twMerge } from 'tailwind-merge';
+
+const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) => {
+    const styles: Record<Difficulty, string> = {
+        [Difficulty.EASY]: 'bg-success-100 text-success-600',
+        [Difficulty.MEDIUM]: 'bg-amber-50 text-amber-600',
+        [Difficulty.HARD]: 'bg-error-50 text-error-600',
+    };
+    return (
+        <span
+            className={twMerge(
+                'px-2.5 py-0.5 rounded-full uppercase tracking-wide',
+                styles[difficulty]
+            )}>
+            {difficulty}
+        </span>
+    );
+};
 
 const TakeAssessment: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
 
-    const [answers, setAnswers] = useState<UserAssessmentAnswerInterface[]>([]);
+    const [answers, setAnswers] = useState<Omit<UserAssessmentAnswerInterface, 'timeSpentInSeconds' | 'marksObtained'>[]>([]);
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [userAssessmentId, setUserAssessmentId] = useState<number | null>(null);
@@ -122,15 +144,17 @@ const TakeAssessment: React.FC = () => {
     });
 
     const handleAnswerChange = useCallback(
-        (questionId: string, value: Partial<UserAssessmentAnswerInterface>) => {
+        (questionId: string, questionType: QuestionType, value: Partial<UserAssessmentAnswerInterface>) => {
             setAnswers((prev) => {
-                const existing = prev.findIndex((a) => a.questionId === questionId);
-                if (existing >= 0) {
+                const index = prev.findIndex((a) => a.questionId === questionId);
+
+                if (index !== -1) {
                     const next = [...prev];
-                    next[existing] = { questionId, ...value };
+                    next[index] = { ...next[index], ...value };
                     return next;
                 }
-                return [...prev, { questionId, ...value }];
+
+                return [...prev, { questionId, questionType, ...value }];
             });
         },
         []
@@ -142,6 +166,18 @@ const TakeAssessment: React.FC = () => {
         setIsSubmitting(false);
         setShowSubmitDialog(false);
         setSubmitted(true);
+    };
+
+    const toggleFlag = (questionId: string) => {
+        setFlagged((prev) => {
+            const next = new Set(prev);
+            if (next.has(questionId)) {
+                next.delete(questionId);
+            } else {
+                next.add(questionId);
+            }
+            return next;
+        });
     };
 
     if (!assessment) {
@@ -326,130 +362,92 @@ const TakeAssessment: React.FC = () => {
                         </aside>)}
 
                         {/* ── Question Area ────────────────────────────────── */}
-                        {isLoadingAssessmentQuestions ? <DataLoader /> : (<main className="lg:col-span-3 space-y-4">
-                            <div className="bg-background-light rounded-2xl border border-border-light shadow-sm overflow-hidden">
-                                {/* Question header */}
-                                <div className="px-6 pt-6 pb-4 border-b border-border-light">
-                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                        <div className="space-y-2">
-                                            <h2 className="text-lg font-bold text-text-main">
-                                                Question {activeStep + 1}
-                                            </h2>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {/* Type chip */}
-                                                <span className="bg-accent-main/10 text-accent-main border-accent-main/20">
-                                                    {currentQuestion?.type?.toUpperCase()}
-                                                </span>
-                                                {/* Marks chip */}
-                                                <span className="bg-muted-light text-text-light border-border-main">
-                                                    {currentQuestion?.marks}{" "}
-                                                    {currentQuestion?.marks === 1 ? "mark" : "marks"}
-                                                </span>
-                                                {/* Difficulty chip */}
-                                                <span
-                                                    className={difficultyStyle[currentQuestion?.difficulty]}
-                                                >
-                                                    {currentQuestion?.difficulty}
-                                                </span>
-                                                {/* Flagged chip */}
-                                                {flagged.has(currentQuestion?._id) && (
-                                                    <span className="bg-warn-light/30 text-warn-dark border-warn-light">
-                                                        Flagged
+                        {isLoadingAssessmentQuestions ? <DataLoader /> : (
+                            <main className="lg:col-span-3 space-y-4">
+                                <ContentBox className="bg-background-light rounded-2xl border border-border-light shadow-sm overflow-hidden">
+                                    {/* Question header */}
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-8 h-8 bg-secondary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
+                                            {activeStep + 1}
+                                        </span>
+                                        <div className="flex items-center gap-2 text-xs text-text-light">
+                                            <DifficultyBadge
+                                                difficulty={currentQuestion.difficulty}
+                                            />
+                                            <span className="">
+                                                {currentQuestion.marks} Marks
+                                                {currentQuestion.negativeMarks > 0 && (
+                                                    <span className="text-error-dark ml-1">
+                                                        (-{currentQuestion.negativeMarks} Neg)
                                                     </span>
                                                 )}
-                                            </div>
-                                        </div>
-
-                                        {/* Time spent */}
-                                        <div className="flex items-center gap-1.5 text-xs text-text-light font-mono shrink-0">
-                                            <RiTimeLine className="w-3.5 h-3.5" />
-                                            Time spent:{" "}
-                                            formatTime(
-                                            answerTimers.current[currentQuestion._id] ?? 0
-                                            )
+                                            </span>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Question content + answer */}
-                                <div className="px-6 py-6 space-y-6">
-                                    {/* Question text */}
-                                    <p className="text-base text-text-main whitespace-pre-line leading-relaxed">
-                                        {currentQuestion?.question}
-                                    </p>
+                                    {/* Question content + answer */}
+                                    <div className="px-6 py-6 space-y-6">
+                                        {/* Question text */}
+                                        <p className="text-base text-text-main whitespace-pre-line leading-relaxed">
+                                            {currentQuestion?.question}
+                                        </p>
 
-                                    {/* ── MCQ ── */}
-                                    {currentQuestion?.type === "mcq" && (
-                                        <div className="space-y-3">
-                                            <p className="text-xs font-bold text-text-light uppercase tracking-wider">
-                                                {currentQuestion.isMultiSelect
-                                                    ? "Select all that apply"
-                                                    : "Select one option"}
-                                            </p>
-                                            <div className="space-y-2">
-                                                {currentQuestion.options?.map((option) => {
-                                                    const isSelected = currentQuestion.isMultiSelect
-                                                        ? Array.isArray(currentAnswer?.answerMCQ) &&
-                                                        currentAnswer.answerMCQ.includes(
-                                                            option._id
-                                                        )
-                                                        : currentAnswer?.answerMCQ === option._id;
+                                        {/* ── MCQ ── */}
+                                        {currentQuestion.type === QuestionType.MCQ && currentQuestion.options && (
+                                            <MultiChoice
+                                                id={currentQuestion._id}
+                                                options={currentQuestion.options}
+                                                isMultiSelect={currentQuestion.isMultiSelect}
+                                                value={currentAnswer?.answerMCQ || []}
+                                                onChange={(selected: string[]) =>
+                                                    handleAnswerChange(
+                                                        currentQuestion._id,
+                                                        currentQuestion.type,
+                                                        { answerMCQ: selected }
+                                                    )
+                                                }
+                                            />
+                                        )}
 
-                                                    return (
-                                                        <label
-                                                            key={option._id}
-                                                            className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all select-none
-                              ${isSelected
-                                                                    ? "bg-primary-main/8 border-primary-main/40 text-text-main"
-                                                                    : "bg-background-main border-border-light text-text-light hover:border-border-dark hover:bg-muted-light"
-                                                                }`}
-                                                        >
-                                                            <input
-                                                                type={
-                                                                    currentQuestion.isMultiSelect
-                                                                        ? "checkbox"
-                                                                        : "radio"
-                                                                }
-                                                                name={`q-${currentQuestion._id}`}
-                                                                value={option._id}
-                                                                checked={isSelected}
-                                                                className="accent-primary-main w-4 h-4"
-                                                                onChange={() => {
-                                                                    if (currentQuestion.isMultiSelect) {
-                                                                        const prev = Array.isArray(
-                                                                            currentAnswer?.answerMCQ
-                                                                        )
-                                                                            ? (currentAnswer.answerMCQ)
-                                                                            : [];
-                                                                        const next = isSelected
-                                                                            ? prev.filter((id) => id !== option._id)
-                                                                            : [...prev, option._id];
-                                                                        handleAnswerChange(
-                                                                            currentQuestion._id,
-                                                                            next
-                                                                        );
-                                                                    } else {
-                                                                        handleAnswerChange(
-                                                                            currentQuestion._id,
-                                                                            option._id
-                                                                        );
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <span className="text-sm font-medium">
-                                                                {option.text}
-                                                            </span>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
+                                        {currentQuestion.type === QuestionType.SUBJECTIVE && (
+                                            <TextArea
+                                                id={currentQuestion._id}
+                                                name={currentQuestion._id}
+                                                rows={8}
+                                                placeholder="Type your answer here..."
+                                                value={currentAnswer?.answerSubjective || ""}
+                                                onChange={(e) =>
+                                                    handleAnswerChange(
+                                                        currentQuestion._id,
+                                                        currentQuestion.type,
+                                                        { answerSubjective: e.target.value }
+                                                    )
+                                                }
+                                            />
+                                        )}
 
-                                    {/* ── Coding ── */}
-                                    {currentQuestion?.type === "coding" && (
-                                        <div className="space-y-3">
-                                            {/* <SimpleCodeEditor
+                                        {currentQuestion.type === QuestionType.CODING && (
+                                            <TextArea
+                                                id={currentQuestion._id}
+                                                name={currentQuestion._id}
+                                                rows={12}
+                                                placeholder="Write your code here..."
+                                            />
+                                        )}
+
+                                        {currentQuestion.type === QuestionType.QUERY && (
+                                            <TextArea
+                                                id={currentQuestion._id}
+                                                name={currentQuestion._id}
+                                                rows={12}
+                                                placeholder="Write your Query here..."
+                                            />
+                                        )}
+
+                                        {/* ── Coding ── */}
+                                        {currentQuestion?.type === "coding" && (
+                                            <div className="space-y-3">
+                                                {/* <SimpleCodeEditor
                                                 language={currentQuestion.language}
                                                 starterCode={
                                                     currentQuestion.starterCode?.[
@@ -479,105 +477,69 @@ const TakeAssessment: React.FC = () => {
                                                     </div>
                                                 </div>
                                             )} */}
-                                        </div>
-                                    )}
-
-                                    {/* ── Subjective ── */}
-                                    {currentQuestion?.type === "subjective" && (
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-bold text-text-light uppercase tracking-wider">
-                                                Your Answer
-                                            </p>
-                                            <textarea
-                                                rows={8}
-                                                placeholder="Type your answer here…"
-                                                value={
-                                                    typeof currentAnswer?.answerSubjective === "string"
-                                                        ? currentAnswer.answerSubjective
-                                                        : ""
-                                                }
-                                                onChange={(e) =>
-                                                    handleAnswerChange(
-                                                        currentQuestion?._id,
-                                                        e.target.value
-                                                    )
-                                                }
-                                                className="w-full rounded-xl border border-border-main bg-background-main text-text-main text-sm p-4 resize-y outline-none focus:border-primary-main focus:ring-2 focus:ring-primary-main/20 transition-all placeholder:text-text-light/50 min-h-[180px]"
-                                            />
-                                            <p className="text-xs text-text-light text-right">
-                                                {typeof currentAnswer?.answerSubjective === "string"
-                                                    ? currentAnswer.answerSubjective.length
-                                                    : 0}{" "}
-                                                characters
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Navigation footer */}
-                                <div className="px-6 py-4 border-t border-border-light flex items-center justify-between gap-3">
-                                    {/* Previous */}
-                                    <button
-                                        onClick={() => setActiveStep((s) => s - 1)}
-                                        disabled={activeStep === 0}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border-main text-text-light text-sm font-semibold hover:bg-muted-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                    >
-                                        <RiArrowLeftLine className="w-4 h-4" />
-                                        Previous
-                                    </button>
-
-                                    {/* Right group */}
-                                    <div className="flex items-center gap-2">
-                                        {/* Flag */}
-                                        <button
-                                            // onClick={toggleFlag}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-95 ${flagged.has(currentQuestion?._id)
-                                                ? "bg-warn-light/30 border-warn-light text-warn-dark"
-                                                : "border-border-main text-text-light hover:bg-muted-light"
-                                                }`}
-                                        >
-                                            <RiFlagLine className="w-4 h-4" />
-                                            <span className="hidden sm:inline">
-                                                {flagged.has(currentQuestion?._id)
-                                                    ? "Unflag"
-                                                    : "Flag"}
-                                            </span>
-                                        </button>
-
-                                        {/* Next / Submit */}
-                                        {activeStep < questions.length - 1 ? (
-                                            <button
-                                                onClick={() => setActiveStep((s) => s + 1)}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-main text-text-inverse text-sm font-bold hover:bg-primary-dark active:scale-95 transition-all"
-                                            >
-                                                Next
-                                                <RiArrowRightLine className="w-4 h-4" />
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => setShowSubmitDialog(true)}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-success-main text-white text-sm font-bold hover:bg-success-dark active:scale-95 transition-all"
-                                            >
-                                                <RiSendPlaneLine className="w-4 h-4" />
-                                                Submit Assessment
-                                            </button>
+                                            </div>
                                         )}
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Skipped questions reminder */}
-                            {answers.length < questions.length && (
-                                <div className="flex items-start gap-2.5 p-4 rounded-xl bg-warn-light/15 border border-warn-light/40 text-sm text-warn-dark">
-                                    <RiQuestionLine className="w-4 h-4 mt-0.5 shrink-0" />
-                                    <span>
-                                        <strong>{questions.length - answers.length}</strong> question
-                                        {questions.length - answers.length > 1 ? "s" : ""} still
-                                        unanswered.
-                                    </span>
-                                </div>
-                            )}
-                        </main>)}
+                                    {/* Navigation footer */}
+                                    <div className="px-6 py-4 border-t border-border-light flex items-center justify-between gap-3">
+                                        <Button
+                                            onClick={() => setActiveStep((s) => s - 1)}
+                                            disabled={activeStep === 0}
+                                            variant='custom'
+                                            className="rounded-xl border border-border-main text-text-light hover:bg-muted-light disabled:opacity-40 disabled:cursor-not-allowed">
+                                            <RiArrowLeftLine className="w-4 h-4" />
+                                            Previous
+                                        </Button>
+
+                                        {/* Right group */}
+                                        <div className="flex items-center gap-3">
+                                            <Button variant='custom'
+                                                onClick={() => toggleFlag(currentQuestion._id)}
+                                                className={`border rounded-xl text-text-light ${flagged.has(currentQuestion?._id)
+                                                    ? "bg-warn-light/30 border-warn-light"
+                                                    : "border-border-main hover:bg-muted-light"
+                                                    }`}>
+                                                <RiFlagLine className="w-4 h-4" />
+                                                <span className="hidden sm:inline">
+                                                    {flagged.has(currentQuestion?._id)
+                                                        ? "Unflag"
+                                                        : "Flag"}
+                                                </span>
+                                            </Button>
+
+                                            {activeStep < questions.length - 1 ? (
+                                                <Button className='rounded-xl'
+                                                    onClick={() => setActiveStep((s) => s + 1)}>
+                                                    Next
+                                                    <RiArrowRightLine className="w-4 h-4" />
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant='success'
+                                                    onClick={() => setShowSubmitDialog(true)}
+                                                    className="rounded-xl">
+                                                    <RiSendPlaneLine className="w-4 h-4" />
+                                                    Submit Assessment
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </ContentBox>
+
+                                {/* Skipped questions reminder */}
+                                {answers.length < questions.length && (
+                                    <div className="flex items-start gap-2.5 p-4 rounded-xl bg-warn-light/15 border border-warn-light/40 text-sm text-warn-dark">
+                                        <RiQuestionLine className="w-4 h-4 mt-0.5 shrink-0" />
+                                        <span>
+                                            <strong>{questions.length - answers.length}</strong> question
+                                            {questions.length - answers.length > 1 ? "s" : ""} still
+                                            unanswered.
+                                        </span>
+                                    </div>
+                                )}
+                            </main>
+                        )}
                     </div>
                 </div>
 

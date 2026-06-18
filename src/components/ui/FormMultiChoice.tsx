@@ -1,9 +1,9 @@
 import type { FormikProps } from 'formik';
 import { twMerge } from 'tailwind-merge';
-import MultiInput, { type MultiInputProps } from './MultiInput';
+import MultiChoice, { type MultiChoiceProps } from './MultiChoice';
 import Label from './Label';
 
-interface FormMultiInputProps<FormValues, ItemType extends string | number> extends Omit<MultiInputProps<ItemType>, 'value' | 'onChange' | 'hasError'> {
+export interface FormMultiChoiceProps<FormValues> extends Omit<MultiChoiceProps, 'value' | 'onChange' | 'hasError'> {
     name: keyof FormValues & string;
     id: keyof FormValues & string;
     formik: FormikProps<FormValues>;
@@ -12,44 +12,47 @@ interface FormMultiInputProps<FormValues, ItemType extends string | number> exte
     withLabel?: boolean;
 }
 
-const FormMultiInput = <FormValues, ItemType extends string | number>({
+const FormMultiChoice = <FormValues,>({
     name,
     id,
     formik,
     label,
     required,
     withLabel = true,
+    className,
     ...props
-}: FormMultiInputProps<FormValues, ItemType>) => {
+}: FormMultiChoiceProps<FormValues>) => {
     const isTouched = formik.touched[name];
     const formError = formik.errors[name];
 
     const errorMessage = isTouched && typeof formError === 'string' ? formError : undefined;
 
-    const value = (formik.values[name] as unknown as ItemType[]) || [];
+    const value = (formik.values[name] as string[]) || []
 
-    const handleChange = (newValue: ItemType[]) => {
-        formik.setFieldValue(name, newValue);
+    const handleChange = (next: string[]) => {
+        formik.setFieldValue(name, next);
         formik.setFieldTouched(name, true, false);
     };
 
     return (
-        <div className={twMerge('w-full', props.className)}>
+        <div className={twMerge('w-full', className)}>
             {withLabel && label && (
                 <Label htmlFor={id} label={label} required={required} />
             )}
-            <MultiInput<ItemType>
+
+            <MultiChoice
                 id={id}
                 value={value}
                 onChange={handleChange}
                 hasError={Boolean(errorMessage)}
                 {...props}
             />
+
             {errorMessage && (
-                <div className="text-sm text-error-main mt-1">{errorMessage}</div>
+                <p className="text-sm text-error-main mt-1">{errorMessage}</p>
             )}
         </div>
     );
 };
 
-export default FormMultiInput;
+export default FormMultiChoice;

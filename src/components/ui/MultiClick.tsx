@@ -28,7 +28,6 @@ const MultiClick = <T extends string | number>({
         <div className={twMerge('flex flex-wrap gap-2', className)} {...props}>
             {options.map((option) => {
                 const optValue = (typeof option === 'string' ? option : option.value) as T;
-                // Give objects their specific label, or format the raw string nicely
                 const optLabel = typeof option === 'string' ? option.toUpperCase() : option.label;
                 const isSelected = value.includes(optValue);
 
