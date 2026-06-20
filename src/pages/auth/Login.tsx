@@ -57,7 +57,7 @@ const Login: React.FC = () => {
                         <span className="w-10 h-10 bg-primary-main/70 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
                             A
                         </span>
-                        <span className="text-2xl font-bold tracking-tight">AssessPro</span>
+                        <span className="text-2xl font-bold tracking-tight">AssessHub</span>
                     </div>
 
                     {/* Hero Content */}
@@ -89,7 +89,7 @@ const Login: React.FC = () => {
 
                 {/* Footer/Copyright */}
                 <div className="lg:block hidden relative z-10 text-sm text-text-inverse/60">
-                    © {new Date().getFullYear()} AssessPro Platform. All rights reserved.
+                    © {new Date().getFullYear()} AssessHub Platform. All rights reserved.
                 </div>
             </div>
 
@@ -156,7 +156,7 @@ const Login: React.FC = () => {
                 </div>
                 {/* Footer/Copyright */}
                 <div className="lg:hidden relative z-10 text-sm text-text-light mt-15">
-                    © {new Date().getFullYear()} AssessPro Platform. All rights reserved.
+                    © {new Date().getFullYear()} AssessHub Platform. All rights reserved.
                 </div>
             </div>
         </div>

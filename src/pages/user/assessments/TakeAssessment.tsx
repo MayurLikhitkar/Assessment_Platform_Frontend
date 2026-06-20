@@ -6,7 +6,7 @@ import api from '../../../services/axios/api';
 import toast from 'react-hot-toast';
 import { getAssessment, getAssessmentQuestions, startAssessment } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
-import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckboxCircleLine, RiFlagLine, RiQuestionLine, RiSendPlaneLine, RiShieldCheckLine, RiTimeLine } from 'react-icons/ri';
+import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckboxCircleLine, RiFlagLine, RiQuestionLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
@@ -18,14 +18,14 @@ import { twMerge } from 'tailwind-merge';
 
 const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) => {
     const styles: Record<Difficulty, string> = {
-        [Difficulty.EASY]: 'bg-success-100 text-success-600',
-        [Difficulty.MEDIUM]: 'bg-amber-50 text-amber-600',
-        [Difficulty.HARD]: 'bg-error-50 text-error-600',
+        easy: 'text-success-dark bg-success-main/20',
+        medium: 'text-primary-dark bg-primary-main/20',
+        hard: 'text-error-dark bg-error-main/30',
     };
     return (
         <span
             className={twMerge(
-                'px-2.5 py-0.5 rounded-full uppercase tracking-wide',
+                'px-2.5 py-0.5 rounded uppercase tracking-wide',
                 styles[difficulty]
             )}>
             {difficulty}
@@ -67,12 +67,6 @@ const TakeAssessment: React.FC = () => {
         queryFn: () => getAssessmentQuestions(id as string | number),
         enabled: !!id,
     });
-
-    const difficultyStyle: Record<string, string> = {
-        easy: "bg-success-light/30 text-success-dark border-success-light",
-        medium: "bg-warn-light/30 text-warn-dark border-warn-light",
-        hard: "bg-error-light/30 text-error-dark border-error-light",
-    };
 
     const assessment = assessmentData?.data;
     const questions = assessmentQuestions?.data ?? [];
@@ -186,13 +180,13 @@ const TakeAssessment: React.FC = () => {
 
     return (
         <Page>
-            <div className="min-h-screen bg-background-main flex flex-col">
+            <div className="min-h-screen bg-background-main flex flex-col font-semibold text-text-main">
                 <ContentBox className="sticky top-0 z-40 px-4 py-2">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between h-16 gap-4">
                             {/* Title */}
                             <div className="min-w-0">
-                                <h1 className="text-sm sm:text-base font-bold text-text-main truncate">
+                                <h1 className="text-sm sm:text-base font-bold truncate">
                                     {assessment?.title}
                                 </h1>
                                 <p className="text-xs text-text-light">
@@ -212,7 +206,7 @@ const TakeAssessment: React.FC = () => {
 
                                 {/* Answered count */}
                                 <div className="hidden sm:flex flex-col items-center leading-none">
-                                    <span className="text-sm font-bold text-text-main">
+                                    <span className="text-sm font-bold">
                                         {answers.length}/{questions.length}
                                     </span>
                                     <span className="text-[10px] text-text-light uppercase tracking-wider">
@@ -224,7 +218,7 @@ const TakeAssessment: React.FC = () => {
                                 <div
                                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
                                         ? "bg-error-light/20 border-error-light text-error-main"
-                                        : "bg-background-main border-border-light text-text-main"
+                                        : "bg-background-main border-border-light"
                                         }`}
                                 >
                                     <RiTimeLine
@@ -272,102 +266,71 @@ const TakeAssessment: React.FC = () => {
                 <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         {/* ── Question Navigator (sidebar) ─────────────────── */}
-                        {isLoadingAssessmentQuestions ? <DataLoader /> : (<aside className="lg:col-span-1">
-                            <div className="sticky top-24 bg-background-light rounded-2xl border border-border-light p-4 space-y-4">
-                                <h3 className="text-sm font-bold text-text-main">Questions</h3>
+                        {isLoadingAssessmentQuestions ? <DataLoader /> : (
+                            <aside className="lg:col-span-1">
+                                <ContentBox className="sticky top-24 space-y-3">
+                                    <h3 className="">Questions</h3>
 
-                                <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-1.5">
-                                    {assessment?.questions.map((q, index) => {
-                                        const isAnswered = answers.some(
-                                            (a) => a.questionId === q
-                                        );
-                                        const isCurrent = index === activeStep;
-                                        const isFlagged = flagged.has(q);
+                                    <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2">
+                                        {assessment?.questions.map((q, index) => {
+                                            const isAnswered = answers.some(
+                                                (a) => a.questionId === q
+                                            );
+                                            const isCurrent = index === activeStep;
+                                            const isFlagged = flagged.has(q);
 
-                                        return (
-                                            <button
-                                                key={q}
-                                                onClick={() => setActiveStep(index)}
-                                                title={`Q${index + 1} · ${q}`}
-                                                className={`relative w-full aspect-square rounded-lg text-xs font-bold flex items-center justify-center transition-all active:scale-95 border
-                        ${isCurrent
+                                            return (
+                                                <Button variant='custom'
+                                                    key={q}
+                                                    onClick={() => setActiveStep(index)}
+                                                    title={`Q${index + 1} · ${q}`}
+                                                    className={`aspect-square transition-all active:scale-95 border ${isCurrent
                                                         ? "bg-primary-main text-text-inverse border-primary-dark shadow-sm"
                                                         : isAnswered
                                                             ? "bg-success-light/40 text-success-dark border-success-light"
                                                             : "bg-muted-light text-text-light border-border-light hover:bg-muted-main"
-                                                    }`}
-                                            >
-                                                {isAnswered && !isCurrent ? (
-                                                    <RiCheckboxCircleLine className="w-4 h-4" />
-                                                ) : (
-                                                    index + 1
-                                                )}
-                                                {isFlagged && (
-                                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-warn-main border border-background-light" />
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                                        }`}
+                                                >
+                                                    {isAnswered && !isCurrent ? (
+                                                        <RiCheckboxCircleLine className="w-4 h-4" />
+                                                    ) : (
+                                                        index + 1
+                                                    )}
+                                                    {isFlagged && (
+                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-warn-main border border-background-light" />
+                                                    )}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
 
-                                {/* Legend */}
-                                <div className="space-y-1.5 pt-1 border-t border-border-light">
-                                    {[
-                                        {
-                                            cls: "bg-primary-main",
-                                            label: "Current",
-                                        },
-                                        {
-                                            cls: "bg-success-light/40 border border-success-light",
-                                            label: "Answered",
-                                        },
-                                        {
-                                            cls: "bg-muted-light border border-border-light",
-                                            label: "Unanswered",
-                                        },
-                                        {
-                                            cls: "bg-warn-main",
-                                            label: "Flagged",
-                                        },
-                                    ].map((l) => (
-                                        <div key={l.label} className="flex items-center gap-2">
-                                            <span
-                                                className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
-                                            />
-                                            <span className="text-xs text-text-light">{l.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Proctoring status */}
-                                <div className="pt-1 border-t border-border-light space-y-1.5">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-text-light flex items-center gap-1">
-                                        <RiShieldCheckLine className="w-3.5 h-3.5" />
-                                        Proctoring
-                                    </p>
-                                    {assessment?.enableRecording && (
-                                        <div className="flex items-center gap-1.5 text-xs text-error-main font-semibold">
-                                            <BsRecordCircle className="w-3.5 h-3.5 animate-pulse" />
-                                            Recording active
-                                        </div>
-                                    )}
-                                    {!assessment?.allowTabSwitch && (
-                                        <div className="flex items-center gap-1.5 text-xs text-text-light">
-                                            <RiShieldCheckLine className="w-3.5 h-3.5 text-primary-main" />
-                                            Tab lock enabled
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </aside>)}
+                                    {/* Legend */}
+                                    <div className="space-y-1 pt-2">
+                                        {[
+                                            { cls: "bg-primary-main", label: "Current", },
+                                            { cls: "bg-success-main/40 border border-success-light", label: "Answered", },
+                                            { cls: "bg-muted-main border border-border-light", label: "Unanswered", },
+                                            { cls: "bg-warn-main/80", label: "Flagged", },
+                                        ].map((l) => (
+                                            <div key={l.label} className="flex items-center gap-2">
+                                                <span
+                                                    className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
+                                                />
+                                                <span className="text-xs text-text-light">{l.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ContentBox>
+                            </aside>
+                        )}
 
                         {/* ── Question Area ────────────────────────────────── */}
                         {isLoadingAssessmentQuestions ? <DataLoader /> : (
                             <main className="lg:col-span-3 space-y-4">
-                                <ContentBox className="bg-background-light rounded-2xl border border-border-light shadow-sm overflow-hidden">
+                                <ContentBox className="space-y-4">
                                     {/* Question header */}
                                     <div className="flex items-center gap-3">
-                                        <span className="w-8 h-8 bg-secondary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
+                                        <span className="w-8 h-8 bg-primary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
                                             {activeStep + 1}
                                         </span>
                                         <div className="flex items-center gap-2 text-xs text-text-light">
@@ -386,9 +349,8 @@ const TakeAssessment: React.FC = () => {
                                     </div>
 
                                     {/* Question content + answer */}
-                                    <div className="px-6 py-6 space-y-6">
-                                        {/* Question text */}
-                                        <p className="text-base text-text-main whitespace-pre-line leading-relaxed">
+                                    <div className="space-y-3">
+                                        <p className="text-base whitespace-pre-line leading-relaxed">
                                             {currentQuestion?.question}
                                         </p>
 
@@ -482,7 +444,7 @@ const TakeAssessment: React.FC = () => {
                                     </div>
 
                                     {/* Navigation footer */}
-                                    <div className="px-6 py-4 border-t border-border-light flex items-center justify-between gap-3">
+                                    <div className="border-border-light flex items-center justify-between gap-3">
                                         <Button
                                             onClick={() => setActiveStep((s) => s - 1)}
                                             disabled={activeStep === 0}

@@ -142,7 +142,7 @@ const AdminQuestions: React.FC = () => {
                 if (!params.data) return null;
                 return (
                     <ActionCell
-                        onEdit={() => navigate(`/admin/questions/edit/${params.data!.id}`)}
+                        onEdit={() => navigate(`/app/questions/${params.data!.id}/edit`)}
                         onDelete={() => setDeleteTarget(params.data!)}
                     />
                 );
@@ -157,7 +157,7 @@ const AdminQuestions: React.FC = () => {
                     <PageTitle title="Questions" description="Create, manage, and organize questions" icon={MdQuiz} />
                     <Button
                         variant="primary"
-                        onClick={() => navigate('/admin/questions/create')}
+                        onClick={() => navigate('/app/questions/create')}
                         className="flex items-center gap-2 shadow-sm"
                     >
                         <MdAdd className="text-xl" />
@@ -211,7 +211,8 @@ const AdminQuestions: React.FC = () => {
 
             {/* Delete Confirmation Modal */}
             <Confirmation
-                open={!!deleteTarget}
+                title=''
+                isOpen={!!deleteTarget}
                 onClose={() => setDeleteTarget(null)}
                 icon={BsFillPatchQuestionFill}
                 message={`Are you sure you want to delete this question? "${deleteTarget?.question?.substring(0, 80)}${(deleteTarget?.question?.length || 0) > 80 ? '...' : ''}"`}

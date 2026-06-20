@@ -32,11 +32,11 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onClose }) => {
     ];
 
     const adminNavItems = [
-        { path: '/admin', label: 'Admin Dashboard', icon: MdAdminPanelSettings },
-        { path: '/admin/users', label: 'User Management', icon: MdPeople },
-        { path: '/admin/assessments', label: 'Assessments', icon: MdDashboard },
-        { path: '/admin/questions', label: 'Question Bank', icon: MdCode },
-        { path: '/admin/profile', label: 'Profile', icon: MdPerson },
+        { path: '/app', label: 'Admin Dashboard', icon: MdAdminPanelSettings },
+        { path: '/app/users', label: 'User Management', icon: MdPeople },
+        { path: '/app/assessments', label: 'Assessments', icon: MdDashboard },
+        { path: '/app/questions', label: 'Question Bank', icon: MdCode },
+        { path: '/app/profile', label: 'Profile', icon: MdPerson },
     ];
 
     const isUserAdmin = isAdmin(user?.role);

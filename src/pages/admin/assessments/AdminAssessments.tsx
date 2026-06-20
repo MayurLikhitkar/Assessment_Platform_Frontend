@@ -187,7 +187,7 @@ const AdminAssessments: React.FC = () => {
                 if (!params.data?.id) return 'N/A';
                 const id = params.data.id;
                 return <ActionCell
-                    onEdit={() => navigate(`/admin/assessments/edit/${id}`)}
+                    onEdit={() => navigate(`/admin/assessments/${id}/edit`)}
                 />
             },
         },

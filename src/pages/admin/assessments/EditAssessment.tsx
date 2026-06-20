@@ -37,7 +37,7 @@ const EditAssessment: React.FC = () => {
                 toast.success(data.responseMessage || 'Assessment updated successfully!');
                 queryClient.invalidateQueries({ queryKey: ['adminAssessments'] });
                 queryClient.invalidateQueries({ queryKey: ['assessment', id] });
-                navigate('/admin/assessments');
+                navigate('/app/assessments');
             }
         },
         onError: (error: ApiResponse<null>) => {

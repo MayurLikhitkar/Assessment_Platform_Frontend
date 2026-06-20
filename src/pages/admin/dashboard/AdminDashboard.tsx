@@ -30,7 +30,7 @@ const AdminDashboard: React.FC = () => {
             icon: <MdPeople className="text-2xl" />,
             bgColor: 'bg-secondary-light/20',
             iconColor: 'text-secondary-main',
-            link: '/admin/users',
+            link: '/app/users',
         },
         {
             label: 'Assessments',
@@ -38,7 +38,7 @@ const AdminDashboard: React.FC = () => {
             icon: <MdAssignment className="text-2xl" />,
             bgColor: 'bg-primary-light/20',
             iconColor: 'text-primary-main',
-            link: '/admin/assessments',
+            link: '/app/assessments',
         },
         {
             label: 'Active Now',

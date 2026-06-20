@@ -15,9 +15,9 @@
     --color-secondary-main: #2563eb;
     --color-secondary-dark: #1249BF;
 
-    --color-border-light: #e9d5ff;
-    --color-border-main: #d8b4fe;
-    --color-border-dark: #c084fc;
+    --color-border-light: #DADADD;
+    --color-border-main: #A9A9B1;
+    --color-border-dark: #797986;
 
     --color-text-light: #4b4b4b;
     --color-text-main: #232b2b;
@@ -121,4 +121,126 @@
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px var(--color-primary-main);
+    }
+
+    50% {
+        box-shadow: 0 0 40px var(--color-primary-dark);
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes count-up {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delay {
+    animation: float 4s ease-in-out infinite 1s;
+}
+
+.animate-float-delay-2 {
+    animation: float 4s ease-in-out infinite 2s;
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+    animation: slide-up 0.6s ease forwards;
+}
+
+.animate-slide-up-delay {
+    animation: slide-up 0.6s ease forwards 0.15s;
+    opacity: 0;
+}
+
+.animate-slide-up-delay-2 {
+    animation: slide-up 0.6s ease forwards 0.3s;
+    opacity: 0;
+}
+
+.animate-slide-up-delay-3 {
+    animation: slide-up 0.6s ease forwards 0.45s;
+    opacity: 0;
+}
+
+.animate-count-up {
+    animation: count-up 0.5s ease forwards;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--color-primary-main), var(--color-primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-grid {
+    background-image:
+        linear-gradient(rgba(255, 66, 0, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 66, 0, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+
+.card-hover {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px var(--color-dark-dark);
+}
+
+.glass {
+    background: var(--color-muted-light);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-dark {
+    background: var(--color-dark-dark);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }

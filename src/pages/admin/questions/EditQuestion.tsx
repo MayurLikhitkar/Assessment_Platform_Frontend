@@ -37,7 +37,7 @@ const EditQuestion: React.FC = () => {
                 toast.success(data.responseMessage || 'Question updated successfully!');
                 queryClient.invalidateQueries({ queryKey: ['adminQuestions'] });
                 queryClient.invalidateQueries({ queryKey: ['question', id] });
-                navigate('/admin/questions');
+                navigate('/app/questions');
             }
         },
         onError: (error: ApiResponse<null>) => {

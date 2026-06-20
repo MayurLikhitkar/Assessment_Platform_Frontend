@@ -1,50 +1,46 @@
-import React, { type ReactNode } from "react";
+import React from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
-import { getProfile } from "../../services/axios/authApi";
 import { UserRole } from "../../types/authTypes";
+import { Navigate, Outlet } from "react-router-dom";
+import PageLoader from "./PageLoader";
 
 interface RoleGuardProps {
-    role?: UserRole[];
-    children: ReactNode;
+    allowedRoles: UserRole[];
 }
 
-// export const hasAccess = (accessId: number) => {
-//     const user = useAppSelector(state => state.auth.userData);
-//     if (!user) return false;
+interface HasRoleProps extends RoleGuardProps {
+    children: React.ReactNode;
+}
 
-//     const isSuperAdmin = user.roleId === ROLE_ID.superAdmin;
-
-//     if (isSuperAdmin) return true;
-
-//     return user.access.some(a => a.accessId === accessId);
-// };
-
-const RoleGuard: React.FC<RoleGuardProps> = ({ role = [UserRole.SUPER_ADMIN], children }) => {
+export const HasRole: React.FC<HasRoleProps> = ({ allowedRoles, children }) => {
     const { user } = useAuth();
+    if (!user) return null;
 
-    // Fetch user profile data
-    const { data: profileData } = useQuery({
-        queryKey: ['userProfile', user?.id],
-        queryFn: () => getProfile(),
-        enabled: !!user,
-    });
+    if (user.role === UserRole.SUPER_ADMIN) return children;
 
-    if (!profileData?.data.role) {
+    if (!allowedRoles.includes(user.role)) {
         return null;
     }
 
-    if (profileData?.data.role === UserRole.SUPER_ADMIN) {
-        return children;   // Super admin bypass
+    return children;
+};
+
+const RoleGuard: React.FC<RoleGuardProps> = ({ allowedRoles }) => {
+    const { user, isLoading } = useAuth();
+
+    if (isLoading) {
+        return <PageLoader text="Checking permissions..." />;
     }
 
-    const hasRole = role.includes(profileData?.data.role);
-
-    if (hasRole) {
-        return children;
+    if (!user) {
+        return <Navigate to="/login" replace />;
     }
 
-    return null;
+    if (!allowedRoles.includes(user.role)) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
 };
 
 export default RoleGuard;

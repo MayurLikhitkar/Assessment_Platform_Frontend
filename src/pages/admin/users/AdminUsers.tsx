@@ -11,7 +11,7 @@ import AgGridTable from '../../../components/common/AgGridTable';
 import moment from 'moment';
 import { Page, PageBody, PageTitle } from '../../../components/ui/Page';
 import DataLoader from '../../../components/common/DataLoader';
-import RoleGuard from '../../../components/common/RoleGuard';
+import { HasRole } from '../../../components/common/RoleGuard';
 
 const AdminUsers: React.FC = () => {
     const { user } = useAuth();
@@ -117,7 +117,7 @@ const AdminUsers: React.FC = () => {
             <PageBody className='py-5'>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <PageTitle title="Users" icon={MdPeople} description="Manage platform users and their roles" />
-                    <RoleGuard role={[UserRole.ADMIN]}>
+                    <HasRole allowedRoles={[UserRole.ADMIN]}>
                         <Button
                             variant="primary"
                             onClick={() => setIsCreateModalOpen(true)}
@@ -126,7 +126,7 @@ const AdminUsers: React.FC = () => {
                             <MdPersonAdd fontSize="small" />
                             Add User
                         </Button>
-                    </RoleGuard>
+                    </HasRole>
                 </div>
 
                 {/* Users Table */}

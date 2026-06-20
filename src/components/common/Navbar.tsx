@@ -68,7 +68,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                             <span className="w-10 h-10 bg-primary-main text-text-inverse backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
                                 A
                             </span>
-                            <span className="text-2xl font-bold text-text-main">AssessPro</span>
+                            <span className="text-2xl font-bold text-text-main">AssessHub</span>
                         </Link>
                     </div>
                 </div>

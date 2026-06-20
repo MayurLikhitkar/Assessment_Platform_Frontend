@@ -17,11 +17,6 @@ const AdminLayout = () => {
         return <Navigate to="/login" replace />;
     }
 
-    // Role guard: only admin and super_admin can access admin routes
-    if (user.role !== 'admin' && user.role !== 'super_admin') {
-        return <Navigate to="/dashboard" replace />;
-    }
-
     return (
         <div className="h-screen flex flex-col bg-background-main text-text-main">
             <Navbar onMenuClick={() => setMobileOpen(!mobileOpen)} />

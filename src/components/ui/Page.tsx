@@ -56,7 +56,7 @@ export const PageFooter: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children,
 
 export const ContentBox: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
     return (
-        <div className={twMerge(`bg-background-light rounded-xl shadow-sm border border-border-light/30 p-6`, className)} {...props}>
+        <div className={twMerge(`bg-background-light rounded-xl shadow-sm border border-border-light p-6`, className)} {...props}>
             {children}
         </div>
     )

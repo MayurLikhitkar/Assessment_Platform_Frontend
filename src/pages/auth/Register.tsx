@@ -125,7 +125,7 @@ const Register: React.FC = () => {
                         <span className="w-10 h-10 bg-primary-main/70 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold border border-background-light/30">
                             A
                         </span>
-                        <span className="text-2xl font-bold tracking-tight">AssessPro</span>
+                        <span className="text-2xl font-bold tracking-tight">AssessHub</span>
                     </div>
 
                     {/* Main Content */}
@@ -134,7 +134,7 @@ const Register: React.FC = () => {
                             Start your journey to <br /><span className="text-secondary-light">Smarter Hiring</span>
                         </h1>
                         <p className="text-text-inverse/80 sm:text-lg">
-                            Join leading companies who trust AssessPro to identify and evaluate top talent through data-driven assessments.
+                            Join leading companies who trust AssessHub to identify and evaluate top talent through data-driven assessments.
                         </p>
 
                         {/* Benefits Grid */}
@@ -156,7 +156,7 @@ const Register: React.FC = () => {
 
                 {/* Footer/Copyright */}
                 <div className="lg:block hidden relative z-10 text-sm text-text-inverse/60">
-                    © {new Date().getFullYear()} AssessPro Platform. All rights reserved.
+                    © {new Date().getFullYear()} AssessHub Platform. All rights reserved.
                 </div>
             </div>
 
@@ -240,7 +240,7 @@ const Register: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="bg-secondary-light/10 border border-secondary-main/20 rounded-lg p-3">
+                            <div className="bg-accent-light/10 border border-secondary-main/20 rounded-lg p-3">
                                 <p className="text-xs text-secondary-dark font-medium mb-1">Password must contain:</p>
                                 <ul className="text-xs text-text-main space-y-0.5">
                                     <li className={`flex items-center gap-2 ${formik.values.password.length >= 8 ? 'text-success-main' : 'text-text-light'}`}>
@@ -299,7 +299,7 @@ const Register: React.FC = () => {
                 </div>
                 {/* Footer/Copyright */}
                 <div className="lg:hidden relative z-10 text-sm text-text-light mt-15">
-                    © {new Date().getFullYear()} AssessPro Platform. All rights reserved.
+                    © {new Date().getFullYear()} AssessHub Platform. All rights reserved.
                 </div>
             </div>
         </div>

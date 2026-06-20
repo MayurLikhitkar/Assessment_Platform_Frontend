@@ -21,7 +21,7 @@ const CreateAssessment: React.FC = () => {
             if (data?.success) {
                 toast.success(data.responseMessage || 'Assessment created successfully!');
                 queryClient.invalidateQueries({ queryKey: ['adminAssessments'] });
-                navigate('/admin/assessments');
+                navigate('/app/assessments');
             }
         },
         onError: (error: ApiResponse<null>) => {

@@ -8,13 +8,15 @@ import queryClient from './services/queryClient';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import AuthLayout from './layouts/AuthLayout';
-import MainLayout from './layouts/MainLayout';
-import AdminLayout from './layouts/AdminLayout';
+import AppLayout from './layouts/AppLayout';
 import { getHomePath } from './utils/roleUtils';
 import { useAuth } from './hooks/useAuth';
 import { lazy, Suspense } from 'react';
 import PageLoader from './components/common/PageLoader';
+import RoleGuard from './components/common/RoleGuard';
+import { UserRole } from './types/authTypes';
 
+const Home = lazy(() => import('./pages/public/Home'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 
@@ -23,7 +25,6 @@ const Profile = lazy(() => import('./pages/user/profile/Profile'));
 const Dashboard = lazy(() => import('./pages/user/dashboard/Dashboard'));
 const TakeAssessment = lazy(() => import('./pages/user/assessments/TakeAssessment'));
 const AssessmentDetails = lazy(() => import('./pages/user/assessments/AssessmentDetails'));
-
 
 const AdminDashboard = lazy(() => import('./pages/admin/dashboard/AdminDashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/users/AdminUsers'));
@@ -38,7 +39,8 @@ const AdminProfile = lazy(() => import('./pages/admin/profile/AdminProfile'));
 // Add a root redirect component to handle role-based routing
 const RootRedirect = () => {
   const { user } = useAuth();
-  return <Navigate to={getHomePath(user?.role)} replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to={getHomePath(user.role)} replace />;
 };
 
 function App() {
@@ -52,37 +54,46 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public Routes */}
+                <Route path="/" element={<Home />} />
                 <Route element={<AuthLayout />}>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+                  <Route path="login" element={<Login />} />
+                  <Route path="register" element={<Register />} />
                 </Route>
+
+                <Route path="/redirect" element={<RootRedirect />} />
 
                 {/* User Routes */}
-                <Route element={<MainLayout />}>
-                  <Route path="/" element={<RootRedirect />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/assessments" element={<Assessments />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/assessment/:id" element={<AssessmentDetails />} />
-                  <Route path="/assessment/:id/take" element={<TakeAssessment />} />
-                  {/*
-              <Route path="/assessments/:id" element={<AssessmentDetail />} /> */}
+                <Route element={<AppLayout />}>
+                  <Route element={<RoleGuard allowedRoles={[UserRole.USER]} />}>
+                    {/* <Route index element={<Dashboard />} /> */}
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="assessments" element={<Assessments />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="assessments/:id" element={<AssessmentDetails />} />
+                    <Route path="assessments/:id/take" element={<TakeAssessment />} />
+                  </Route>
+
+                  {/* App Routes */}
+                  <Route path='/app'>
+                    <Route element={<RoleGuard allowedRoles={[UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EVALUATOR, UserRole.PROCTOR]} />}>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="profile" element={<AdminProfile />} />
+                      <Route path="assessments" element={<AdminAssessments />} />
+                      <Route path="questions" element={<AdminQuestions />} />
+                    </Route>
+
+                    <Route element={<RoleGuard allowedRoles={[UserRole.SUPER_ADMIN, UserRole.ADMIN]} />}>
+                      <Route path="users" element={<AdminUsers />} />
+                      <Route path="assessments/create" element={<CreateAssessment />} />
+                      <Route path="assessments/:id/edit" element={<EditAssessment />} />
+                      <Route path="questions/create" element={<CreateQuestion />} />
+                      <Route path="questions/:id/edit" element={<EditQuestion />} />
+                    </Route>
+                  </Route>
                 </Route>
 
-                {/* Admin Routes */}
-                <Route element={<AdminLayout />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/assessments" element={<AdminAssessments />} />
-                  <Route path="/admin/assessments/create" element={<CreateAssessment />} />
-                  <Route path="/admin/assessments/edit/:id" element={<EditAssessment />} />
-                  <Route path="/admin/questions" element={<AdminQuestions />} />
-                  <Route path="/admin/questions/create" element={<CreateQuestion />} />
-                  <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
-                  <Route path="/admin/profile" element={<AdminProfile />} />
-                </Route>
-
-                {/* 404 Route */}
+                {/* Not Found Route */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>

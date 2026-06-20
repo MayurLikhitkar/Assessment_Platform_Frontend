@@ -58,7 +58,7 @@ const AssessmentDetails: React.FC = () => {
         document.documentElement.requestFullscreen().catch(() => {
             // Fullscreen request failed (e.g. browser blocked it), proceed anyway
         }).finally(() => {
-            navigate(`/assessment/${assessment?.id}/take`);
+            navigate(`/assessments/${assessment?.id}/take`);
         });
     };
 
