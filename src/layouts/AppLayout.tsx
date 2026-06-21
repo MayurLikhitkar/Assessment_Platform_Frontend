@@ -5,7 +5,7 @@ import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
 import PageLoader from '../components/common/PageLoader';
 
-const AdminLayout = () => {
+const AppLayout: React.FC = () => {
     const { user, isLoading } = useAuth();
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -30,4 +30,4 @@ const AdminLayout = () => {
     );
 };
 
-export default AdminLayout;
+export default AppLayout;

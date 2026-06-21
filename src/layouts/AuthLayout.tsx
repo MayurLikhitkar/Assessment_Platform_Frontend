@@ -1,8 +1,9 @@
+import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getHomePath } from '../utils/roleUtils';
 
-const AuthLayout = () => {
+const AuthLayout: React.FC = () => {
     const { user } = useAuth();
 
     if (user) {

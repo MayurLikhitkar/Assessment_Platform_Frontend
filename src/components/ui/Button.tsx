@@ -16,6 +16,7 @@ const Button: React.FC<ButtonProps> = ({
     loading = false,
     loadingText,
     disabled,
+    type = 'button',
     ...props
 }) => {
     const baseStyles = 'flex gap-2 items-center justify-center font-medium rounded-md cursor-pointer transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed group';
@@ -59,6 +60,7 @@ const Button: React.FC<ButtonProps> = ({
                 className
             )}
             disabled={disabled || loading}
+            type={type}
             {...props}
         >
             {loading ? (

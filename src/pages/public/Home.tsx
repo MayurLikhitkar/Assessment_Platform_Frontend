@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
-    RiShieldCheckLine, RiCodeBoxLine, RiTimeLine, RiBarChartBoxLine, RiUserStarLine, RiLockPasswordLine, RiArrowRightLine, RiCheckLine, RiMenuLine, RiCloseLine, RiStarFill, RiGlobalLine, RiBrainLine, RiTeamLine, RiFileTextLine, RiEyeLine, RiRocketLine, RiArrowDownLine, RiTwitterXLine, RiLinkedinBoxLine, RiGithubLine, RiMailLine, RiPhoneLine, RiMapPinLine, RiPlayCircleLine, RiMedalLine, RiSpeedUpLine, RiPieChartLine,
+    RiShieldCheckLine, RiCodeBoxLine, RiTimeLine, RiBarChartBoxLine, RiUserStarLine, RiLockPasswordLine, RiArrowRightLine, RiCheckLine, RiMenuLine, RiCloseLine, RiStarFill, RiGlobalLine, RiBrainLine, RiTeamLine, RiFileTextLine, RiEyeLine, RiRocketLine, RiArrowDownLine, RiMailLine, RiPhoneLine, RiMapPinLine, RiPlayCircleLine, RiMedalLine, RiSpeedUpLine, RiPieChartLine,
+    RiLineChartLine,
 } from "react-icons/ri";
 import Button from "../../components/ui/Button";
 import { Link } from "react-router-dom";
@@ -29,9 +30,9 @@ function Navbar() {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-999 ${scrolled ? "bg-muted-light/95 border-b border-border-light/10 shadow-md" : "bg-transparent"
+            className={`fixed top-0 left-0 right-0 z-999 ${scrolled ? "backdrop-blur-lg bg-muted-light/60 border-b border-border-light/10 shadow-md" : "bg-transparent"
                 }`}>
-            <Container className="flex items-center justify-between">
+            <Container className="flex items-center justify-between py-5">
                 {/* Logo */}
                 <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 bg-primary-main rounded-lg flex items-center justify-center animate-pulse-glow">
@@ -104,12 +105,7 @@ function Navbar() {
 function HeroSection() {
     return (
         <section className="relative min-h-screen bg-background-main hero-grid flex flex-col items-center justify-center overflow-hidden pt-16">
-            {/* Blobs */}
-            <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary-main/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary-main/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-main/5 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16 py-20">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16 py-15    ">
                 {/* Left Content */}
                 <div className="flex-1 text-center lg:text-left">
                     <div className="inline-flex items-center gap-2 bg-primary-main/10 border border-primary-main/20 text-primary-main px-4 py-1.5 rounded-full text-sm font-medium mb-6 animate-slide-up">
@@ -130,14 +126,14 @@ function HeroSection() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up-delay-3">
-                        <button className="flex items-center justify-center gap-2 bg-primary-main text-text-inverse font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-dark transition-all duration-200 shadow-lg shadow-primary-main/30 hover:shadow-primary-main/50 hover:-translate-y-0.5">
+                        <Button className="flex items-center justify-center gap-2 bg-primary-main text-text-inverse font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-dark transition-all duration-200 shadow-lg shadow-primary-main/30 hover:shadow-primary-main/50 hover:-translate-y-0.5">
                             Start Free Trial
                             <RiArrowRightLine />
-                        </button>
-                        <button className="flex items-center justify-center gap-2 border border-border-main text-text-main font-semibold px-8 py-3.5 rounded-xl hover:border-primary-main hover:text-primary-main transition-all duration-200 bg-background-light">
+                        </Button>
+                        <Button variant="outline" className="border-border-main px-8 py-3.5 rounded-xl hover:border-primary-main hover:text-primary-main transition-all duration-200 bg-background-light!">
                             <RiPlayCircleLine className="text-primary-main text-lg" />
                             Watch Demo
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Trust badges */}
@@ -155,12 +151,6 @@ function HeroSection() {
                 <div className="flex-1 w-full max-w-lg lg:max-w-none">
                     <DashboardMockup />
                 </div>
-            </div>
-
-            {/* Scroll indicator */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-text-light/50 animate-bounce">
-                <span className="text-xs font-medium">Scroll</span>
-                <RiArrowDownLine />
             </div>
         </section>
     );
@@ -278,10 +268,10 @@ function DashboardMockup() {
 ───────────────────────────────────────────── */
 function StatsBanner() {
     const stats = [
-        { value: "50K+", label: "Assessments Taken", icon: RiFileTextLine },
-        { value: "12K+", label: "Active Candidates", icon: RiTeamLine },
-        { value: "98%", label: "Uptime Guaranteed", icon: RiShieldCheckLine },
-        { value: "4.9★", label: "Average Rating", icon: RiStarFill },
+        { value: "3x Faster", label: "Candidate Screening", icon: RiTimeLine },
+        { value: "92%", label: "Hiring Accuracy Improvement", icon: RiLineChartLine },
+        { value: "99.2%", label: "Platform Uptime", icon: RiShieldCheckLine },
+        { value: "4.9", label: "Average Rating", icon: RiStarFill },
     ];
 
     return (
@@ -360,7 +350,7 @@ function FeaturesSection() {
 
     return (
         <section id="features" className="py-24 bg-background-main">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Container>
                 {/* Heading */}
                 <div className="text-center max-w-2xl mx-auto mb-16">
                     <span className="inline-block text-primary-main text-sm font-semibold tracking-widest uppercase mb-3">
@@ -381,7 +371,7 @@ function FeaturesSection() {
                     {features.map((f, i) => (
                         <div
                             key={i}
-                            className="bg-background-light border border-border-light rounded-2xl p-6 card-hover group"
+                            className="bg-background-light border border-border-light rounded-2xl p-6 card-hover group cursor-pointer"
                         >
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-4 ${f.color}`}>
                                 <f.icon />
@@ -393,7 +383,7 @@ function FeaturesSection() {
                         </div>
                     ))}
                 </div>
-            </div>
+            </Container>
         </section>
     );
 }
@@ -661,8 +651,8 @@ function TestimonialsSection() {
     ];
 
     return (
-        <section id="testimonials" className="py-24 bg-background-dark">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="testimonials" className="py-24 bg-background-main">
+            <Container>
                 <div className="text-center max-w-2xl mx-auto mb-16">
                     <span className="inline-block text-primary-main text-sm font-semibold tracking-widest uppercase mb-3">
                         Testimonials
@@ -680,7 +670,7 @@ function TestimonialsSection() {
                     {testimonials.map((t, i) => (
                         <div
                             key={i}
-                            className="bg-background-light border border-border-light rounded-2xl p-6 card-hover"
+                            className="bg-background-light border border-border-light rounded-2xl p-6 card-hover cursor-pointer"
                         >
                             {/* Stars */}
                             <div className="flex gap-1 mb-4">
@@ -703,7 +693,7 @@ function TestimonialsSection() {
                         </div>
                     ))}
                 </div>
-            </div>
+            </Container>
         </section>
     );
 }
@@ -730,18 +720,6 @@ function CTASection() {
                     Join thousands of companies using AssessHub to hire faster, smarter,
                     and with complete confidence.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button className="flex items-center justify-center gap-2 bg-primary-main text-text-inverse font-semibold px-10 py-4 rounded-xl hover:bg-primary-dark transition-all duration-200 shadow-lg shadow-primary-main/40 hover:shadow-primary-main/60 hover:-translate-y-0.5 text-base">
-                        Start Free Trial
-                        <RiArrowRightLine />
-                    </button>
-                    <button className="flex items-center justify-center gap-2 border border-border-dark text-text-inverse font-semibold px-10 py-4 rounded-xl hover:border-text-inverse/50 transition-all duration-200 text-base">
-                        Schedule a Demo
-                    </button>
-                </div>
-                <p className="mt-6 text-text-inverse/40 text-sm">
-                    No credit card required · 14-day free trial · Cancel anytime
-                </p>
             </div>
         </section>
     );
@@ -751,17 +729,17 @@ function CTASection() {
    FOOTER
 ───────────────────────────────────────────── */
 function Footer() {
-    const links: Record<string, string[]> = {
-        Product: ["Features", "Pricing", "Changelog", "Roadmap"],
-        Company: ["About", "Blog", "Careers", "Press"],
-        Resources: ["Documentation", "API Reference", "Status", "Support"],
-        Legal: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
-    };
+    const links = [
+        { name: "Home", to: "/" },
+        { name: "Features", to: "#features" },
+        { name: "How It Works", to: "#How It Works" },
+        { name: "Testimonials", to: "#Testimonials" },
+    ];
 
     return (
         <footer className="bg-background-inverse border-t border-dark-main">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-10">
+            <Container className="py-16">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
                     {/* Brand */}
                     <div className="col-span-2">
                         <div className="flex items-center gap-2.5 mb-4">
@@ -772,64 +750,45 @@ function Footer() {
                                 Assess<span className="gradient-text">Hub</span>
                             </span>
                         </div>
-                        <p className="text-sm text-text-inverse/50 leading-relaxed mb-5 max-w-xs">
+                        <p className="text-sm text-text-inverse/50 tracking-wider">
                             The smartest way to evaluate talent — from code challenges to comprehensive knowledge assessments.
                         </p>
-                        {/* Contact */}
-                        <div className="space-y-2">
-                            {[
-                                { icon: RiMailLine, text: "hello@assesshub.io" },
-                                { icon: RiPhoneLine, text: "+1 (800) 555-0199" },
-                                { icon: RiMapPinLine, text: "San Francisco, CA" },
-                            ].map((c, i) => (
-                                <div key={i} className="flex items-center gap-2 text-xs text-text-inverse/40">
-                                    <c.icon className="text-primary-main" />
-                                    <span>{c.text}</span>
-                                </div>
-                            ))}
-                        </div>
                     </div>
 
                     {/* Link columns */}
-                    {Object.entries(links).map(([category, items]) => (
-                        <div key={category}>
-                            <h4 className="text-sm font-semibold text-text-inverse mb-4">{category}</h4>
-                            <ul className="space-y-2">
-                                {items.map((item) => (
-                                    <li key={item}>
-                                        <a href="#" className="text-sm text-text-inverse/50 hover:text-primary-main transition-colors">
-                                            {item}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Bottom bar */}
-                <div className="mt-12 pt-8 border-t border-dark-main flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-xs text-text-inverse/40">
-                        © {new Date().getFullYear()} AssessHub. All rights reserved.
-                    </p>
-                    <div className="flex items-center gap-4">
-                        {[
-                            { icon: RiTwitterXLine, label: "Twitter" },
-                            { icon: RiLinkedinBoxLine, label: "LinkedIn" },
-                            { icon: RiGithubLine, label: "GitHub" },
-                        ].map((s) => (
-                            <a
-                                key={s.label}
-                                href="#"
-                                aria-label={s.label}
-                                className="w-8 h-8 rounded-lg bg-dark-main flex items-center justify-center text-text-inverse/50 hover:text-primary-main hover:bg-primary-main/10 transition-all duration-200"
+                    <div className="gap-2 flex flex-col">
+                        <h3 className="text-text-inverse/80 font-semibold">Quick Links</h3>
+                        {links.map((link) => (
+                            <Link
+                                key={link.name}
+                                to={link.to}
+                                className="text-sm text-text-inverse/50 hover:text-primary-main transition-colors"
                             >
-                                <s.icon className="text-sm" />
-                            </a>
+                                {link.name}
+                            </Link>
+                        ))}
+                    </div>
+
+                    <div className="space-y-2">
+                        <h3 className="text-text-inverse/80 font-semibold">Social Links</h3>
+                        {[
+                            { icon: RiMailLine, text: "mayurlikhitkar786@gmail.com" },
+                            { icon: RiPhoneLine, text: "+91 6260658118" },
+                            { icon: RiMapPinLine, text: "Indore, Madhya Pradesh" },
+                        ].map((c, i) => (
+                            <div key={i} className="flex items-center gap-2 text-text-inverse/50">
+                                <c.icon className="text-primary-main w-4 h-4 shrink-0" />
+                                <span className="text-sm wrap-break-word">{c.text}</span>
+                            </div>
                         ))}
                     </div>
                 </div>
-            </div>
+
+                {/* Bottom bar */}
+                <div className="mt-12 pt-8 border-t border-dark-main text-text-inverse/50 text-center">
+                    © {new Date().getFullYear()} AssessHub. All rights reserved.
+                </div>
+            </Container>
         </footer>
     );
 }

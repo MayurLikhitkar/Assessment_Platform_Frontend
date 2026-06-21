@@ -15,6 +15,7 @@ import { lazy, Suspense } from 'react';
 import PageLoader from './components/common/PageLoader';
 import RoleGuard from './components/common/RoleGuard';
 import { UserRole } from './types/authTypes';
+import FullScreenLayout from './layouts/FullScreenLayout';
 
 const Home = lazy(() => import('./pages/public/Home'));
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -70,7 +71,6 @@ function App() {
                     <Route path="assessments" element={<Assessments />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="assessments/:id" element={<AssessmentDetails />} />
-                    <Route path="assessments/:id/take" element={<TakeAssessment />} />
                   </Route>
 
                   {/* App Routes */}
@@ -90,6 +90,12 @@ function App() {
                       <Route path="questions/create" element={<CreateQuestion />} />
                       <Route path="questions/:id/edit" element={<EditQuestion />} />
                     </Route>
+                  </Route>
+                </Route>
+
+                <Route element={<FullScreenLayout />}>
+                  <Route element={<RoleGuard allowedRoles={[UserRole.USER]} />}>
+                    <Route path="assessments/:id/take" element={<TakeAssessment />} />
                   </Route>
                 </Route>
 

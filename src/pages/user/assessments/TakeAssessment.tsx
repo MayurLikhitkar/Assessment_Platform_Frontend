@@ -10,11 +10,13 @@ import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckboxCircleLine, R
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
-import { Difficulty, QuestionType } from '../../../types/questionTypes';
+import { Difficulty, QuestionType, type QuestionInterface } from '../../../types/questionTypes';
 import MultiChoice from '../../../components/ui/MultiChoice';
 import TextArea from '../../../components/ui/TextArea';
 import Button from '../../../components/ui/Button';
 import { twMerge } from 'tailwind-merge';
+import PageLoader from '../../../components/common/PageLoader';
+import { FaCircleCheck } from 'react-icons/fa6';
 
 const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) => {
     const styles: Record<Difficulty, string> = {
@@ -30,6 +32,49 @@ const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) =
             )}>
             {difficulty}
         </span>
+    );
+};
+
+const QuestionNavItem: React.FC<{
+    index: number;
+    question: QuestionInterface;
+    isActive: boolean;
+    isAnswered: boolean;
+    isFlagged: boolean;
+    onClick: () => void;
+}> = ({ index, question, isActive, isAnswered, isFlagged, onClick }) => {
+    return (
+        <Button variant='custom'
+            onClick={onClick}
+            className={twMerge(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer',
+                isActive
+                    ? 'bg-secondary-light/20 text-secondary-main'
+                    : '',
+                isAnswered && !isActive && 'text-success-main'
+            )}
+        >
+            <span
+                className={twMerge(
+                    'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                    isActive
+                        ? 'bg-primary-main text-text-inverse'
+                        : isAnswered
+                            ? 'bg-success-main text-success-dark'
+                            : 'bg-background-main text-text-light'
+                )}
+            >
+                {isAnswered ? (
+                    <FaCircleCheck className="w-3.5 h-3.5" />
+                ) : (
+                    index + 1
+                )}
+            </span>
+            <span className="truncate flex-1">{question.question.slice(0, 40)}...</span>
+            {isFlagged && (
+                <RiFlagLine className="w-3.5 h-3.5 text-warn-main shrink-0" />
+            )}
+        </Button>
     );
 };
 
@@ -175,76 +220,74 @@ const TakeAssessment: React.FC = () => {
     };
 
     if (!assessment) {
-        return <>Something went wrong</>
+        return <PageLoader />
     }
 
     return (
         <Page>
             <div className="min-h-screen bg-background-main flex flex-col font-semibold text-text-main">
-                <ContentBox className="sticky top-0 z-40 px-4 py-2">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center justify-between h-16 gap-4">
-                            {/* Title */}
-                            <div className="min-w-0">
-                                <h1 className="text-sm sm:text-base font-bold truncate">
-                                    {assessment?.title}
-                                </h1>
-                                <p className="text-xs text-text-light">
-                                    Question {activeStep + 1} of {questions.length}
-                                </p>
-                            </div>
-
-                            {/* Right controls */}
-                            <div className="flex items-center gap-3 shrink-0">
-                                {/* Recording badge */}
-                                {assessment?.enableRecording && (
-                                    <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error-light/20 border border-error-light/40">
-                                        <BsRecordCircle className="w-3.5 h-3.5 text-error-main animate-pulse" />
-                                        <span className="text-xs font-bold text-error-main">REC</span>
-                                    </div>
-                                )}
-
-                                {/* Answered count */}
-                                <div className="hidden sm:flex flex-col items-center leading-none">
-                                    <span className="text-sm font-bold">
-                                        {answers.length}/{questions.length}
-                                    </span>
-                                    <span className="text-[10px] text-text-light uppercase tracking-wider">
-                                        Answered
-                                    </span>
-                                </div>
-
-                                {/* Timer */}
-                                <div
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
-                                        ? "bg-error-light/20 border-error-light text-error-main"
-                                        : "bg-background-main border-border-light"
-                                        }`}
-                                >
-                                    <RiTimeLine
-                                        className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
-                                    />
-                                    {moment.utc(timeLeft * 1000).format('HH:mm:ss')}
-                                </div>
-
-                                {/* Submit button */}
-                                <button
-                                    onClick={() => setShowSubmitDialog(true)}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-main text-text-inverse text-sm font-bold hover:bg-primary-dark active:scale-95 transition-all"
-                                >
-                                    <RiSendPlaneLine className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Submit</span>
-                                </button>
-                            </div>
+                <ContentBox className="sticky top-0 left-0 right-0 z-40 px-12 py-2 rounded-none">
+                    <div className="flex items-center justify-between h-16 gap-4">
+                        {/* Title */}
+                        <div className="min-w-0">
+                            <h1 className="text-sm sm:text-base font-bold truncate">
+                                {assessment?.title}
+                            </h1>
+                            <p className="text-xs text-text-light">
+                                Question {activeStep + 1} of {questions.length}
+                            </p>
                         </div>
 
-                        {/* Progress bar */}
-                        <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
+                        {/* Right controls */}
+                        <div className="flex items-center gap-3 shrink-0">
+                            {/* Recording badge */}
+                            {assessment?.enableRecording && (
+                                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error-light/20 border border-error-light/40">
+                                    <BsRecordCircle className="w-3.5 h-3.5 text-error-main animate-pulse" />
+                                    <span className="text-xs font-bold text-error-main">REC</span>
+                                </div>
+                            )}
+
+                            {/* Answered count */}
+                            <div className="hidden sm:flex flex-col items-center leading-none">
+                                <span className="text-sm font-bold">
+                                    {answers.length}/{questions.length}
+                                </span>
+                                <span className="text-[10px] text-text-light uppercase tracking-wider">
+                                    Answered
+                                </span>
+                            </div>
+
+                            {/* Timer */}
                             <div
-                                className="h-full bg-primary-main rounded-full transition-all duration-500"
-                                style={{ width: `${(answers.length / questions.length) * 100}%` }}
-                            />
+                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
+                                    ? "bg-error-light/20 border-error-light text-error-main"
+                                    : "bg-background-main border-border-light"
+                                    }`}
+                            >
+                                <RiTimeLine
+                                    className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
+                                />
+                                {moment.utc(timeLeft * 1000).format('HH:mm:ss')}
+                            </div>
+
+                            {/* Submit button */}
+                            <button
+                                onClick={() => setShowSubmitDialog(true)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-main text-text-inverse text-sm font-bold hover:bg-primary-dark active:scale-95 transition-all"
+                            >
+                                <RiSendPlaneLine className="w-4 h-4" />
+                                <span className="hidden sm:inline">Submit</span>
+                            </button>
                         </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
+                        <div
+                            className="h-full bg-primary-main rounded-full transition-all duration-500"
+                            style={{ width: `${(answers.length / questions.length) * 100}%` }}
+                        />
                     </div>
                 </ContentBox>
 
@@ -263,44 +306,28 @@ const TakeAssessment: React.FC = () => {
 
                 {/* ── Main Layout ─────────────────────────────────────── */}
                 {/* {Paste here} */}
-                <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+                <div className="flex-1 w-full mx-auto px- sm:px-12 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         {/* ── Question Navigator (sidebar) ─────────────────── */}
                         {isLoadingAssessmentQuestions ? <DataLoader /> : (
                             <aside className="lg:col-span-1">
                                 <ContentBox className="sticky top-24 space-y-3">
-                                    <h3 className="">Questions</h3>
+                                    <h3 className="text-xl text-secondary-main">Questions</h3>
 
-                                    <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2">
-                                        {assessment?.questions.map((q, index) => {
+                                    <div className="space-y-1">
+                                        {questions.map((q, idx) => {
                                             const isAnswered = answers.some(
-                                                (a) => a.questionId === q
+                                                (a) => a.questionId === q._id
                                             );
-                                            const isCurrent = index === activeStep;
-                                            const isFlagged = flagged.has(q);
-
-                                            return (
-                                                <Button variant='custom'
-                                                    key={q}
-                                                    onClick={() => setActiveStep(index)}
-                                                    title={`Q${index + 1} · ${q}`}
-                                                    className={`aspect-square transition-all active:scale-95 border ${isCurrent
-                                                        ? "bg-primary-main text-text-inverse border-primary-dark shadow-sm"
-                                                        : isAnswered
-                                                            ? "bg-success-light/40 text-success-dark border-success-light"
-                                                            : "bg-muted-light text-text-light border-border-light hover:bg-muted-main"
-                                                        }`}
-                                                >
-                                                    {isAnswered && !isCurrent ? (
-                                                        <RiCheckboxCircleLine className="w-4 h-4" />
-                                                    ) : (
-                                                        index + 1
-                                                    )}
-                                                    {isFlagged && (
-                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-warn-main border border-background-light" />
-                                                    )}
-                                                </Button>
-                                            );
+                                            return <QuestionNavItem
+                                                key={q._id}
+                                                index={idx}
+                                                question={q}
+                                                isActive={idx === activeStep}
+                                                isAnswered={isAnswered}
+                                                isFlagged={flagged.has(q._id)}
+                                                onClick={() => setActiveStep(idx)}
+                                            />
                                         })}
                                     </div>
 
