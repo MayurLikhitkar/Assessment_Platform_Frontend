@@ -58,7 +58,7 @@ const AssessmentDetails: React.FC = () => {
         document.documentElement.requestFullscreen().catch(() => {
             // Fullscreen request failed (e.g. browser blocked it), proceed anyway
         }).finally(() => {
-            navigate(`/assessments/${assessment?.id}/take`);
+            navigate(`/assessments/${assessment?.id}/lobby`);
         });
     };
 
@@ -80,7 +80,7 @@ const AssessmentDetails: React.FC = () => {
                                 {/* Meta Badges */}
                                 <div className="flex flex-wrap items-center gap-3">
                                     {assessment.type.map((t) => (
-                                        <span key={t} className="px-3 py-1 rounded-md bg-muted-light text-text-light font-bold uppercase text-xs border border-muted-main">
+                                        <span key={t} className="px-3 py-1 rounded-md bg-muted-light text-text-light font-bold uppercase text-xs border border-border-light">
                                             {t}
                                         </span>
                                     ))}

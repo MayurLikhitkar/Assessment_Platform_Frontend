@@ -6,7 +6,7 @@ import api from '../../../services/axios/api';
 import toast from 'react-hot-toast';
 import { getAssessment, getAssessmentQuestions, startAssessment } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
-import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckboxCircleLine, RiFlagLine, RiQuestionLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
+import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiFlagFill, RiFlagLine, RiQuestionLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
@@ -17,6 +17,15 @@ import Button from '../../../components/ui/Button';
 import { twMerge } from 'tailwind-merge';
 import PageLoader from '../../../components/common/PageLoader';
 import { FaCircleCheck } from 'react-icons/fa6';
+
+type NavButtonProps = {
+    index: number;
+    question: QuestionInterface;
+    isActive: boolean;
+    isAnswered: boolean;
+    isFlagged: boolean;
+    onClick: () => void;
+};
 
 const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) => {
     const styles: Record<Difficulty, string> = {
@@ -35,21 +44,14 @@ const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) =
     );
 };
 
-const QuestionNavItem: React.FC<{
-    index: number;
-    question: QuestionInterface;
-    isActive: boolean;
-    isAnswered: boolean;
-    isFlagged: boolean;
-    onClick: () => void;
-}> = ({ index, question, isActive, isAnswered, isFlagged, onClick }) => {
+const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, isAnswered, isFlagged, onClick }) => {
     return (
         <Button variant='custom'
             onClick={onClick}
             className={twMerge(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer',
                 isActive
-                    ? 'bg-secondary-light/20 text-secondary-main'
+                    ? 'bg-secondary-light/15 text-secondary-main'
                     : '',
                 isAnswered && !isActive && 'text-success-main'
             )}
@@ -58,21 +60,21 @@ const QuestionNavItem: React.FC<{
                 className={twMerge(
                     'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
                     isActive
-                        ? 'bg-primary-main text-text-inverse'
+                        ? 'bg-secondary-main text-text-inverse'
                         : isAnswered
-                            ? 'bg-success-main text-success-dark'
-                            : 'bg-background-main text-text-light'
+                            ? 'bg-success-main text-text-inverse'
+                            : 'bg-background-dark text-text-light'
                 )}
             >
                 {isAnswered ? (
-                    <FaCircleCheck className="w-3.5 h-3.5" />
+                    <FaCircleCheck className="w-4 h-4 shrink-0" />
                 ) : (
                     index + 1
                 )}
             </span>
             <span className="truncate flex-1">{question.question.slice(0, 40)}...</span>
             {isFlagged && (
-                <RiFlagLine className="w-3.5 h-3.5 text-warn-main shrink-0" />
+                <RiFlagFill className="w-4 h-4 text-warn-main shrink-0" />
             )}
         </Button>
     );
@@ -226,7 +228,7 @@ const TakeAssessment: React.FC = () => {
     return (
         <Page>
             <div className="min-h-screen bg-background-main flex flex-col font-semibold text-text-main">
-                <ContentBox className="sticky top-0 left-0 right-0 z-40 px-12 py-2 rounded-none">
+                <ContentBox className="sticky top-0 left-0 right-0 z-40 px-24 py-2 rounded-none">
                     <div className="flex items-center justify-between h-16 gap-4">
                         {/* Title */}
                         <div className="min-w-0">
@@ -306,7 +308,7 @@ const TakeAssessment: React.FC = () => {
 
                 {/* ── Main Layout ─────────────────────────────────────── */}
                 {/* {Paste here} */}
-                <div className="flex-1 w-full mx-auto px- sm:px-12 py-6">
+                <div className="flex-1 w-full mx-auto px- sm:px-24 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         {/* ── Question Navigator (sidebar) ─────────────────── */}
                         {isLoadingAssessmentQuestions ? <DataLoader /> : (
@@ -476,7 +478,7 @@ const TakeAssessment: React.FC = () => {
                                             onClick={() => setActiveStep((s) => s - 1)}
                                             disabled={activeStep === 0}
                                             variant='custom'
-                                            className="rounded-xl border border-border-main text-text-light hover:bg-muted-light disabled:opacity-40 disabled:cursor-not-allowed">
+                                            className="rounded-xl border border-border-light text-text-light hover:bg-muted-light disabled:opacity-40 disabled:cursor-not-allowed">
                                             <RiArrowLeftLine className="w-4 h-4" />
                                             Previous
                                         </Button>
@@ -487,13 +489,13 @@ const TakeAssessment: React.FC = () => {
                                                 onClick={() => toggleFlag(currentQuestion._id)}
                                                 className={`border rounded-xl text-text-light ${flagged.has(currentQuestion?._id)
                                                     ? "bg-warn-light/30 border-warn-light"
-                                                    : "border-border-main hover:bg-muted-light"
+                                                    : "border-border-light hover:bg-muted-light"
                                                     }`}>
                                                 <RiFlagLine className="w-4 h-4" />
                                                 <span className="hidden sm:inline">
                                                     {flagged.has(currentQuestion?._id)
                                                         ? "Unflag"
-                                                        : "Flag"}
+                                                        : "Flag for review"}
                                                 </span>
                                             </Button>
 
@@ -515,18 +517,6 @@ const TakeAssessment: React.FC = () => {
                                         </div>
                                     </div>
                                 </ContentBox>
-
-                                {/* Skipped questions reminder */}
-                                {answers.length < questions.length && (
-                                    <div className="flex items-start gap-2.5 p-4 rounded-xl bg-warn-light/15 border border-warn-light/40 text-sm text-warn-dark">
-                                        <RiQuestionLine className="w-4 h-4 mt-0.5 shrink-0" />
-                                        <span>
-                                            <strong>{questions.length - answers.length}</strong> question
-                                            {questions.length - answers.length > 1 ? "s" : ""} still
-                                            unanswered.
-                                        </span>
-                                    </div>
-                                )}
                             </main>
                         )}
                     </div>

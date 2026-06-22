@@ -24,6 +24,7 @@ const Register = lazy(() => import('./pages/auth/Register'));
 const Assessments = lazy(() => import('./pages/user/assessments/Assessments'));
 const Profile = lazy(() => import('./pages/user/profile/Profile'));
 const Dashboard = lazy(() => import('./pages/user/dashboard/Dashboard'));
+const AssessmentLobby = lazy(() => import('./pages/user/assessments/AssessmentLobby'));
 const TakeAssessment = lazy(() => import('./pages/user/assessments/TakeAssessment'));
 const AssessmentDetails = lazy(() => import('./pages/user/assessments/AssessmentDetails'));
 
@@ -95,6 +96,7 @@ function App() {
 
                 <Route element={<FullScreenLayout />}>
                   <Route element={<RoleGuard allowedRoles={[UserRole.USER]} />}>
+                    <Route path="assessments/:id/lobby" element={<AssessmentLobby />} />
                     <Route path="assessments/:id/take" element={<TakeAssessment />} />
                   </Route>
                 </Route>
