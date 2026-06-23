@@ -44,6 +44,9 @@ export interface UserAssessmentInterface {
     recordingUrl?: string;
     tabSwitches: number;
     fullscreenExits: number;
+    webcamAllowed: boolean;
+    microphoneAllowed: boolean;
+    recordingAllowed: boolean;
     violations: {
         type: VoilationType;
         timestamp: Date;
