@@ -42,7 +42,7 @@ const Dashboard: React.FC = () => {
             icon: <MdAssignment className="text-2xl" />,
             bgColor: 'bg-primary-light/20',
             iconColor: 'text-primary-main',
-            link: '/admin/assessments',
+            link: '/app/assessments',
         },
         {
             label: 'Assessments Completed',
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
             icon: <MdAssignment className="text-2xl" />,
             bgColor: 'bg-primary-light/20',
             iconColor: 'text-primary-main',
-            link: '/admin/assessments',
+            link: '/app/assessments',
         },
         {
             label: 'Active Now',

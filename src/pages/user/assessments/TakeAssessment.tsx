@@ -4,9 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '../../../services/axios/api';
 import toast from 'react-hot-toast';
-import { getAssessment, getAssessmentQuestions, startAssessment } from '../../../services/axios/userApi';
+import { getAssessment, getAssessmentQuestions } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
-import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiFlagFill, RiFlagLine, RiQuestionLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
+import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiFlagFill, RiFlagLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
@@ -17,6 +17,7 @@ import Button from '../../../components/ui/Button';
 import { twMerge } from 'tailwind-merge';
 import PageLoader from '../../../components/common/PageLoader';
 import { FaCircleCheck } from 'react-icons/fa6';
+import { MdQuiz } from 'react-icons/md';
 
 type NavButtonProps = {
     index: number;
@@ -49,21 +50,24 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
         <Button variant='custom'
             onClick={onClick}
             className={twMerge(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer border',
                 isActive
-                    ? 'bg-secondary-light/15 text-secondary-main'
-                    : '',
-                isAnswered && !isActive && 'text-success-main'
+                    ? 'bg-secondary-light/10 text-secondary-main border-secondary-light/30'
+                    : 'border-border-light hover:bg-muted-light/70',
+                isAnswered && !isActive && 'text-success-main border-success-light/50'
             )}
         >
+            {isFlagged && (
+                <RiFlagFill className="w-4 h-4 text-warn-main shrink-0" />
+            )}
             <span
                 className={twMerge(
-                    'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                    'w-6 h-6 rounded flex items-center justify-center text-xs font-bold shrink-0',
                     isActive
                         ? 'bg-secondary-main text-text-inverse'
                         : isAnswered
                             ? 'bg-success-main text-text-inverse'
-                            : 'bg-background-dark text-text-light'
+                            : 'bg-muted-main/60 text-text-light'
                 )}
             >
                 {isAnswered ? (
@@ -73,9 +77,6 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
                 )}
             </span>
             <span className="truncate flex-1">{question.question.slice(0, 40)}...</span>
-            {isFlagged && (
-                <RiFlagFill className="w-4 h-4 text-warn-main shrink-0" />
-            )}
         </Button>
     );
 };
@@ -156,26 +157,6 @@ const TakeAssessment: React.FC = () => {
         (a) => a.questionId === currentQuestion?._id
     );
 
-    const startMutation = useMutation({
-        mutationFn: () => startAssessment(assessment?._id as string),
-        onSuccess: (data) => {
-            setUserAssessmentId(data.userAssessmentId);
-            setSessionId(data.sessionId);
-            setQuestions(assessment?.questions || []);
-            setStartTime(new Date());
-            setTimeLeft((assessment?.durationInMinutes ?? 0) * 60);
-            setStarted(true);
-            // Initialize answer timers
-            (assessment?.questions || []).forEach((q) => {
-                answerTimers.current[q] = 0;
-            });
-        },
-        onError: (error) => {
-            toast.error(error.response?.data?.message || 'Failed to start assessment');
-            navigate('/assessments');
-        },
-    });
-
     // Submit answer mutation
     const submitAnswerMutation = useMutation({
         mutationFn: (data) => api.post(`/assessments/${id}/answer`, data),
@@ -226,8 +207,8 @@ const TakeAssessment: React.FC = () => {
     }
 
     return (
-        <Page>
-            <div className="min-h-screen bg-background-main flex flex-col font-semibold text-text-main">
+        <Page>  
+            <div className="h-full bg-background-main flex flex-col font-semibold text-text-main">
                 <ContentBox className="sticky top-0 left-0 right-0 z-40 px-24 py-2 rounded-none">
                     <div className="flex items-center justify-between h-16 gap-4">
                         {/* Title */}
@@ -308,55 +289,12 @@ const TakeAssessment: React.FC = () => {
 
                 {/* ── Main Layout ─────────────────────────────────────── */}
                 {/* {Paste here} */}
-                <div className="flex-1 w-full mx-auto px- sm:px-24 py-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* ── Question Navigator (sidebar) ─────────────────── */}
-                        {isLoadingAssessmentQuestions ? <DataLoader /> : (
-                            <aside className="lg:col-span-1">
-                                <ContentBox className="sticky top-24 space-y-3">
-                                    <h3 className="text-xl text-secondary-main">Questions</h3>
-
-                                    <div className="space-y-1">
-                                        {questions.map((q, idx) => {
-                                            const isAnswered = answers.some(
-                                                (a) => a.questionId === q._id
-                                            );
-                                            return <QuestionNavItem
-                                                key={q._id}
-                                                index={idx}
-                                                question={q}
-                                                isActive={idx === activeStep}
-                                                isAnswered={isAnswered}
-                                                isFlagged={flagged.has(q._id)}
-                                                onClick={() => setActiveStep(idx)}
-                                            />
-                                        })}
-                                    </div>
-
-                                    {/* Legend */}
-                                    <div className="space-y-1 pt-2">
-                                        {[
-                                            { cls: "bg-primary-main", label: "Current", },
-                                            { cls: "bg-success-main/40 border border-success-light", label: "Answered", },
-                                            { cls: "bg-muted-main border border-border-light", label: "Unanswered", },
-                                            { cls: "bg-warn-main/80", label: "Flagged", },
-                                        ].map((l) => (
-                                            <div key={l.label} className="flex items-center gap-2">
-                                                <span
-                                                    className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
-                                                />
-                                                <span className="text-xs text-text-light">{l.label}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </ContentBox>
-                            </aside>
-                        )}
-
+                <div className="flex-1 w-full mx-auto sm:px-24 py-6 overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
                         {/* ── Question Area ────────────────────────────────── */}
                         {isLoadingAssessmentQuestions ? <DataLoader /> : (
-                            <main className="lg:col-span-3 space-y-4">
-                                <ContentBox className="space-y-4">
+                            <main className="lg:col-span-3 space-y-4 overflow-y-auto h-full pr-1">
+                                <ContentBox className="space-y-4 h-full">
                                     {/* Question header */}
                                     <div className="flex items-center gap-3">
                                         <span className="w-8 h-8 bg-primary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
@@ -518,6 +456,49 @@ const TakeAssessment: React.FC = () => {
                                     </div>
                                 </ContentBox>
                             </main>
+                        )}
+
+                        {/* ── Question Navigator (sidebar) ─────────────────── */}
+                        {isLoadingAssessmentQuestions ? <DataLoader /> : (
+                            <aside className="lg:col-span-1 overflow-y-auto h-full">
+                                <ContentBox className="space-y-3 h-full">
+                                    <h3 className="text-xl text-secondary-main"><MdQuiz className="inline-block mr-2 text-2xl" />Questions</h3>
+
+                                    <div className="space-y-1">
+                                        {questions.map((q, idx) => {
+                                            const isAnswered = answers.some(
+                                                (a) => a.questionId === q._id
+                                            );
+                                            return <QuestionNavItem
+                                                key={q._id}
+                                                index={idx}
+                                                question={q}
+                                                isActive={idx === activeStep}
+                                                isAnswered={isAnswered}
+                                                isFlagged={flagged.has(q._id)}
+                                                onClick={() => setActiveStep(idx)}
+                                            />
+                                        })}
+                                    </div>
+
+                                    {/* Legend */}
+                                    <div className="space-y-1 pt-2">
+                                        {[
+                                            { cls: "bg-secondary-light", label: "Current", },
+                                            { cls: "bg-success-main/40 border border-success-light", label: "Answered", },
+                                            { cls: "bg-muted-main border border-border-light", label: "Unanswered", },
+                                            { cls: "bg-warn-main/80", label: "Flagged", },
+                                        ].map((l) => (
+                                            <div key={l.label} className="flex items-center gap-2">
+                                                <span
+                                                    className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
+                                                />
+                                                <span className="text-xs text-text-light">{l.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ContentBox>
+                            </aside>
                         )}
                     </div>
                 </div>

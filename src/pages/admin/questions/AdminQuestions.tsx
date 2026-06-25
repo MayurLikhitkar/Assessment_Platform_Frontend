@@ -142,7 +142,7 @@ const AdminQuestions: React.FC = () => {
                 if (!params.data) return null;
                 return (
                     <ActionCell
-                        onEdit={() => navigate(`/app/questions/${params.data!.id}/edit`)}
+                        onEdit={() => navigate(`/app/questions/${params.data?.id}/edit`)}
                         onDelete={() => setDeleteTarget(params.data!)}
                     />
                 );

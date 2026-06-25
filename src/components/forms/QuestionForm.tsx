@@ -163,7 +163,7 @@ const questionValidationSchema = Yup.object().shape({
     }),
     minLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.typeError('Must be a number').min(10, 'Minimum 10 words').required('Min length is required'),
+        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 character').required('Min length is required'),
         otherwise: (schema) => schema.notRequired(),
     }),
     maxLength: Yup.number().when('type', {
@@ -435,8 +435,9 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 <ContentBox>
                     <h3 className="font-semibold text-text-main mb-2">Subjective Question Specs</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                        <FormInput id="minLength" name="minLength" label="Min Length (Words)" type="number" min={10} formik={formik} required />
-                        <FormInput id="maxLength" name="maxLength" label="Max Length (Words)" type="number" min={10} formik={formik} required />
+                        <FormInput id="minLength" name="minLength" label="Min Length" type="number" min={1} formik={formik} required />
+                        <FormInput id="maxLength" name="maxLength" label="Max Length" type="number" min={1} formik={formik} required />
+                        <FormInput id="wordLimit" name="wordLimit" label="Max Words" type="number" min={1} formik={formik} required />
                     </div>
                     <FormMultiInput
                         id="expectedKeywords"

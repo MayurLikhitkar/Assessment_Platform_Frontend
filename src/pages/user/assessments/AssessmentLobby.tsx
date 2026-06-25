@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -13,8 +13,8 @@ import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
 import { TbArrowsMaximize, TbBrowserX } from 'react-icons/tb';
 import { IoVideocam, IoVideocamOff } from 'react-icons/io5';
 import { BsDisplay } from 'react-icons/bs';
-
-// ── Types ────────────────────────────────────────────────────────────────────
+import Input from '../../../components/ui/Input';
+import type { ApiResponse } from '../../../types/types';
 
 type ChecklistKey = 'connection' | 'environment' | 'rules';
 
@@ -54,33 +54,33 @@ interface PermCardProps {
 const STATUS_META: Record<PermStatus, { label: string; color: string; bg: string; border: string }> = {
     idle: {
         label: 'Not checked',
-        color: 'text-slate-500',
-        bg: 'bg-slate-100',
-        border: 'border-slate-200',
+        color: 'text-text-main',
+        bg: 'bg-background-main',
+        border: 'border-border-light',
     },
     checking: {
         label: 'Checking…',
-        color: 'text-amber-600',
-        bg: 'bg-amber-50',
-        border: 'border-amber-200',
+        color: 'text-text-light',
+        bg: 'bg-secondary-light/10',
+        border: 'border-secondary-light/30',
     },
     granted: {
         label: 'Granted',
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50',
-        border: 'border-emerald-200',
+        color: 'text-success-main',
+        bg: 'bg-success-light/20',
+        border: 'border-success-light/50',
     },
     denied: {
         label: 'Denied',
-        color: 'text-red-600',
-        bg: 'bg-red-50',
-        border: 'border-red-200',
+        color: 'text-error-main',
+        bg: 'bg-error-light/30',
+        border: 'border-error-light/50',
     },
     not_required: {
         label: 'Not required',
-        color: 'text-slate-400',
-        bg: 'bg-slate-50',
-        border: 'border-slate-100',
+        color: 'text-text-light',
+        bg: 'bg-background-main',
+        border: 'border-border-light',
     },
 };
 
@@ -125,7 +125,7 @@ const PermissionCard: React.FC<PermissionCardProps> = ({ title, description, sta
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+                        <p className="text-xs text-text-light mt-0.5">{description}</p>
                     </div>
                 </div>
 
@@ -146,6 +146,19 @@ const PermissionCard: React.FC<PermissionCardProps> = ({ title, description, sta
             </div>
 
             {/* Webcam preview */}
+            {/* {previewEl && status === 'granted' && (
+                title.toLowerCase().includes('camera') ? (
+                    <div className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden border border-border-light bg-background-inverse aspect-video flex items-center justify-center">
+                        <div className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover [&>canvas]:w-full [&>canvas]:h-full [&>canvas]:object-cover">
+                            {previewEl}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="w-full rounded-xl overflow-hidden border border-border-light bg-background-inverse">
+                        {previewEl}
+                    </div>
+                )
+            )} */}
             {previewEl && status === 'granted' && (
                 <div className="rounded-xl overflow-hidden border border-border-light bg-background-inverse">
                     {previewEl}
@@ -212,14 +225,14 @@ const ReadinessRow: React.FC<{ label: string; done: boolean; detail: string }> =
             <span
                 className={twMerge(
                     'w-4 h-4 rounded-full flex items-center justify-center',
-                    done ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
+                    done ? 'bg-background-main text-success-main' : 'bg-background-main text-text-light'
                 )}
             >
-                {done ? <RiCheckLine className="w-2.5 h-2.5" /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-300 block" />}
+                {done ? <RiCheckLine className="w-2.5 h-2.5" /> : <span className="w-1.5 h-1.5 rounded-full bg-background-main block" />}
             </span>
-            <span className="text-slate-600 font-medium">{label}</span>
+            <span className="text-text-main">{label}</span>
         </div>
-        <span className={twMerge('font-semibold', done ? 'text-emerald-600' : 'text-slate-400')}>{detail}</span>
+        <span className={twMerge('font-semibold', done ? 'text-success-main' : 'text-text-light')}>{detail}</span>
     </div>
 );
 
@@ -247,9 +260,9 @@ const AssessmentLobby: React.FC = () => {
     const streamRef = useRef<MediaStream | null>(null);
 
     const [perms, setPerms] = useState<PermissionState>({
-        webcam: assessment?.requireWebcam ? 'idle' : 'not_required',
-        microphone: assessment?.requireMicrophone ? 'idle' : 'not_required',
-        fullscreen: assessment?.allowFullscreenExit ? 'not_required' : 'idle',
+        webcam: 'idle',
+        microphone: 'idle',
+        fullscreen: document.fullscreenElement ? 'granted' : 'idle',
     });
 
     const [micLevel, setMicLevel] = useState(0);
@@ -262,17 +275,6 @@ const AssessmentLobby: React.FC = () => {
         environment: false,
         rules: false,
     });
-
-    const [isStarting, setIsStarting] = useState(false);
-    const [started, setStarted] = useState(false);
-
-    const requiredPerms = (Object.keys(perms) as (keyof PermissionState)[]).filter(
-        (k) => perms[k] !== 'not_required'
-    );
-
-    const allPermsGranted = requiredPerms.every((k) => perms[k] === 'granted');
-    const allChecked = Object.values(checks).every(Boolean);
-    const canStart = allPermsGranted && allChecked;
 
     const startMicVisualizer = useCallback((stream: MediaStream) => {
         const ctx = new AudioContext();
@@ -329,6 +331,35 @@ const AssessmentLobby: React.FC = () => {
         }
     }, []);
 
+    const permissionConfig = useMemo(() => {
+        if (!assessment) return null;
+
+        return {
+            webcamRequired: assessment.requireWebcam,
+            microphoneRequired: assessment.requireMicrophone,
+            fullscreenRequired: !assessment.allowFullscreenExit,
+        };
+    }, [assessment]);
+
+    useEffect(() => {
+        const handler = () => {
+            if (document.fullscreenElement) {
+                setPerms((p) => ({ ...p, fullscreen: 'granted' }));  // ← add this
+            } else if (perms.fullscreen === 'granted') {
+                setPerms((p) => ({ ...p, fullscreen: 'idle' }));
+            }
+        };
+        document.addEventListener('fullscreenchange', handler);
+        return () => document.removeEventListener('fullscreenchange', handler);
+    }, [perms.fullscreen]);
+
+    useEffect(() => {
+        if (perms.webcam === 'granted' && videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [perms.webcam]);
+
     useEffect(() => {
         return () => {
             if (micAnimRef.current) cancelAnimationFrame(micAnimRef.current);
@@ -338,36 +369,18 @@ const AssessmentLobby: React.FC = () => {
     }, []);
 
     const handleStart = async () => {
-        setIsStarting(true);
-        // Simulate API call
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsStarting(false);
-        setStarted(true);
+        startMutation.mutate();
     };
 
     const startMutation = useMutation({
         mutationFn: () => startAssessment(assessment?._id as string),
         onSuccess: () => {
-            navigate(`/assessments/${id}/take`);
+            navigate(`/assessments/${assessment?.id}/take`);
         },
-        onError: (error) => {
-            toast.error(error?.response?.data?.message || 'Failed to start assessment');
+        onError: (error: ApiResponse<null>) => {
+            toast.error(error.responseMessage || 'Failed to start assessment');
         },
     });
-
-    if (started) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-                <div className="text-center space-y-4">
-                    <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500 flex items-center justify-center">
-                        <RiPlayCircleLine className="w-8 h-8" />
-                    </div>
-                    <h1 className="text-2xl font-bold">Assessment Started!</h1>
-                    <p className="text-slate-400">Good luck. Timer is now running.</p>
-                </div>
-            </div>
-        );
-    }
 
     if (isLoading || !assessment) return <PageLoader />;
 
@@ -403,13 +416,15 @@ const AssessmentLobby: React.FC = () => {
             icon: <IoVideocamOff className="w-5 h-5" />,
             activeIcon: <IoVideocam className="w-5 h-5" />,
             preview: (
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    className="w-full h-36 object-cover rounded-xl"
-                />
+                <div className="w-full aspect-video max-w-2xl mx-auto flex items-center justify-center">
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                    />
+                </div>
             ),
         },
         {
@@ -420,14 +435,14 @@ const AssessmentLobby: React.FC = () => {
             activeIcon: <FaMicrophone className="w-5 h-5" />,
             preview: (
                 <div className="p-3 space-y-1">
-                    <p className="text-xs text-emerald-300 font-medium mb-2">Microphone level</p>
-                    <div className="w-full h-3 rounded-full bg-emerald-950 overflow-hidden">
+                    <p className="text-xs text-success-light mb-2">Microphone level</p>
+                    <div className="w-full h-3 rounded-full bg-success-light/20 overflow-hidden">
                         <div
-                            className="h-full rounded-full bg-emerald-400 transition-all duration-75"
+                            className="h-full rounded-full bg-success-main transition-all duration-75"
                             style={{ width: `${micLevel}%` }}
                         />
                     </div>
-                    <p className="text-[10px] text-emerald-500">Speak to test your microphone</p>
+                    <p className="text-xs text-success-main">Speak to test your microphone</p>
                 </div>
             ),
         },
@@ -441,12 +456,25 @@ const AssessmentLobby: React.FC = () => {
         },
     ];
 
+    const effectivePerms: PermissionState = {
+        webcam: permissionConfig?.webcamRequired ? perms.webcam : 'not_required',
+        microphone: permissionConfig?.microphoneRequired ? perms.microphone : 'not_required',
+        fullscreen: permissionConfig?.fullscreenRequired ? perms.fullscreen : 'not_required',
+    };
+
+    const requiredPerms = (Object.keys(effectivePerms) as (keyof PermissionState)[])
+        .filter((k) => effectivePerms[k] !== 'not_required');
+
     const grantedCount = requiredPerms.filter((k) => perms[k] === 'granted').length;
     const progressPct = requiredPerms.length > 0 ? (grantedCount / requiredPerms.length) * 100 : 100;
 
+    const allChecked = Object.values(checks).every(Boolean);
+    const allPermsGranted = requiredPerms.every((k) => perms[k] === 'granted');
+    const canStart = allPermsGranted && allChecked;
+
     return (
         <Page>
-            <div className="min-h-screen bg-background-main flex flex-col font-semibold text-text-main py-10 px-4">
+            <div className="min-h-screen flex flex-col font-semibold py-10 px-4">
                 <div className="max-w-4xl mx-auto space-y-5">
                     {/* Header card */}
                     <ContentBox className="space-y-4">
@@ -521,8 +549,8 @@ const AssessmentLobby: React.FC = () => {
                                         key={card.key}
                                         title={card.title}
                                         description={card.description}
-                                        status={perms[card.key]}
-                                        required={perms[card.key] !== 'not_required'}
+                                        status={effectivePerms[card.key]}
+                                        required={effectivePerms[card.key] !== 'not_required'}
                                         icon={card.icon}
                                         activeIcon={card.activeIcon}
                                         onRequest={permHandlers[card.key]}
@@ -539,38 +567,29 @@ const AssessmentLobby: React.FC = () => {
                             </ContentBox>
 
                             {/* Pre-flight checklist */}
-                            <ContentBox>
+                            <ContentBox className='space-y-2'>
                                 <h2 className="font-bold">Before You Begin</h2>
                                 <p className="text-xs">Confirm each item below to proceed.</p>
 
-                                <div className="space-y-3">
-                                    {CHECKLIST_ITEMS.map((item) => (
-                                        <button
-                                            key={item.key}
-                                            onClick={() => setChecks((p) => ({ ...p, [item.key]: !p[item.key] }))}
-                                            className="w-full flex items-center gap-3 text-sm text-left group"
-                                        >
-                                            <span
-                                                className={twMerge(
-                                                    'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150',
-                                                    checks[item.key]
-                                                        ? 'bg-success-main border-success-light text-text-inverse'
-                                                        : 'border-border-main bg-background-main group-hover:border-border-dark'
-                                                )}
-                                            >
-                                                {checks[item.key] && <RiCheckLine className="w-3 h-3" />}
-                                            </span>
-                                            <span
-                                                className={twMerge(
-                                                    'transition-colors',
-                                                    checks[item.key] ? 'text-text-light line-through' : 'text-text-main'
-                                                )}
-                                            >
-                                                {item.label}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
+                                {CHECKLIST_ITEMS.map((item) => (
+                                    <label
+                                        key={item.key}
+                                        className="flex items-center gap-3 cursor-pointer group"
+                                    >
+                                        <Input
+                                            type="checkbox"
+                                            checked={checks[item.key]}
+                                            onChange={() => setChecks((p) => ({ ...p, [item.key]: !p[item.key] }))}
+                                        />
+                                        <span
+                                            className={twMerge(
+                                                'text-sm transition-colors',
+                                                checks[item.key] ? 'text-text-light line-through' : 'text-text-main'
+                                            )}>
+                                            {item.label}
+                                        </span>
+                                    </label>
+                                ))}
                             </ContentBox>
                         </div>
 
@@ -578,65 +597,58 @@ const AssessmentLobby: React.FC = () => {
                         <div className="lg:col-span-2 space-y-6">
                             <ContentBox className='space-y-2'>
                                 <h2 className="font-bold">Rules &amp; Guidelines</h2>
-                                {rules.map((rule, i) => (
-                                    <div key={i} className="flex items-center gap-3 text-sm">
+                                {rules.map((rule) => (
+                                    <div key={rule.label} className="flex items-center gap-3 text-sm">
                                         <rule.icon className="w-5 h-5 shrink-0" />
-                                        <span className="text-slate-600 leading-relaxed">{rule.label}</span>
+                                        <span className="text-text-light leading-relaxed">{rule.label}</span>
                                     </div>
                                 ))}
                             </ContentBox>
 
-                            {/* CTA sticky-ish card */}
-                            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 lg:sticky lg:top-20">
-                                {/* Readiness summary */}
+                            <ContentBox className='space-y-3'>
                                 <div className="space-y-2">
-                                    <h2 className="font-bold text-slate-800 text-sm">Readiness Check</h2>
-                                    <div className="space-y-1.5">
-                                        <ReadinessRow
-                                            label="Permissions"
-                                            done={allPermsGranted}
-                                            detail={
-                                                allPermsGranted
-                                                    ? 'All granted'
-                                                    : `${grantedCount}/${requiredPerms.length} granted`
-                                            }
-                                        />
-                                        <ReadinessRow
-                                            label="Pre-flight checklist"
-                                            done={allChecked}
-                                            detail={
-                                                allChecked
-                                                    ? 'All confirmed'
-                                                    : `${Object.values(checks).filter(Boolean).length}/${CHECKLIST_ITEMS.length} confirmed`
-                                            }
-                                        />
-                                    </div>
+                                    <h2 className="font-bold">Readiness Check</h2>
+                                    <ReadinessRow
+                                        label="Permissions"
+                                        done={allPermsGranted}
+                                        detail={
+                                            allPermsGranted
+                                                ? 'All granted'
+                                                : `${grantedCount}/${requiredPerms.length} granted`
+                                        }
+                                    />
+                                    <ReadinessRow
+                                        label="Pre-flight checklist"
+                                        done={allChecked}
+                                        detail={
+                                            allChecked
+                                                ? 'All confirmed'
+                                                : `${Object.values(checks).filter(Boolean).length}/${CHECKLIST_ITEMS.length} confirmed`
+                                        }
+                                    />
                                 </div>
 
-                                <div className="h-px bg-slate-100" />
-
-                                {/* Warning */}
                                 {!canStart && (
-                                    <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
-                                        <RiInformationLine className="w-4 h-4 shrink-0 mt-0.5" />
+                                    <div className="flex items-start gap-2 p-3 rounded-xl bg-warn-light/20 border border-warn-light text-xs text-error-main">
+                                        <RiInformationLine className="w-4 h-4 shrink-0" />
                                         <span>
-                                            Complete all permission checks and the pre-flight checklist to unlock the Start button.
+                                            Ensure all prerequisites are fulfilled to avoid interruptions during the assessment.
                                         </span>
                                     </div>
                                 )}
 
                                 {/* Start button */}
-                                <button
+                                <Button
                                     onClick={handleStart}
-                                    disabled={!canStart || isStarting}
+                                    disabled={!canStart}
                                     className={twMerge(
-                                        'w-full py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all duration-200',
-                                        canStart && !isStarting
-                                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.02] active:scale-100'
-                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        'w-full py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200',
+                                        canStart
+                                            ? 'bg-accent-main hover:bg-accent-dark text-text-inverse shadow-lg hover:scale-[1.02] active:scale-100'
+                                            : 'bg-background-main text-text-light cursor-not-allowed'
                                     )}
                                 >
-                                    {isStarting ? (
+                                    {startMutation.isPending ? (
                                         <>
                                             <RiLoader4Line className="w-5 h-5 animate-spin" />
                                             Starting…
@@ -647,12 +659,12 @@ const AssessmentLobby: React.FC = () => {
                                             Begin Assessment
                                         </>
                                     )}
-                                </button>
+                                </Button>
 
-                                <p className="text-center text-[11px] text-red-500 font-medium">
+                                <p className="text-center text-xs text-error-main">
                                     ⚠ Timer starts immediately when you click Begin
                                 </p>
-                            </div>
+                            </ContentBox>
                         </div>
                     </div>
                 </div>

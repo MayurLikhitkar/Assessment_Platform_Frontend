@@ -8,7 +8,7 @@ export enum AssessmentStatus {
     TERMINATED = 'terminated',
 }
 
-export enum VoilationType {
+export enum ViolationType {
     TAB_SWITCH = 'tab_switch',
     FULLSCREEN_EXIT = 'fullscreen_exit',
     NO_WEBCAM = 'no_webcam',
@@ -20,7 +20,7 @@ export interface UserAssessmentAnswerInterface {
     questionId: string,
     questionType: QuestionType,
     timeSpentInSeconds: number,
-    answerMCQ?: string[],
+    answerMCQ: string[],
     answerCoding?: string,
     answerQuery?: string,
     answerSubjective?: string,
@@ -48,7 +48,7 @@ export interface UserAssessmentInterface {
     microphoneAllowed: boolean;
     recordingAllowed: boolean;
     violations: {
-        type: VoilationType;
+        type: ViolationType;
         timestamp: Date;
         details?: string;
     }[];

@@ -187,7 +187,7 @@ const AdminAssessments: React.FC = () => {
                 if (!params.data?.id) return 'N/A';
                 const id = params.data.id;
                 return <ActionCell
-                    onEdit={() => navigate(`/admin/assessments/${id}/edit`)}
+                    onEdit={() => navigate(`/app/assessments/${id}/edit`)}
                 />
             },
         },
@@ -202,7 +202,7 @@ const AdminAssessments: React.FC = () => {
                     <Button
                         variant="primary"
                         className="flex items-center gap-2"
-                        onClick={() => navigate('/admin/assessments/create')}
+                        onClick={() => navigate('/app/assessments/create')}
                     >
                         <MdAdd className="text-xl" />
                         Create Assessment

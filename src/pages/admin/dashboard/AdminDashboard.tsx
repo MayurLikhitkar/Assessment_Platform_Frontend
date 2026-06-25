@@ -59,8 +59,8 @@ const AdminDashboard: React.FC = () => {
     ];
 
     const quickActions = [
-        { label: 'Manage Users', description: 'View, edit, and manage user accounts', path: '/admin/users', icon: <MdPeople className="text-2xl" /> },
-        { label: 'Manage Assessments', description: 'Create and manage assessments', path: '/admin/assessments', icon: <MdAssignment className="text-2xl" /> },
+        { label: 'Manage Users', description: 'View, edit, and manage user accounts', path: '/app/users', icon: <MdPeople className="text-2xl" /> },
+        { label: 'Manage Assessments', description: 'Create and manage assessments', path: '/app/assessments', icon: <MdAssignment className="text-2xl" /> },
     ];
 
     return (
