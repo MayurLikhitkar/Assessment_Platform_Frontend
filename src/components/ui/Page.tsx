@@ -12,7 +12,7 @@ interface PageTitleProps extends HTMLAttributes<HTMLDivElement> {
 
 export const Page: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
     return (
-        <div className={twMerge(`min-h-full space-y-4`, className)} {...props}>
+        <div className={twMerge(`h-full overflow-y-auto space-y-4`, className)} {...props}>
             {children}
         </div>
     )
@@ -40,7 +40,7 @@ export const PageTitle: React.FC<PageTitleProps> = ({ title, description, icon: 
 
 export const PageBody: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
     return (
-        <div className={twMerge(`max-w-5xl mx-auto space-y-6 h-full p-4`, className)} {...props}>
+        <div className={twMerge(`max-w-6xl mx-auto space-y-6`, className)} {...props}>
             {children}
         </div>
     )
@@ -48,7 +48,7 @@ export const PageBody: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children, c
 
 export const PageFooter: React.FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
     return (
-        <div className={twMerge(`max-w-5xl mx-auto sticky bottom-0 right-0 z-998 w-full flex items-center justify-end gap-4 bg-background-light rounded-xl shadow-lg border border-border-main/60 p-3 xl:p-4`, className)} {...props}>
+        <div className={twMerge(`max-w-6xl mx-auto sticky bottom-0 right-0 z-998 w-full flex items-center justify-end gap-4 bg-background-light rounded-xl shadow-lg border border-border-main/60 p-3 xl:p-4`, className)} {...props}>
             {children}
         </div>
     )

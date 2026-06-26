@@ -1,6 +1,6 @@
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
 
   /* color-scheme: light dark; */
   font-synthesis: none;

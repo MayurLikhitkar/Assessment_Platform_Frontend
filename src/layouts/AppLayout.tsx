@@ -22,7 +22,7 @@ const AppLayout: React.FC = () => {
             <Navbar onMenuClick={() => setMobileOpen(!mobileOpen)} />
             <div className='flex flex-1 overflow-hidden'>
                 <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-                <main className='flex-1 overflow-y-auto'>
+                <main className='flex-1'>
                     <Outlet />
                 </main>
             </div>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ContentBox, Page } from '../../../components/ui/Page';
+import { ContentBox, Page, PageBody } from '../../../components/ui/Page';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '../../../services/axios/api';
@@ -207,72 +207,111 @@ const TakeAssessment: React.FC = () => {
     }
 
     return (
-        <Page>  
-            <div className="h-full bg-background-main flex flex-col font-semibold text-text-main">
-                <ContentBox className="sticky top-0 left-0 right-0 z-40 px-24 py-2 rounded-none">
-                    <div className="flex items-center justify-between h-16 gap-4">
-                        {/* Title */}
-                        <div className="min-w-0">
-                            <h1 className="text-sm sm:text-base font-bold truncate">
-                                {assessment?.title}
-                            </h1>
-                            <p className="text-xs text-text-light">
-                                Question {activeStep + 1} of {questions.length}
-                            </p>
-                        </div>
+        <div className="p-3">
+            <div className="max-w-7xl mx-auto space-y-6 bg-background-main flex flex-col font-semibold text-text-main">
+                {/* <div className='sticky top-0 left-0 right-0 z-40 space-y-4'> */}
+                <div className='space-y-4'>
+                    <ContentBox className="py-2">
+                        <div className="flex items-center justify-between h-16 gap-4">
+                            {/* Title */}
+                            <div className="min-w-0">
+                                <h1 className="text-sm sm:text-base font-bold truncate">
+                                    {assessment?.title}
+                                </h1>
+                                <p className="text-xs text-text-light">
+                                    Question {activeStep + 1} of {questions.length}
+                                </p>
+                            </div>
 
-                        {/* Right controls */}
-                        <div className="flex items-center gap-3 shrink-0">
-                            {/* Recording badge */}
-                            {assessment?.enableRecording && (
-                                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error-light/20 border border-error-light/40">
-                                    <BsRecordCircle className="w-3.5 h-3.5 text-error-main animate-pulse" />
-                                    <span className="text-xs font-bold text-error-main">REC</span>
+                            {/* Right controls */}
+                            <div className="flex items-center gap-3 shrink-0">
+                                {/* Recording badge */}
+                                {assessment?.enableRecording && (
+                                    <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error-light/20 border border-error-light/40">
+                                        <BsRecordCircle className="w-3.5 h-3.5 text-error-main animate-pulse" />
+                                        <span className="text-xs font-bold text-error-main">REC</span>
+                                    </div>
+                                )}
+
+                                {/* Answered count */}
+                                <div className="hidden sm:flex flex-col items-center leading-none">
+                                    <span className="text-sm font-bold">
+                                        {answers.length}/{questions.length}
+                                    </span>
+                                    <span className="text-[10px] text-text-light uppercase tracking-wider">
+                                        Answered
+                                    </span>
                                 </div>
-                            )}
 
-                            {/* Answered count */}
-                            <div className="hidden sm:flex flex-col items-center leading-none">
-                                <span className="text-sm font-bold">
-                                    {answers.length}/{questions.length}
-                                </span>
-                                <span className="text-[10px] text-text-light uppercase tracking-wider">
-                                    Answered
-                                </span>
+                                {/* Timer */}
+                                <div
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
+                                        ? "bg-error-light/20 border-error-light text-error-main"
+                                        : "bg-background-main border-border-light"
+                                        }`}
+                                >
+                                    <RiTimeLine
+                                        className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
+                                    />
+                                    {moment.utc(timeLeft * 1000).format('HH:mm:ss')}
+                                </div>
                             </div>
+                        </div>
 
-                            {/* Timer */}
+                        {/* Progress bar */}
+                        <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
                             <div
-                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
-                                    ? "bg-error-light/20 border-error-light text-error-main"
-                                    : "bg-background-main border-border-light"
-                                    }`}
-                            >
-                                <RiTimeLine
-                                    className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
-                                />
-                                {moment.utc(timeLeft * 1000).format('HH:mm:ss')}
-                            </div>
+                                className="h-full bg-primary-main rounded-full transition-all duration-500"
+                                style={{ width: `${(answers.length / questions.length) * 100}%` }}
+                            />
+                        </div>
+                    </ContentBox>
 
-                            {/* Submit button */}
-                            <button
-                                onClick={() => setShowSubmitDialog(true)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-main text-text-inverse text-sm font-bold hover:bg-primary-dark active:scale-95 transition-all"
-                            >
-                                <RiSendPlaneLine className="w-4 h-4" />
-                                <span className="hidden sm:inline">Submit</span>
-                            </button>
+                    {/* Navigation footer */}
+                    <div className="flex items-center justify-between gap-3">
+                        <Button
+                            onClick={() => setActiveStep((s) => s - 1)}
+                            disabled={activeStep === 0}
+                            variant='custom'
+                            className="rounded-md border border-border-light text-text-light bg-background-light shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                            <RiArrowLeftLine className="w-4 h-4" />
+                            Previous
+                        </Button>
+
+                        {/* Right group */}
+                        <div className="flex items-center gap-3">
+                            <Button variant='custom'
+                                onClick={() => toggleFlag(currentQuestion._id)}
+                                className={`border rounded-md text-text-light bg-background-light ${flagged.has(currentQuestion?._id)
+                                    ? "bg-warn-light/30 border-warn-light"
+                                    : "border-border-light shadow-sm"
+                                    }`}>
+                                <RiFlagLine className="w-4 h-4" />
+                                <span className="hidden sm:inline">
+                                    {flagged.has(currentQuestion?._id)
+                                        ? "Unflag"
+                                        : "Flag for review"}
+                                </span>
+                            </Button>
+
+                            {activeStep < questions.length - 1 ? (
+                                <Button className='rounded-md'
+                                    onClick={() => setActiveStep((s) => s + 1)}>
+                                    Next
+                                    <RiArrowRightLine className="w-4 h-4" />
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant='success'
+                                    onClick={() => setShowSubmitDialog(true)}
+                                    className="rounded-md">
+                                    <RiSendPlaneLine className="w-4 h-4" />
+                                    Submit Assessment
+                                </Button>
+                            )}
                         </div>
                     </div>
-
-                    {/* Progress bar */}
-                    <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
-                        <div
-                            className="h-full bg-primary-main rounded-full transition-all duration-500"
-                            style={{ width: `${(answers.length / questions.length) * 100}%` }}
-                        />
-                    </div>
-                </ContentBox>
+                </div>
 
                 {/* ── Violation Alert ─────────────────────────────────── */}
                 {violations.length > 0 && (
@@ -289,94 +328,93 @@ const TakeAssessment: React.FC = () => {
 
                 {/* ── Main Layout ─────────────────────────────────────── */}
                 {/* {Paste here} */}
-                <div className="flex-1 w-full mx-auto sm:px-24 py-6 overflow-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-                        {/* ── Question Area ────────────────────────────────── */}
-                        {isLoadingAssessmentQuestions ? <DataLoader /> : (
-                            <main className="lg:col-span-3 space-y-4 overflow-y-auto h-full pr-1">
-                                <ContentBox className="space-y-4 h-full">
-                                    {/* Question header */}
-                                    <div className="flex items-center gap-3">
-                                        <span className="w-8 h-8 bg-primary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
-                                            {activeStep + 1}
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* ── Question Area ────────────────────────────────── */}
+                    {isLoadingAssessmentQuestions ? <DataLoader /> : (
+                        <main className="lg:col-span-3 space-y-4">
+                            <ContentBox className="space-y-5 overflow-y-auto" style={{ height: 'calc(100vh - 25vh)' }}>
+                                {/* Question header */}
+                                <div className="flex items-center gap-3">
+                                    <span className="w-8 h-8 bg-primary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
+                                        {activeStep + 1}
+                                    </span>
+                                    <div className="flex items-center gap-2 text-xs text-text-light">
+                                        <DifficultyBadge
+                                            difficulty={currentQuestion.difficulty}
+                                        />
+                                        <span className="">
+                                            {currentQuestion.marks} Marks
+                                            {currentQuestion.negativeMarks > 0 && (
+                                                <span className="text-error-dark ml-1">
+                                                    (-{currentQuestion.negativeMarks} Neg)
+                                                </span>
+                                            )}
                                         </span>
-                                        <div className="flex items-center gap-2 text-xs text-text-light">
-                                            <DifficultyBadge
-                                                difficulty={currentQuestion.difficulty}
-                                            />
-                                            <span className="">
-                                                {currentQuestion.marks} Marks
-                                                {currentQuestion.negativeMarks > 0 && (
-                                                    <span className="text-error-dark ml-1">
-                                                        (-{currentQuestion.negativeMarks} Neg)
-                                                    </span>
-                                                )}
-                                            </span>
-                                        </div>
                                     </div>
+                                </div>
 
-                                    {/* Question content + answer */}
-                                    <div className="space-y-3">
-                                        <p className="text-base whitespace-pre-line leading-relaxed">
-                                            {currentQuestion?.question}
-                                        </p>
+                                {/* Question content + answer */}
+                                <div className="space-y-3">
+                                    <p className="text-base whitespace-pre-line leading-relaxed">
+                                        {currentQuestion?.question}
+                                    </p>
 
-                                        {/* ── MCQ ── */}
-                                        {currentQuestion.type === QuestionType.MCQ && currentQuestion.options && (
-                                            <MultiChoice
-                                                id={currentQuestion._id}
-                                                options={currentQuestion.options}
-                                                isMultiSelect={currentQuestion.isMultiSelect}
-                                                value={currentAnswer?.answerMCQ || []}
-                                                onChange={(selected: string[]) =>
-                                                    handleAnswerChange(
-                                                        currentQuestion._id,
-                                                        currentQuestion.type,
-                                                        { answerMCQ: selected }
-                                                    )
-                                                }
-                                            />
-                                        )}
+                                    {/* ── MCQ ── */}
+                                    {currentQuestion.type === QuestionType.MCQ && currentQuestion.options && (
+                                        <MultiChoice
+                                            id={currentQuestion._id}
+                                            options={currentQuestion.options}
+                                            isMultiSelect={currentQuestion.isMultiSelect}
+                                            value={currentAnswer?.answerMCQ || []}
+                                            onChange={(selected: string[]) =>
+                                                handleAnswerChange(
+                                                    currentQuestion._id,
+                                                    currentQuestion.type,
+                                                    { answerMCQ: selected }
+                                                )
+                                            }
+                                        />
+                                    )}
 
-                                        {currentQuestion.type === QuestionType.SUBJECTIVE && (
-                                            <TextArea
-                                                id={currentQuestion._id}
-                                                name={currentQuestion._id}
-                                                rows={8}
-                                                placeholder="Type your answer here..."
-                                                value={currentAnswer?.answerSubjective || ""}
-                                                onChange={(e) =>
-                                                    handleAnswerChange(
-                                                        currentQuestion._id,
-                                                        currentQuestion.type,
-                                                        { answerSubjective: e.target.value }
-                                                    )
-                                                }
-                                            />
-                                        )}
+                                    {currentQuestion.type === QuestionType.SUBJECTIVE && (
+                                        <TextArea
+                                            id={currentQuestion._id}
+                                            name={currentQuestion._id}
+                                            rows={8}
+                                            placeholder="Type your answer here..."
+                                            value={currentAnswer?.answerSubjective || ""}
+                                            onChange={(e) =>
+                                                handleAnswerChange(
+                                                    currentQuestion._id,
+                                                    currentQuestion.type,
+                                                    { answerSubjective: e.target.value }
+                                                )
+                                            }
+                                        />
+                                    )}
 
-                                        {currentQuestion.type === QuestionType.CODING && (
-                                            <TextArea
-                                                id={currentQuestion._id}
-                                                name={currentQuestion._id}
-                                                rows={12}
-                                                placeholder="Write your code here..."
-                                            />
-                                        )}
+                                    {currentQuestion.type === QuestionType.CODING && (
+                                        <TextArea
+                                            id={currentQuestion._id}
+                                            name={currentQuestion._id}
+                                            rows={12}
+                                            placeholder="Write your code here..."
+                                        />
+                                    )}
 
-                                        {currentQuestion.type === QuestionType.QUERY && (
-                                            <TextArea
-                                                id={currentQuestion._id}
-                                                name={currentQuestion._id}
-                                                rows={12}
-                                                placeholder="Write your Query here..."
-                                            />
-                                        )}
+                                    {currentQuestion.type === QuestionType.QUERY && (
+                                        <TextArea
+                                            id={currentQuestion._id}
+                                            name={currentQuestion._id}
+                                            rows={12}
+                                            placeholder="Write your Query here..."
+                                        />
+                                    )}
 
-                                        {/* ── Coding ── */}
-                                        {currentQuestion?.type === "coding" && (
-                                            <div className="space-y-3">
-                                                {/* <SimpleCodeEditor
+                                    {/* ── Coding ── */}
+                                    {currentQuestion?.type === "coding" && (
+                                        <div className="space-y-3">
+                                            {/* <SimpleCodeEditor
                                                 language={currentQuestion.language}
                                                 starterCode={
                                                     currentQuestion.starterCode?.[
@@ -406,105 +444,58 @@ const TakeAssessment: React.FC = () => {
                                                     </div>
                                                 </div>
                                             )} */}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Navigation footer */}
-                                    <div className="border-border-light flex items-center justify-between gap-3">
-                                        <Button
-                                            onClick={() => setActiveStep((s) => s - 1)}
-                                            disabled={activeStep === 0}
-                                            variant='custom'
-                                            className="rounded-xl border border-border-light text-text-light hover:bg-muted-light disabled:opacity-40 disabled:cursor-not-allowed">
-                                            <RiArrowLeftLine className="w-4 h-4" />
-                                            Previous
-                                        </Button>
-
-                                        {/* Right group */}
-                                        <div className="flex items-center gap-3">
-                                            <Button variant='custom'
-                                                onClick={() => toggleFlag(currentQuestion._id)}
-                                                className={`border rounded-xl text-text-light ${flagged.has(currentQuestion?._id)
-                                                    ? "bg-warn-light/30 border-warn-light"
-                                                    : "border-border-light hover:bg-muted-light"
-                                                    }`}>
-                                                <RiFlagLine className="w-4 h-4" />
-                                                <span className="hidden sm:inline">
-                                                    {flagged.has(currentQuestion?._id)
-                                                        ? "Unflag"
-                                                        : "Flag for review"}
-                                                </span>
-                                            </Button>
-
-                                            {activeStep < questions.length - 1 ? (
-                                                <Button className='rounded-xl'
-                                                    onClick={() => setActiveStep((s) => s + 1)}>
-                                                    Next
-                                                    <RiArrowRightLine className="w-4 h-4" />
-                                                </Button>
-                                            ) : (
-                                                <Button
-                                                    variant='success'
-                                                    onClick={() => setShowSubmitDialog(true)}
-                                                    className="rounded-xl">
-                                                    <RiSendPlaneLine className="w-4 h-4" />
-                                                    Submit Assessment
-                                                </Button>
-                                            )}
                                         </div>
-                                    </div>
-                                </ContentBox>
-                            </main>
-                        )}
+                                    )}
+                                </div>
+                            </ContentBox>
+                        </main>
+                    )}
 
-                        {/* ── Question Navigator (sidebar) ─────────────────── */}
-                        {isLoadingAssessmentQuestions ? <DataLoader /> : (
-                            <aside className="lg:col-span-1 overflow-y-auto h-full">
-                                <ContentBox className="space-y-3 h-full">
-                                    <h3 className="text-xl text-secondary-main"><MdQuiz className="inline-block mr-2 text-2xl" />Questions</h3>
+                    {/* ── Question Navigator (sidebar) ─────────────────── */}
+                    {isLoadingAssessmentQuestions ? <DataLoader /> : (
+                        <aside className="lg:col-span-1">
+                            <ContentBox className="space-y-3 overflow-y-auto" style={{ height: 'calc(100vh - 25vh)' }}>
+                                <h3 className="text-xl text-secondary-main"><MdQuiz className="inline-block mr-2 text-2xl" />Questions</h3>
 
-                                    <div className="space-y-1">
-                                        {questions.map((q, idx) => {
-                                            const isAnswered = answers.some(
-                                                (a) => a.questionId === q._id
-                                            );
-                                            return <QuestionNavItem
-                                                key={q._id}
-                                                index={idx}
-                                                question={q}
-                                                isActive={idx === activeStep}
-                                                isAnswered={isAnswered}
-                                                isFlagged={flagged.has(q._id)}
-                                                onClick={() => setActiveStep(idx)}
+                                <div className="space-y-1">
+                                    {questions.map((q, idx) => {
+                                        const isAnswered = answers.some(
+                                            (a) => a.questionId === q._id
+                                        );
+                                        return <QuestionNavItem
+                                            key={q._id}
+                                            index={idx}
+                                            question={q}
+                                            isActive={idx === activeStep}
+                                            isAnswered={isAnswered}
+                                            isFlagged={flagged.has(q._id)}
+                                            onClick={() => setActiveStep(idx)}
+                                        />
+                                    })}
+                                </div>
+
+                                {/* Legend */}
+                                <div className="space-y-1 pt-2">
+                                    {[
+                                        { cls: "bg-secondary-light", label: "Current", },
+                                        { cls: "bg-success-main/40 border border-success-light", label: "Answered", },
+                                        { cls: "bg-muted-main border border-border-light", label: "Unanswered", },
+                                        { cls: "bg-warn-main/80", label: "Flagged", },
+                                    ].map((l) => (
+                                        <div key={l.label} className="flex items-center gap-2">
+                                            <span
+                                                className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
                                             />
-                                        })}
-                                    </div>
-
-                                    {/* Legend */}
-                                    <div className="space-y-1 pt-2">
-                                        {[
-                                            { cls: "bg-secondary-light", label: "Current", },
-                                            { cls: "bg-success-main/40 border border-success-light", label: "Answered", },
-                                            { cls: "bg-muted-main border border-border-light", label: "Unanswered", },
-                                            { cls: "bg-warn-main/80", label: "Flagged", },
-                                        ].map((l) => (
-                                            <div key={l.label} className="flex items-center gap-2">
-                                                <span
-                                                    className={`w-3 h-3 rounded-sm shrink-0 ${l.cls}`}
-                                                />
-                                                <span className="text-xs text-text-light">{l.label}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </ContentBox>
-                            </aside>
-                        )}
-                    </div>
+                                            <span className="text-xs text-text-light">{l.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ContentBox>
+                        </aside>
+                    )}
                 </div>
-
             </div>
-        </Page>
+        </div>
     )
 }
 
