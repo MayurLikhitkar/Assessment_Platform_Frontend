@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ContentBox, Page, PageBody } from '../../../components/ui/Page';
+import { ContentBox } from '../../../components/ui/Page';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '../../../services/axios/api';
 import toast from 'react-hot-toast';
 import { getAssessment, getAssessmentQuestions } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
-import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiFlagFill, RiFlagLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
+import { RiArrowLeftLine, RiArrowRightLine, RiFlagFill, RiFlagLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
@@ -18,6 +18,9 @@ import { twMerge } from 'tailwind-merge';
 import PageLoader from '../../../components/common/PageLoader';
 import { FaCircleCheck } from 'react-icons/fa6';
 import { MdQuiz } from 'react-icons/md';
+import TerminateModal from '../../../components/proctoring/TerminateModal';
+import WarningModal from '../../../components/proctoring/WarningModal';
+import SubmitModal from '../../../components/modal/SubmitModal';
 
 type NavButtonProps = {
     index: number;
@@ -50,7 +53,7 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
         <Button variant='custom'
             onClick={onClick}
             className={twMerge(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer border',
+                'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer border',
                 isActive
                     ? 'bg-secondary-light/10 text-secondary-main border-secondary-light/30'
                     : 'border-border-light hover:bg-muted-light/70',
@@ -62,7 +65,7 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
             )}
             <span
                 className={twMerge(
-                    'w-6 h-6 rounded flex items-center justify-center text-xs font-bold shrink-0',
+                    'w-6 h-6 rounded flex items-center justify-center font-bold shrink-0',
                     isActive
                         ? 'bg-secondary-main text-text-inverse'
                         : isAnswered
@@ -76,7 +79,10 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
                     index + 1
                 )}
             </span>
-            <span className="truncate flex-1">{question.question.slice(0, 40)}...</span>
+            <span className="truncate flex-1">{question.question.slice(0, 45)}…</span>
+            <span className="uppercase text-text-light/80 text-xs shrink-0 hidden sm:block">
+                {question.type}
+            </span>
         </Button>
     );
 };
@@ -84,25 +90,18 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
 const TakeAssessment: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [activeStep, setActiveStep] = useState(0);
 
-    const [answers, setAnswers] = useState<Omit<UserAssessmentAnswerInterface, 'timeSpentInSeconds' | 'marksObtained'>[]>([]);
-    const [startTime, setStartTime] = useState<Date | null>(null);
-    const [timeLeft, setTimeLeft] = useState<number>(0);
-    const [userAssessmentId, setUserAssessmentId] = useState<number | null>(null);
-    const [sessionId, setSessionId] = useState<number | null>(null);
-    const [violations, setViolations] = useState([]);
-    const [showSubmitDialog, setShowSubmitDialog] = useState(false);
-    const [flagged, setFlagged] = useState<Set<string>>(new Set());
+    const [terminated, setTerminated] = useState(false);
+    const [terminateReason, setTerminateReason] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [started, setStarted] = useState(false);
+    const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [isAutoSubmit, setIsAutoSubmit] = useState(false);
 
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const answerTimers = useRef<Record<number, number>>({});
-    const stepStartRef = useRef<number>(0);
-
-    const timerCritical = timeLeft <= 300;
+    // ── answer / navigation ───────────────────────────────────────────────────
+    const [activeStep, setActiveStep] = useState(0);
+    const [answers, setAnswers] = useState<Omit<UserAssessmentAnswerInterface, 'timeSpentInSeconds' | 'marksObtained'>[]>([]);
+    const [flagged, setFlagged] = useState<Set<string>>(new Set());
 
     const { data: assessmentData, isLoading } = useQuery({
         queryKey: ['assessment', id],
@@ -119,43 +118,135 @@ const TakeAssessment: React.FC = () => {
     const assessment = assessmentData?.data;
     const questions = assessmentQuestions?.data ?? [];
 
+    // ── proctoring state ──────────────────────────────────────────────────────
+    const [tabViolations, setTabViolations] = useState(0);
+    const [fsViolations, setFsViolations] = useState(0);
+    const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+    // ── timer state ───────────────────────────────────────────────────────────
+    const [timeLeft, setTimeLeft] = useState((assessment?.durationInMinutes ?? 0) * 60);
+    const [timeSpentSeconds, setTimeSpentSeconds] = useState(0);
+
+    // ── refs ──────────────────────────────────────────────────────────────────
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const timerStarted = useRef(false);           // guard: start timer only once
+    const stepStartRef = useRef<number>(0);
+    const answerTimers = useRef<Record<string, number>>({});
+    const fullscreenExitCount = useRef(0);         // fullscreen exit counter
+    const startTimestamp = useRef<number>(0);      // wall-clock start
+
+    const currentQuestion = questions[activeStep];
+    const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
+    const timerCritical = timeLeft <= 300;
+
     useEffect(() => {
         stepStartRef.current = Date.now();
     }, [activeStep]);
 
+    function addTabViolation(detail: string) {
+        setTabViolations((prev) => {
+            const next = prev + 1;
+            const max = assessment?.maxTabSwitches ?? 2;
+
+            if (next > max) {
+                terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
+                return next;
+            }
+
+            if (next === max) {
+                setWarningMessage(
+                    `⚠ Final warning: This is your last allowed tab switch. Any further violation will immediately terminate your assessment.`
+                );
+            } else {
+                setWarningMessage(
+                    `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. Exceeding the limit will terminate your assessment.`
+                );
+            }
+
+            return next;
+        });
+    }
+
+    function addFsViolation() {
+        setFsViolations(() => {
+            const count = fullscreenExitCount.current;
+            const max = assessment?.maxFullscreenExits ?? 1;
+
+            if (count > max) {
+                terminate(`Assessment terminated: You exited fullscreen more than ${max} time(s) allowed.`);
+                return count;
+            }
+
+            if (count === max) {
+                setWarningMessage(`⚠ Final fullscreen warning: You have exited fullscreen the maximum number of times. Another exit will terminate your assessment.`);
+            } else {
+                setWarningMessage(`⚠ Fullscreen exit detected (${count}/${max}). Please stay in fullscreen mode. Further exits may terminate your assessment.`);
+            }
+
+            // Attempt to re-enter fullscreen
+            document.documentElement.requestFullscreen?.().catch(() => { });
+
+            return count;
+        });
+    }
+
+    function terminate(reason: string) {
+        setTerminateReason(reason);
+        setTerminated(true);
+        // Stop the timer
+        if (timerRef.current) clearInterval(timerRef.current);
+        // Exit fullscreen on termination
+        if (document.fullscreenElement) document.exitFullscreen?.();
+    }
+
+    function addViolation(message: string) {
+        setViolations((prev) => {
+            const next = [...prev, message];
+            if (next.length > assessmentData.maxTabSwitches) {
+                setTerminated(true);
+            } else if (next.length === assessmentData.maxTabSwitches) {
+                setWarning('You have reached the maximum allowed tab switches. Further violations will terminate the assessment.');
+            }
+            return next;
+        });
+    }
+
     // timer effect:
     useEffect(() => {
-        if (!started) return;
+        if (!assessment?.durationInMinutes || timerStarted.current) return;
+        timerStarted.current = true;
+        startTimestamp.current = Date.now();
+        stepStartRef.current = Date.now();
+        setTimeLeft(assessment.durationInMinutes * 60);
 
         timerRef.current = setInterval(() => {
-            setTimeLeft((t) => {
-                if (t <= 1) {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
                     clearInterval(timerRef.current!);
-                    setShowSubmitDialog(true);
+                    // Auto-submit
+                    setIsAutoSubmit(true);
+                    setShowSubmitModal(true);
                     return 0;
                 }
-                return t - 1;
+                return prev - 1;
             });
         }, 1000);
 
-        return () => clearInterval(timerRef.current!);
-    }, [started])
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [assessment?.durationInMinutes]);
 
     useEffect(() => {
         stepStartRef.current = Date.now();
         return () => {
-            const qId = questions[activeStep]?.id;
+            const qId = questions[activeStep]?._id;
             if (qId !== undefined) {
                 const elapsed = Math.floor((Date.now() - stepStartRef.current) / 1000);
                 answerTimers.current[qId] = (answerTimers.current[qId] ?? 0) + elapsed;
             }
         };
     }, [activeStep, questions]);
-
-    const currentQuestion = questions[activeStep];
-    const currentAnswer = answers.find(
-        (a) => a.questionId === currentQuestion?._id
-    );
 
     // Submit answer mutation
     const submitAnswerMutation = useMutation({
@@ -186,7 +277,7 @@ const TakeAssessment: React.FC = () => {
         setIsSubmitting(true);
         await new Promise((r) => setTimeout(r, 1500)); // simulate API call
         setIsSubmitting(false);
-        setShowSubmitDialog(false);
+        setShowSubmitModal(false);
         setSubmitted(true);
     };
 
@@ -202,13 +293,92 @@ const TakeAssessment: React.FC = () => {
         });
     };
 
+    // Tab monitoring
+    useEffect(() => {
+        if (!assessment || terminated || assessment.allowTabSwitch) return;
+
+        const onVisibilityChange = () => {
+            if (document.hidden) addTabViolation('Tab switch / window minimised detected.');
+        };
+        const onBlur = () => addTabViolation('Window lost focus (potential tab switch).');
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('blur', onBlur);
+
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('blur', onBlur);
+        };
+    }, [terminated, assessment]);
+
+    // Fullscreen monitoring
+    useEffect(() => {
+        if (!assessment || terminated || assessment.allowFullscreenExit) return;
+
+        const onFullscreenChange = () => {
+            if (document.fullscreenElement) return;
+            fullscreenExitCount.current += 1;
+            addFsViolation();
+        };
+
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+    }, [terminated, assessment]);
+
     if (!assessment) {
         return <PageLoader />
     }
 
+    if (terminated) {
+        return <TerminateModal
+            isOpen={terminated}
+            reason={terminateReason}
+            onExit={() => globalThis.location.reload()} />
+    }
+
+    if (submitted) {
+        return (
+            <SuccessScreen
+                title={assessment.title}
+                answeredCount={answers.length}
+                totalQuestions={questions.length}
+                timeSpentSeconds={timeSpentSeconds}
+                onExit={() => window.location.reload()}
+            />
+        );
+    }
+
+    const totalViolations = tabViolations + fsViolations;
+
     return (
         <div className="p-3">
             <div className="max-w-7xl mx-auto space-y-6 bg-background-main flex flex-col font-semibold text-text-main">
+                {warningMessage && (
+                    <WarningModal
+                        isOpen={!!warningMessage}
+                        message={warningMessage || ''}
+                        violationCount={totalViolations}
+                        maxViolations={(assessment.maxTabSwitches ?? 2) + (assessment.maxFullscreenExits ?? 1)}
+                        onDismiss={() => setWarningMessage(null)}
+                    />
+                )}
+
+                {showSubmitModal && (
+                    <SubmitModal
+                        isOpen={showSubmitModal}
+                        totalQuestions={questions.length}
+                        answeredCount={answers.length}
+                        flaggedCount={flagged.size}
+                        isAutoSubmit={isAutoSubmit}
+                        isSubmitting={isSubmitting}
+                        onConfirm={handleSubmitAssessment}
+                        onCancel={() => {
+                            setShowSubmitModal(false);
+                            setIsAutoSubmit(false);
+                        }}
+                    />
+                )}
+
                 {/* <div className='sticky top-0 left-0 right-0 z-40 space-y-4'> */}
                 <div className='space-y-4'>
                     <ContentBox className="py-2">
@@ -303,7 +473,7 @@ const TakeAssessment: React.FC = () => {
                             ) : (
                                 <Button
                                     variant='success'
-                                    onClick={() => setShowSubmitDialog(true)}
+                                    onClick={() => setShowSubmitModal(true)}
                                     className="rounded-md">
                                     <RiSendPlaneLine className="w-4 h-4" />
                                     Submit Assessment
@@ -312,19 +482,6 @@ const TakeAssessment: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* ── Violation Alert ─────────────────────────────────── */}
-                {violations.length > 0 && (
-                    <div className="bg-warn-light/20 border-b border-warn-light/40 px-4 py-2.5 flex items-center gap-2 text-warn-dark text-sm">
-                        <RiAlertLine className="w-4 h-4 shrink-0" />
-                        <span>
-                            <strong>{violations.length}</strong> proctoring violation
-                            {violations.length > 1 ? "s" : ""} detected. Excessive violations
-                            may terminate your session.
-                        </span>
-
-                    </div>
-                )}
 
                 {/* ── Main Layout ─────────────────────────────────────── */}
                 {/* {Paste here} */}

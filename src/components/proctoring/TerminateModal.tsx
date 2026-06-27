@@ -1,42 +1,68 @@
 import React from 'react';
-import { MdError } from 'react-icons/md';
 import Modal from '../ui/Modal';
-import Button from '../ui/Button';
 
 interface TerminateModalProps {
     isOpen: boolean;
-    onClose: () => void;
-    onTerminate: () => void;
-    tabSwitchCount: number;
-    maxSwitches: number;
+    reason: string;
+    onExit: () => void;
 }
 
-const TerminateModal: React.FC<TerminateModalProps> = ({ isOpen, onClose, onTerminate, tabSwitchCount, maxSwitches }) => {
+const TerminateModal: React.FC<TerminateModalProps> = ({
+    isOpen,
+    reason,
+    onExit,
+}) => {
     return (
         <Modal
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={() => { }} // prevent closing
             title="Assessment Terminated"
-            maxWidth="sm"
+            maxWidth="md"
+            className="border border-red-200"
         >
-            <div className="flex flex-col space-y-4 pt-2">
-                <div className="flex items-center text-error-main gap-2 text-lg font-semibold">
-                    <MdError className="text-2xl" />
-                    Terminated
+            <div className="space-y-5">
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                        <svg
+                            className="w-6 h-6 text-red-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636"
+                            />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <p className="text-xs text-red-500 font-medium">
+                            Proctoring violation limit exceeded
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <p className="text-text-main font-medium">
-                        Your assessment has been terminated due to excessive tab/window switching.
-                    </p>
-                    <p className="mt-2 text-text-light text-sm">
-                        You switched tabs/windows {tabSwitchCount} times, exceeding the maximum allowed ({maxSwitches}).
-                    </p>
+
+                {/* Reason */}
+                <p className="text-sm text-slate-700 leading-relaxed">
+                    {reason}
+                </p>
+
+                {/* Info */}
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-700">
+                    Your progress has been recorded. Please contact your administrator.
                 </div>
-                <div className="flex justify-end pt-4 mt-4 border-t border-border-light">
-                    <Button onClick={onTerminate} variant="danger" size="md">
-                        Close Assessment
-                    </Button>
-                </div>
+
+                {/* Action */}
+                <button
+                    onClick={onExit}
+                    className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm"
+                >
+                    Exit Assessment
+                </button>
             </div>
         </Modal>
     );

@@ -250,7 +250,8 @@ const AssessmentDetails: React.FC = () => {
                 title='Assessment Warning'
                 isOpen={start}
                 onClose={() => setStart(false)}
-                onConfirm={handleStartConfirm}>
+                onConfirm={handleStartConfirm}
+            >
                 <div className="space-y-4 text-left">
                     <p className="text-text-main font-medium">
                         You are about to start the assessment. Please confirm you understand
