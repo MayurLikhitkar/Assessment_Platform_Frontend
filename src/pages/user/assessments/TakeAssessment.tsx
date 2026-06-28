@@ -17,10 +17,11 @@ import Button from '../../../components/ui/Button';
 import { twMerge } from 'tailwind-merge';
 import PageLoader from '../../../components/common/PageLoader';
 import { FaCircleCheck } from 'react-icons/fa6';
-import { MdQuiz } from 'react-icons/md';
-import TerminateModal from '../../../components/proctoring/TerminateModal';
-import WarningModal from '../../../components/proctoring/WarningModal';
-import SubmitModal from '../../../components/modal/SubmitModal';
+import TerminateModal from '../../../components/assessment/TerminateModal';
+import WarningModal from '../../../components/assessment/WarningModal';
+import SubmitModal from '../../../components/assessment/SubmitModal';
+import SuccessModal from '../../../components/assessment/SuccessScreen';
+import { LuClipboard } from 'react-icons/lu';
 
 type NavButtonProps = {
     index: number;
@@ -34,7 +35,7 @@ type NavButtonProps = {
 const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) => {
     const styles: Record<Difficulty, string> = {
         easy: 'text-success-dark bg-success-main/20',
-        medium: 'text-primary-dark bg-primary-main/20',
+        medium: 'text-accent-dark bg-accent-main/20',
         hard: 'text-error-dark bg-error-main/30',
     };
     return (
@@ -53,9 +54,9 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
         <Button variant='custom'
             onClick={onClick}
             className={twMerge(
-                'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all duration-200 cursor-pointer border',
+                'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-xs transition-all duration-200 cursor-pointer border',
                 isActive
-                    ? 'bg-secondary-light/10 text-secondary-main border-secondary-light/30'
+                    ? 'bg-accent-light/10 text-accent-main border-accent-light/50'
                     : 'border-border-light hover:bg-muted-light/70',
                 isAnswered && !isActive && 'text-success-main border-success-light/50'
             )}
@@ -67,7 +68,7 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
                 className={twMerge(
                     'w-6 h-6 rounded flex items-center justify-center font-bold shrink-0',
                     isActive
-                        ? 'bg-secondary-main text-text-inverse'
+                        ? 'bg-accent-main text-text-inverse'
                         : isAnswered
                             ? 'bg-success-main text-text-inverse'
                             : 'bg-muted-main/60 text-text-light'
@@ -84,6 +85,23 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
                 {question.type}
             </span>
         </Button>
+    );
+};
+
+const ProctoringStatus: React.FC<{ label: string; used: number; max: number }> = ({ label, used, max }) => {
+    const pct = Math.min((used / max) * 100, 100);
+    const color = pct >= 100 ? 'bg-error-main' : pct >= 66 ? 'bg-warn-main' : 'bg-success-main';
+
+    return (
+        <div>
+            <div className="flex justify-between text-xs text-text-light mb-0.5">
+                <span>{label}</span>
+                <span className={used >= max ? 'text-error-main font-bold' : ''}>{used}/{max}</span>
+            </div>
+            <div className="h-1.5 bg-background-main rounded-full overflow-hidden">
+                <div className={twMerge('h-full rounded-full transition-all duration-500', color)} style={{ width: `${pct}%` }} />
+            </div>
+        </div>
     );
 };
 
@@ -117,19 +135,24 @@ const TakeAssessment: React.FC = () => {
 
     const assessment = assessmentData?.data;
     const questions = assessmentQuestions?.data ?? [];
-
+console.log(assessment)
     // ── proctoring state ──────────────────────────────────────────────────────
     const [tabViolations, setTabViolations] = useState(0);
     const [fsViolations, setFsViolations] = useState(0);
     const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
     // ── timer state ───────────────────────────────────────────────────────────
-    const [timeLeft, setTimeLeft] = useState((assessment?.durationInMinutes ?? 0) * 60);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null); // null = not yet initialized
     const [timeSpentSeconds, setTimeSpentSeconds] = useState(0);
 
     // ── refs ──────────────────────────────────────────────────────────────────
+    // Replace totalSecondsRef with this:
+    const totalSeconds = React.useMemo(
+        () => (assessment?.durationInMinutes ?? 0) * 60,
+        [assessment?.durationInMinutes]
+    );
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const timerStarted = useRef(false);           // guard: start timer only once
+    const timerInitialized = useRef(false);          // guard: start timer only once
     const stepStartRef = useRef<number>(0);
     const answerTimers = useRef<Record<string, number>>({});
     const fullscreenExitCount = useRef(0);         // fullscreen exit counter
@@ -137,7 +160,7 @@ const TakeAssessment: React.FC = () => {
 
     const currentQuestion = questions[activeStep];
     const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
-    const timerCritical = timeLeft <= 300;
+    const timerCritical = timeLeft !== null && timeLeft <= 300;
 
     useEffect(() => {
         stepStartRef.current = Date.now();
@@ -148,18 +171,19 @@ const TakeAssessment: React.FC = () => {
             const next = prev + 1;
             const max = assessment?.maxTabSwitches ?? 2;
 
-            if (next > max) {
+            if (next >= max) {
                 terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
                 return next;
             }
 
-            if (next === max) {
+            const remaining = max - next;
+            if (remaining == 0) {
                 setWarningMessage(
-                    `⚠ Final warning: This is your last allowed tab switch. Any further violation will immediately terminate your assessment.`
+                    `⚠ Final warning: You have used ${next} of ${max} allowed tab switches. One more violation will immediately terminate your assessment.`
                 );
             } else {
                 setWarningMessage(
-                    `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. Exceeding the limit will terminate your assessment.`
+                    `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. You have ${remaining} chances remaining.`
                 );
             }
 
@@ -168,25 +192,29 @@ const TakeAssessment: React.FC = () => {
     }
 
     function addFsViolation() {
-        setFsViolations(() => {
-            const count = fullscreenExitCount.current;
+        setFsViolations((prev) => {
+            const next = prev + 1;
             const max = assessment?.maxFullscreenExits ?? 1;
 
-            if (count > max) {
-                terminate(`Assessment terminated: You exited fullscreen more than ${max} time(s) allowed.`);
-                return count;
+            if (next >= max) {
+                terminate(`Assessment terminated: You exited fullscreen more than ${max - 1} time(s) allowed.`);
+                return next;
             }
 
-            if (count === max) {
-                setWarningMessage(`⚠ Final fullscreen warning: You have exited fullscreen the maximum number of times. Another exit will terminate your assessment.`);
+            const remaining = max - next;
+            if (remaining === 1) {
+                setWarningMessage(
+                    `⚠ Final warning: You have exited fullscreen ${next} of ${max} allowed times. One more exit will immediately terminate your assessment.`
+                );
             } else {
-                setWarningMessage(`⚠ Fullscreen exit detected (${count}/${max}). Please stay in fullscreen mode. Further exits may terminate your assessment.`);
+                setWarningMessage(
+                    `⚠ Fullscreen exit detected (${next}/${max}). You have ${remaining} chances remaining.`
+                );
             }
-
             // Attempt to re-enter fullscreen
             document.documentElement.requestFullscreen?.().catch(() => { });
 
-            return count;
+            return next;
         });
     }
 
@@ -199,36 +227,24 @@ const TakeAssessment: React.FC = () => {
         if (document.fullscreenElement) document.exitFullscreen?.();
     }
 
-    function addViolation(message: string) {
-        setViolations((prev) => {
-            const next = [...prev, message];
-            if (next.length > assessmentData.maxTabSwitches) {
-                setTerminated(true);
-            } else if (next.length === assessmentData.maxTabSwitches) {
-                setWarning('You have reached the maximum allowed tab switches. Further violations will terminate the assessment.');
-            }
-            return next;
-        });
-    }
-
     // timer effect:
     useEffect(() => {
-        if (!assessment?.durationInMinutes || timerStarted.current) return;
-        timerStarted.current = true;
+        if (!assessment?.durationInMinutes || timerInitialized.current) return;
+        timerInitialized.current = true;
         startTimestamp.current = Date.now();
         stepStartRef.current = Date.now();
-        setTimeLeft(assessment.durationInMinutes * 60);
 
         timerRef.current = setInterval(() => {
             setTimeLeft((prev) => {
-                if (prev <= 1) {
+                const current = prev ?? totalSeconds;
+                if (current <= 1) {
                     clearInterval(timerRef.current!);
                     // Auto-submit
                     setIsAutoSubmit(true);
                     setShowSubmitModal(true);
                     return 0;
                 }
-                return prev - 1;
+                return current - 1;
             });
         }, 1000);
 
@@ -317,7 +333,7 @@ const TakeAssessment: React.FC = () => {
 
         const onFullscreenChange = () => {
             if (document.fullscreenElement) return;
-            fullscreenExitCount.current += 1;
+            // fullscreenExitCount.current += 1;
             addFsViolation();
         };
 
@@ -338,12 +354,13 @@ const TakeAssessment: React.FC = () => {
 
     if (submitted) {
         return (
-            <SuccessScreen
+            <SuccessModal
+                isOpen={submitted}
                 title={assessment.title}
                 answeredCount={answers.length}
                 totalQuestions={questions.length}
                 timeSpentSeconds={timeSpentSeconds}
-                onExit={() => window.location.reload()}
+                onExit={() => globalThis.location.reload()}
             />
         );
     }
@@ -385,7 +402,7 @@ const TakeAssessment: React.FC = () => {
                         <div className="flex items-center justify-between h-16 gap-4">
                             {/* Title */}
                             <div className="min-w-0">
-                                <h1 className="text-sm sm:text-base font-bold truncate">
+                                <h1 className="text-sm sm:text-base truncate tracking-wide">
                                     {assessment?.title}
                                 </h1>
                                 <p className="text-xs text-text-light">
@@ -408,7 +425,7 @@ const TakeAssessment: React.FC = () => {
                                     <span className="text-sm font-bold">
                                         {answers.length}/{questions.length}
                                     </span>
-                                    <span className="text-[10px] text-text-light uppercase tracking-wider">
+                                    <span className="text-xs text-text-light uppercase tracking-wider">
                                         Answered
                                     </span>
                                 </div>
@@ -423,7 +440,7 @@ const TakeAssessment: React.FC = () => {
                                     <RiTimeLine
                                         className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
                                     />
-                                    {moment.utc(timeLeft * 1000).format('HH:mm:ss')}
+                                    {moment.utc((timeLeft ?? totalSeconds) * 1000).format('HH:mm:ss')}
                                 </div>
                             </div>
                         </div>
@@ -431,7 +448,7 @@ const TakeAssessment: React.FC = () => {
                         {/* Progress bar */}
                         <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
                             <div
-                                className="h-full bg-primary-main rounded-full transition-all duration-500"
+                                className="h-full bg-accent-main rounded-full transition-all duration-500"
                                 style={{ width: `${(answers.length / questions.length) * 100}%` }}
                             />
                         </div>
@@ -465,7 +482,7 @@ const TakeAssessment: React.FC = () => {
                             </Button>
 
                             {activeStep < questions.length - 1 ? (
-                                <Button className='rounded-md'
+                                <Button className='rounded-md' variant='accent'
                                     onClick={() => setActiveStep((s) => s + 1)}>
                                     Next
                                     <RiArrowRightLine className="w-4 h-4" />
@@ -489,10 +506,10 @@ const TakeAssessment: React.FC = () => {
                     {/* ── Question Area ────────────────────────────────── */}
                     {isLoadingAssessmentQuestions ? <DataLoader /> : (
                         <main className="lg:col-span-3 space-y-4">
-                            <ContentBox className="space-y-5 overflow-y-auto" style={{ height: 'calc(100vh - 25vh)' }}>
+                            <ContentBox className="space-y-5 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
                                 {/* Question header */}
                                 <div className="flex items-center gap-3">
-                                    <span className="w-8 h-8 bg-primary-main rounded-md text-text-inverse flex items-center justify-center font-bold">
+                                    <span className="w-8 h-8 bg-accent-main rounded-md text-text-inverse flex items-center justify-center font-bold">
                                         {activeStep + 1}
                                     </span>
                                     <div className="flex items-center gap-2 text-xs text-text-light">
@@ -538,6 +555,7 @@ const TakeAssessment: React.FC = () => {
                                             id={currentQuestion._id}
                                             name={currentQuestion._id}
                                             rows={8}
+                                            className='border border-border-light'
                                             placeholder="Type your answer here..."
                                             value={currentAnswer?.answerSubjective || ""}
                                             onChange={(e) =>
@@ -563,6 +581,7 @@ const TakeAssessment: React.FC = () => {
                                         <TextArea
                                             id={currentQuestion._id}
                                             name={currentQuestion._id}
+                                            className='border border-border-light'
                                             rows={12}
                                             placeholder="Write your Query here..."
                                         />
@@ -611,8 +630,8 @@ const TakeAssessment: React.FC = () => {
                     {/* ── Question Navigator (sidebar) ─────────────────── */}
                     {isLoadingAssessmentQuestions ? <DataLoader /> : (
                         <aside className="lg:col-span-1">
-                            <ContentBox className="space-y-3 overflow-y-auto" style={{ height: 'calc(100vh - 25vh)' }}>
-                                <h3 className="text-xl text-secondary-main"><MdQuiz className="inline-block mr-2 text-2xl" />Questions</h3>
+                            <ContentBox className="space-y-3 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
+                                <h3 className="text-text-light"><LuClipboard className="inline-block mr-2 text-lg text-accent-main" />Questions</h3>
 
                                 <div className="space-y-1">
                                     {questions.map((q, idx) => {
@@ -634,7 +653,7 @@ const TakeAssessment: React.FC = () => {
                                 {/* Legend */}
                                 <div className="space-y-1 pt-2">
                                     {[
-                                        { cls: "bg-secondary-light", label: "Current", },
+                                        { cls: "bg-accent-main", label: "Current", },
                                         { cls: "bg-success-main/40 border border-success-light", label: "Answered", },
                                         { cls: "bg-muted-main border border-border-light", label: "Unanswered", },
                                         { cls: "bg-warn-main/80", label: "Flagged", },
@@ -647,6 +666,24 @@ const TakeAssessment: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
+
+                                {!assessment.allowTabSwitch && (
+                                    <div className="border-t border-slate-100 pt-3 space-y-1.5">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proctoring</p>
+                                        <ProctoringStatus
+                                            label="Tab Switches"
+                                            used={tabViolations}
+                                            max={assessment.maxTabSwitches ?? 2}
+                                        />
+                                        {!assessment.allowFullscreenExit && (
+                                            <ProctoringStatus
+                                                label="Fullscreen Exits"
+                                                used={fsViolations}
+                                                max={assessment.maxFullscreenExits ?? 1}
+                                            />
+                                        )}
+                                    </div>
+                                )}
                             </ContentBox>
                         </aside>
                     )}

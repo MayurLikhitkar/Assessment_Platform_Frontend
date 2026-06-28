@@ -15,7 +15,7 @@ import { IoVideocam, IoVideocamOff } from 'react-icons/io5';
 import { BsDisplay } from 'react-icons/bs';
 import Input from '../../../components/ui/Input';
 import type { ApiResponse } from '../../../types/types';
-import PermissionCard, { type PermStatus } from '../../../components/proctoring/PermissionCard';
+import PermissionCard, { type PermStatus } from '../../../components/assessment/PermissionCard';
 
 type ChecklistKey = 'connection' | 'environment' | 'rules';
 

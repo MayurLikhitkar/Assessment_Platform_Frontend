@@ -2,7 +2,7 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'underline' | 'success' | 'icon' | 'text' | 'custom' | 'glass';
+    variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'danger' | 'underline' | 'success' | 'icon' | 'text' | 'custom' | 'glass';
     size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     loadingText?: string;
@@ -24,6 +24,7 @@ const Button: React.FC<ButtonProps> = ({
     const variants = {
         primary: 'bg-primary-main hover:bg-primary-dark text-text-inverse focus:border-primary-light',
         secondary: 'bg-secondary-dark hover:bg-secondary-main text-text-inverse focus:border-secondary-light',
+        accent: 'bg-accent-main hover:bg-accent-dark text-text-inverse focus:border-accent-light',
         outline: 'border border-primary-main/40 hover:bg-primary-light/10 text-text-main focus:border-primary-light',
         underline: 'px-4 py-2 border-b-2 border-primary-main hover:bg-background-main text-text-main',
         success: 'bg-success-dark hover:bg-success-main text-text-inverse focus:border-success-light',
