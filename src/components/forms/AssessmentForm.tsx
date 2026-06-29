@@ -15,11 +15,11 @@ import Button from '../ui/Button';
 import { ContentBox, PageFooter } from '../ui/Page';
 import { getQuestions } from '../../services/axios/adminApi';
 import type { Difficulty, QuestionInterface } from '../../types/questionTypes';
-import { AssessmentDifficulty, AssessmentType, type AssessmentInterface } from '../../types/assessmentTypes';
+import { AssessmentDifficulty, AssessmentType, type AssessmentInterface, type FormAssessmentInterface } from '../../types/assessmentTypes';
 import AgGridTable from '../common/AgGridTable';
 
 interface AssessmentFormProps {
-    initialValues: Partial<AssessmentInterface>;
+    initialValues: Partial<FormAssessmentInterface>;
     onSubmit: (values: Partial<AssessmentInterface>) => void;
     handleCancel: () => void;
     isLoading: boolean;
@@ -90,7 +90,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         enableRecording: Yup.boolean()
     });
 
-    const formik = useFormik<Partial<AssessmentInterface>>({
+    const formik = useFormik<Partial<FormAssessmentInterface>>({
         initialValues,
         enableReinitialize: true,
         validationSchema: assessmentSchema,

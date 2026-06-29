@@ -177,10 +177,10 @@ const Assessments: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                                 {assessments?.map((assessment: AssessmentInterface) => {
                                     const proctoringFeatures = [
-                                        { icon: IoVideocam, active: assessment.requireWebcam, label: 'Webcam' },
-                                        { icon: FaMicrophone, active: assessment.requireMicrophone, label: 'Mic' },
-                                        { icon: TbBrowserX, active: !assessment.allowTabSwitch, label: 'Tab Lock' },
-                                        { icon: FaLock, active: !assessment.allowFullscreenExit, label: 'Fullscreen' },
+                                        { icon: IoVideocam, active: assessment.webcam.allowed, label: 'Webcam' },
+                                        { icon: FaMicrophone, active: assessment.microphone.allowed, label: 'Mic' },
+                                        { icon: TbBrowserX, active: !assessment.tabSwitch.allowed, label: 'Tab Lock' },
+                                        { icon: FaLock, active: !assessment.fullscreenExit.allowed, label: 'Fullscreen' },
                                     ];
                                     const features = [
                                         { icon: MdQuiz, value: assessment.questions?.length || 0, label: 'Questions' },

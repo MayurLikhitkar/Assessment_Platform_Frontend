@@ -13,6 +13,16 @@ export enum AssessmentDifficulty {
     EXPERT = 'expert',
 }
 
+export interface ILimit {
+    allowed: boolean
+    max?: number
+}
+
+export interface IRecord {
+    allowed: boolean
+    url?: string
+}
+
 export interface AssessmentInterface {
     _id: string;
     id: number;
@@ -24,14 +34,45 @@ export interface AssessmentInterface {
     totalMarks: number;
     passingMarks: number;
     questions: string[];
+    startDate?: Date;
+    endDate?: Date;
+    tags: string[];
+    instructions: string;
+    isActive: boolean;
+    isPublic: boolean;
+    negativeMarking: boolean;
+
+    // Proctoring settings
+    webcam: IRecord;
+    microphone: IRecord;
+    enableRecording: boolean;
+    tabSwitch: ILimit;
+    fullscreenExit: ILimit;
+
     createdBy: string;
     updatedBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface FormAssessmentInterface {
+    _id: string;
+    id: number;
+    title: string;
+    description: string;
+    type: AssessmentType[];
+    difficulty: AssessmentDifficulty;
+    durationInMinutes: number;
+    totalMarks: number;
+    passingMarks: number;
+    questions: string[];
     isActive: boolean;
     isPublic: boolean;
     startDate?: Date;
     endDate?: Date;
     tags: string[];
     instructions: string;
+    negativeMarking: boolean;
 
     // Proctoring settings
     requireWebcam: boolean;
@@ -42,9 +83,12 @@ export interface AssessmentInterface {
     maxFullscreenExits?: number;
     enableRecording: boolean;
 
+    createdBy: string;
+    updatedBy: string;
     createdAt: Date;
     updatedAt: Date;
 }
+
 export type AssessmentSortableFields = Pick<AssessmentInterface, 'createdAt' | 'title' | 'difficulty' | 'durationInMinutes' | 'startDate' | 'endDate'>;
 
 export interface GetAssessmentsParams {
