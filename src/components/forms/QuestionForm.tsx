@@ -14,7 +14,7 @@ import FormMultiClick from '../ui/FormMultiClick';
 import { ContentBox, PageFooter } from '../ui/Page';
 
 import { QuestionType, Difficulty, DatabaseType, ProgrammingLanguage } from '../../types/questionTypes';
-import type { QuestionInterface } from '../../types/questionTypes';
+import type { FormQuestionInterface, QuestionInterface } from '../../types/questionTypes';
 
 // Validation Schema with conditional branches based on Question Type
 const questionValidationSchema = Yup.object().shape({
@@ -30,6 +30,10 @@ const questionValidationSchema = Yup.object().shape({
         .trim()
         .min(10, 'Question explanation must be at least 10 characters')
         .max(3000, 'Question explanation must not exceed 3000 characters'),
+    answerExplanation: Yup.string()
+        .trim()
+        .min(10, 'Answer explanation must be at least 10 characters')
+        .max(2000, 'Answer explanation must not exceed 2000 characters'),
     marks: Yup.number()
         .min(1, 'Marks must be at least 1')
         .max(100, 'Marks must not exceed 100')
@@ -43,12 +47,12 @@ const questionValidationSchema = Yup.object().shape({
         .min(5, 'Minimum 5 seconds')
         .max(7200, 'Maximum 7200 seconds')
         .integer('Time limit must be a whole number')
-        .required('Time limit is required'),
+        .notRequired(),
     difficulty: Yup.string()
         .oneOf(Object.values(Difficulty), 'Invalid difficulty')
         .required('Difficulty is required'),
-    answerExplanation: Yup.string().trim().max(2000, 'Answer Explanation must not exceed 2000 characters'),
-    tags: Yup.array().of(Yup.string().trim().min(1, 'Tag cannot be empty')).min(1, 'At least one tag is required'),
+    tags: Yup.array().of(Yup.string().trim().min(1, 'Tag cannot be empty')).min(1, 'At least one tag is required').required('Tags are required'),
+    hints: Yup.array().of(Yup.string().trim().min(1, 'Hint cannot be empty')).notRequired(),
 
     // --- MCQ Validation ---
     options: Yup.array().when('type', {
@@ -73,9 +77,13 @@ const questionValidationSchema = Yup.object().shape({
                     (options) => options?.some((opt) => opt.isCorrect) ?? false
                 )
                 .test(
-                    'at-least-one-incorrect',
-                    'At least one option must be marked as incorrect (not all can be correct)',
-                    (options) => options?.some((opt) => !opt.isCorrect) ?? false
+                    'single-correct-when-not-multiselect',
+                    'Only one option can be marked as correct when multi-select is disabled',
+                    function (options) {
+                        const { isMultiSelect } = this.parent;
+                        if (isMultiSelect || !options) return true;
+                        return options.filter((opt) => opt.isCorrect).length === 1;
+                    }
                 )
                 .test(
                     'unique-options',
@@ -89,6 +97,11 @@ const questionValidationSchema = Yup.object().shape({
                 .required('Options are required'),
         otherwise: (schema) => schema.notRequired(),
     }),
+    isMultiSelect: Yup.boolean().when('type', {
+        is: QuestionType.MCQ,
+        then: (schema) => schema.notRequired(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
 
     // --- CODING Validation ---
     programmingLanguages: Yup.array().when('type', {
@@ -98,17 +111,12 @@ const questionValidationSchema = Yup.object().shape({
     }),
     memoryLimitInMB: Yup.number().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.typeError('Must be a number').min(128, 'Minimum 128 MB').max(512, 'Maximum 512 MB').required('Memory limit is required'),
-        otherwise: (schema) => schema.notRequired(),
-    }),
-    hints: Yup.array().when('type', {
-        is: QuestionType.CODING,
-        then: (schema) => schema.of(Yup.string().trim().min(1, 'Hint cannot be empty')).max(3, 'Maximum 3 hints allowed').notRequired(),
+        then: (schema) => schema.typeError('Must be a number').min(128, 'Minimum 128 MB').max(512, 'Maximum 512 MB').notRequired(),
         otherwise: (schema) => schema.notRequired(),
     }),
     constraints: Yup.array().when('type', {
         is: QuestionType.CODING,
-        then: (schema) => schema.of(Yup.string().trim().min(1, 'Constraint cannot be empty')).max(3, 'Maximum 3 constraints allowed').notRequired(),
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Constraint cannot be empty')).notRequired(),
         otherwise: (schema) => schema.notRequired(),
     }),
     testCases: Yup.array().when('type', {
@@ -131,7 +139,7 @@ const questionValidationSchema = Yup.object().shape({
     }),
     databaseSchema: Yup.string().when('type', {
         is: QuestionType.QUERY,
-        then: (schema) => schema.trim().min(10, 'Schema must be at least 10 characters').required('Database schema is required'),
+        then: (schema) => schema.trim().min(10, 'Schema must be at least 10 characters').notRequired(),
         otherwise: (schema) => schema.notRequired(),
     }),
     expectedQuery: Yup.string().when('type', {
@@ -156,11 +164,6 @@ const questionValidationSchema = Yup.object().shape({
     }),
 
     // --- SUBJECTIVE Validation ---
-    wordLimit: Yup.number().when('type', {
-        is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 words').required('Word limit is required'),
-        otherwise: (schema) => schema.notRequired(),
-    }),
     minLength: Yup.number().when('type', {
         is: QuestionType.SUBJECTIVE,
         then: (schema) => schema.typeError('Must be a number').min(1, 'Minimum 1 character').required('Min length is required'),
@@ -173,18 +176,18 @@ const questionValidationSchema = Yup.object().shape({
     }),
     expectedKeywords: Yup.array().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.of(Yup.string().trim().min(1, 'Keyword cannot be empty')).min(1, 'At least one keyword is required'),
+        then: (schema) => schema.of(Yup.string().trim().min(1, 'Keyword cannot be empty')).min(1, 'At least one keyword is required').required(),
         otherwise: (schema) => schema.notRequired(),
     }),
     sampleAnswer: Yup.string().when('type', {
         is: QuestionType.SUBJECTIVE,
-        then: (schema) => schema.trim().max(10000, 'Sample Answer must not exceed 10000 characters').notRequired(),
+        then: (schema) => schema.trim().max(2000, 'Sample Answer must not exceed 2000 characters').notRequired(),
         otherwise: (schema) => schema.notRequired(),
     }),
 });
 
 interface QuestionFormProps {
-    initialValues: Partial<QuestionInterface>;
+    initialValues: Partial<FormQuestionInterface>;
     onSubmit: (values: Partial<QuestionInterface>) => void;
     handleCancel: () => void;
     isLoading: boolean;
@@ -198,7 +201,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
     isLoading,
     isEditMode = false
 }) => {
-    const formik = useFormik<Partial<QuestionInterface>>({
+    const formik = useFormik<Partial<FormQuestionInterface>>({
         initialValues,
         enableReinitialize: true,
         validationSchema: questionValidationSchema,
@@ -206,35 +209,54 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         validateOnBlur: true,
         onSubmit: (values) => {
             console.log("Submitting values: ", values);
+            const { type } = values;
+            const payload: Partial<QuestionInterface> = {
+                type,
+                question: values.question,
+                questionExplanation: values.questionExplanation,
+                answerExplanation: values.answerExplanation,
+                marks: values.marks,
+                negativeMarks: values.negativeMarks,
+                difficulty: values.difficulty,
+                timeLimitInSeconds: values.timeLimitInSeconds,
+                tags: values.tags,
+                hints: values.hints,
+                isActive: values.isActive,
+            };
             // Clean up payload based on type before sending
-            const payload = { ...values };
-            if (payload.type !== QuestionType.MCQ) {
-                delete payload.options;
-                delete payload.isMultiSelect;
+            if (type === QuestionType.MCQ) {
+                payload.mcqFields = {
+                    options: values.options ?? [],
+                    isMultiSelect: !!values.isMultiSelect,
+                };
             }
-            if (payload.type !== QuestionType.CODING) {
-                delete payload.testCases;
-                delete payload.memoryLimitInMB;
-                delete payload.constraints;
-                delete payload.programmingLanguages;
-                delete payload.hints;
-                delete payload.starterCode;
-                delete payload.solutionCode;
+            if (type === QuestionType.CODING) {
+                payload.codingFields = {
+                    programmingLanguages: values.programmingLanguages ?? [],
+                    testCases: values.testCases ?? [],
+                    constraints: values.constraints,
+                    memoryLimitInMB: values.memoryLimitInMB,
+                    starterCode: values.starterCode,
+                    solutionCode: values.solutionCode,
+                };
             }
-            if (payload.type !== QuestionType.QUERY) {
-                delete payload.databaseType;
-                delete payload.expectedQuery;
-                delete payload.databaseSchema;
-                delete payload.sampleData;
-                delete payload.allowedKeywords;
-                delete payload.forbiddenKeywords;
+            if (type === QuestionType.QUERY) {
+                payload.queryFields = {
+                    databaseType: values.databaseType!,
+                    databaseSchema: values.databaseSchema,
+                    sampleData: values.sampleData,
+                    expectedQuery: values.expectedQuery!,
+                    allowedKeywords: values.allowedKeywords,
+                    forbiddenKeywords: values.forbiddenKeywords,
+                };
             }
-            if (payload.type !== QuestionType.SUBJECTIVE) {
-                delete payload.maxLength;
-                delete payload.minLength;
-                delete payload.wordLimit;
-                delete payload.expectedKeywords;
-                delete payload.sampleAnswer;
+            if (type === QuestionType.SUBJECTIVE) {
+                payload.subjectiveFields = {
+                    minLength: values.minLength!,
+                    maxLength: values.maxLength!,
+                    expectedKeywords: values.expectedKeywords ?? [],
+                    sampleAnswer: values.sampleAnswer,
+                };
             }
 
             onSubmit(payload);
@@ -246,14 +268,27 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         formik.setFieldValue(`${field}[${index}].${key}`, value);
     };
 
-    const removeDynamicItem = (field: keyof QuestionInterface, index: number) => {
+    const removeDynamicItem = (field: keyof FormQuestionInterface, index: number) => {
         const list = formik.values[field];
         if (Array.isArray(list)) {
             if (field === 'options' && list.length <= 2) {
                 toast.error('At least 2 options are required');
                 return;
             }
-            formik.setFieldValue(field as string, list.filter((_, i) => i !== index));
+            formik.setFieldValue(field, list.filter((_, i) => i !== index));
+        }
+    };
+
+    const handleOptionCorrectChange = (index: number, checked: boolean) => {
+        const options = formik.values.options ?? [];
+        if (formik.values.isMultiSelect) {
+            updateDynamicList('options', index, 'isCorrect', checked);
+        } else {
+            const updated = options.map((opt, i) => ({
+                ...opt,
+                isCorrect: i === index ? checked : false,
+            }));
+            formik.setFieldValue('options', updated);
         }
     };
 
@@ -274,7 +309,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
     return (
         <form id='question-form' onSubmit={formik.handleSubmit} className="space-y-3">
             {/* Base Question Details */}
-            <ContentBox className="grid sm:grid-cols-2 gap-6">
+            <ContentBox className="grid sm:grid-cols-2 gap-5">
                 <FormSelect
                     id="type"
                     name="type"
@@ -293,7 +328,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 />
                 <FormInput id="marks" name="marks" label="Marks" type="number" min={1} formik={formik} required />
                 <FormInput id="negativeMarks" name="negativeMarks" label="Negative Marks" type="number" min={0} step={0.5} formik={formik} />
-                <FormInput id="timeLimitInSeconds" name="timeLimitInSeconds" label="Time Limit (Seconds)" type="number" min={5} max={18000} formik={formik} required />
+                <FormInput id="timeLimitInSeconds" name="timeLimitInSeconds" label="Time Limit (Seconds)" type="number" formik={formik} required />
                 <FormSelect
                     id="isActive"
                     name="isActive"
@@ -303,8 +338,8 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 />
             </ContentBox>
 
-            <ContentBox className="grid gap-6">
-                <FormTextArea id="question" name="question" label="Question Text" rows={4} formik={formik} placeholder="Enter the question here..." required />
+            <ContentBox className="space-y-5">
+                <FormTextArea id="question" name="question" label="Question" rows={4} formik={formik} placeholder="Enter the question here..." required />
                 <FormTextArea id="questionExplanation" name="questionExplanation" label="Question Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the question" />
                 <FormTextArea id="answerExplanation" name="answerExplanation" label="Answer Explanation" rows={3} formik={formik} placeholder="Provide an explanation for the correct answer (optional)" />
             </ContentBox>
@@ -312,21 +347,39 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
             {/* Conditional Sections */}
             {/* --- CONDITIONAL: MCQ --- */}
             {formik.values.type === QuestionType.MCQ && (
-                <ContentBox>
-                    <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-semibold text-text-main">MCQ Options</h3>
-                        <Button type="button" variant='text' className="mt-2" onClick={addOption}>
-                            <MdAdd className='text-xl' /> Add Option
-                        </Button>
+                <ContentBox className='space-y-5'>
+                    <h3 className="font-semibold text-text-main">MCQ Options</h3>
+                    <div className="grid sm:grid-cols-2 gap-6">
+                        <FormSelect
+                            id="isMultiSelect"
+                            name="isMultiSelect"
+                            label="Is Multi Select?"
+                            options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                            formik={formik}
+                        />
+                        <div className='flex items-end justify-end'>
+                            <Button variant='secondary' className='px-2 py-1' onClick={addOption}>
+                                <MdAdd className='text-xl' /> Add Option
+                            </Button>
+                        </div>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {formik.values.options && formik.values.options.length > 0 ? formik.values.options.map((option, index) => (
                             <div key={index + 1} className="flex flex-col gap-1 w-full relative">
                                 <div className="flex items-center gap-3">
                                     <Input
-                                        type="checkbox"
+                                        type={formik.values.isMultiSelect ? 'checkbox' : 'radio'}
                                         checked={option.isCorrect}
-                                        onChange={(e) => updateDynamicList('options', index, 'isCorrect', e.target.checked)}
+                                        onChange={(e) => {
+                                            if (formik.values.isMultiSelect) {
+                                                handleOptionCorrectChange(index, e.target.checked);
+                                            }
+                                        }}
+                                        onClick={() => {
+                                            if (!formik.values.isMultiSelect) {
+                                                handleOptionCorrectChange(index, true);
+                                            }
+                                        }}
                                         className="cursor-pointer shrink-0"
                                         title="Mark as correct answer"
                                     />
@@ -357,7 +410,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
 
             {/* --- CONDITIONAL: CODING --- */}
             {formik.values.type === QuestionType.CODING && (
-                <ContentBox className='space-y-6'>
+                <ContentBox className='space-y-5'>
                     <h3 className="font-semibold text-text-main">Coding Environment Specs</h3>
 
                     <FormMultiClick
@@ -388,7 +441,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                         <h4 className="font-semibold text-text-main mb-2">Test Cases</h4>
                         <div className="space-y-4">
                             {formik.values.testCases?.map((tc, index) => (
-                                <div key={index} className="space-y-3 border border-border-light p-3 rounded-md">
+                                <div key={index + 1} className="space-y-3 border border-border-light p-3 rounded-md">
                                     <div className="flex justify-between">
                                         <label className="flex items-center text-sm gap-2 mt-2">
                                             <Input type="checkbox" checked={tc.isPublic} onChange={(e) => updateDynamicList('testCases', index, 'isPublic', e.target.checked)} />
@@ -414,7 +467,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
 
             {/* --- CONDITIONAL: QUERY --- */}
             {formik.values.type === QuestionType.QUERY && (
-                <ContentBox>
+                <ContentBox className='space-y-5'>
                     <h3 className="font-semibold text-text-main">Database Details</h3>
                     <FormSelect
                         id="databaseType"
@@ -425,19 +478,36 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                         formik={formik}
                         required
                     />
-                    <FormTextArea id="databaseSchema" name="databaseSchema" label="Database Schema (SQL setup script)" rows={4} formik={formik} placeholder="CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));" required />
+                    <FormTextArea id="databaseSchema" name="databaseSchema" label="Database Schema (SQL setup script)" rows={4} formik={formik} placeholder="CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));" />
                     <FormTextArea id="expectedQuery" name="expectedQuery" label="Expected Query (Correct Answer)" rows={3} formik={formik} placeholder="SELECT * FROM users WHERE age > 18;" required />
+                    <FormTextArea id='sampleData' name='sampleData' label="Sample Data (SQL)" rows={4} formik={formik} placeholder="INSERT INTO users (id, name) VALUES (1, 'John Doe');" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormMultiInput
+                            id="allowedKeywords"
+                            name="allowedKeywords"
+                            label="Allowed Keywords"
+                            placeholder="Add a keyword and press Enter"
+                            formik={formik}
+                        />
+
+                        <FormMultiInput
+                            id="forbiddenKeywords"
+                            name="forbiddenKeywords"
+                            label="Forbidden Keywords"
+                            placeholder="Add a keyword and press Enter"
+                            formik={formik}
+                        />
+                    </div>
                 </ContentBox>
             )}
 
             {/* --- CONDITIONAL: SUBJECTIVE --- */}
             {formik.values.type === QuestionType.SUBJECTIVE && (
-                <ContentBox>
-                    <h3 className="font-semibold text-text-main mb-2">Subjective Question Specs</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                <ContentBox className='space-y-5'>
+                    <h3 className="font-semibold text-text-main">Subjective Question Specs</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <FormInput id="minLength" name="minLength" label="Min Length" type="number" min={1} formik={formik} required />
                         <FormInput id="maxLength" name="maxLength" label="Max Length" type="number" min={1} formik={formik} required />
-                        <FormInput id="wordLimit" name="wordLimit" label="Max Words" type="number" min={1} formik={formik} required />
                     </div>
                     <FormMultiInput
                         id="expectedKeywords"
@@ -447,6 +517,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                         formik={formik}
                         required
                     />
+                    <FormTextArea id="sampleAnswer" name="sampleAnswer" label="Sample Answer" rows={3} formik={formik} placeholder="Provide an sample answer (optional)" />
                 </ContentBox>
             )}
 
@@ -459,6 +530,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                     label="Tags"
                     placeholder="Add a tag and press Enter"
                     formik={formik}
+                    required
                 />
 
                 {/* Hints */}

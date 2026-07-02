@@ -33,7 +33,7 @@ const AdminQuestions: React.FC = () => {
 
     // Delete mutation
     const deleteMutation = useMutation({
-        mutationFn: (id: number) => deleteQuestion(id),
+        mutationFn: (id: string) => deleteQuestion(id),
         onSuccess: (data) => {
             if (data?.success) {
                 toast.success(data.responseMessage || 'Question deleted');
@@ -142,7 +142,7 @@ const AdminQuestions: React.FC = () => {
                 if (!params.data) return null;
                 return (
                     <ActionCell
-                        onEdit={() => navigate(`/app/questions/${params.data?.id}/edit`)}
+                        onEdit={() => navigate(`/app/questions/${params.data?._id}/edit`)}
                         onDelete={() => setDeleteTarget(params.data!)}
                     />
                 );
@@ -218,7 +218,7 @@ const AdminQuestions: React.FC = () => {
                 message={`Are you sure you want to delete this question? "${deleteTarget?.question?.substring(0, 80)}${(deleteTarget?.question?.length || 0) > 80 ? '...' : ''}"`}
                 onConfirm={() => {
                     if (deleteTarget) {
-                        deleteMutation.mutate(deleteTarget.id);
+                        deleteMutation.mutate(deleteTarget._id);
                     }
                 }}
                 confirmText="Delete"

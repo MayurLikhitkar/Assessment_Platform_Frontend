@@ -9,7 +9,7 @@ import AssessmentForm from '../../../components/forms/AssessmentForm';
 
 import { createAssessment } from '../../../services/axios/adminApi';
 import type { ApiResponse } from '../../../types/types';
-import { AssessmentDifficulty, type AssessmentInterface, type FormAssessmentInterface } from '../../../types/assessmentTypes';
+import { AssessmentDifficulty, type FormAssessmentInterface } from '../../../types/assessmentTypes';
 
 const CreateAssessment: React.FC = () => {
     const navigate = useNavigate();

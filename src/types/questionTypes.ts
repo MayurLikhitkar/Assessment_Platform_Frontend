@@ -43,9 +43,38 @@ export interface Option {
     isCorrect: boolean;
 }
 
-export interface QuestionInterface {
+export interface McqFields {
+    options: Option[];
+    isMultiSelect: boolean;
+}
+
+export interface CodingFields {
+    programmingLanguages: ProgrammingLanguage[];
+    starterCode?: Partial<Record<ProgrammingLanguage, string>>;
+    solutionCode?: Partial<Record<ProgrammingLanguage, string>>;
+    testCases: TestCase[];
+    constraints?: string[];
+    memoryLimitInMB?: number;
+}
+
+export interface QueryFields {
+    databaseType: DatabaseType;
+    databaseSchema?: string;
+    sampleData?: string;
+    expectedQuery: string;
+    allowedKeywords?: string[];
+    forbiddenKeywords?: string[];
+}
+
+export interface SubjectiveFields {
+    minLength: number;
+    maxLength: number;
+    expectedKeywords: string[];
+    sampleAnswer?: string;
+}
+
+export interface FormQuestionInterface {
     _id: string;
-    id: number;
     type: QuestionType;
     question: string;
     questionExplanation: string;
@@ -55,6 +84,7 @@ export interface QuestionInterface {
     difficulty: Difficulty;
     timeLimitInSeconds?: number; // in seconds
     tags: string[];
+    hints?: string[];
     isActive: boolean;
     createdBy: string;
     updatedBy: string;
@@ -71,7 +101,6 @@ export interface QuestionInterface {
     solutionCode?: Partial<Record<ProgrammingLanguage, string>>;
     testCases?: TestCase[];
     constraints?: string[];
-    hints?: string[];
     memoryLimitInMB?: number;
 
     // query fields
@@ -85,7 +114,30 @@ export interface QuestionInterface {
     // subjective fields
     minLength?: number;
     maxLength?: number;
-    wordLimit?: number;
     expectedKeywords?: string[];
     sampleAnswer?: string;
+}
+
+export interface QuestionInterface {
+    _id: string;
+    type: QuestionType;
+    question: string;
+    questionExplanation?: string;
+    answerExplanation?: string;
+    negativeMarks: number;
+    marks: number;
+    difficulty: Difficulty;
+    timeLimitInSeconds?: number; // in seconds
+    tags: string[];
+    hints?: string[];
+    isActive: boolean;
+    createdBy: string;
+    updatedBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+
+    mcqFields?: McqFields;
+    codingFields?: CodingFields;
+    queryFields?: QueryFields;
+    subjectiveFields?: SubjectiveFields;
 }

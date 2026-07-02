@@ -20,7 +20,7 @@ const Select: React.FC<SelectProps> = ({ value, id, placeholder, className, opti
     const baseClassNames: ClassNamesConfig<Option, false, GroupBase<Option>> = {
         control: () =>
             twMerge(
-                'rounded-lg bg-background-light px-1 py-2 h-full cursor-pointer! transition-all border-2 border-primary-light/50 hover:border-primary-light outline-none focus:border-primary-light',
+                'rounded-lg bg-background-light px-1 py-2 h-full cursor-pointer! transition-all border border-primary-light/50 hover:border-primary-light outline-none focus:border-primary-light',
                 className
             ),
         valueContainer: () => 'px-2 text-text-main',

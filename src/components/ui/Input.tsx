@@ -1,7 +1,7 @@
 import React, { type InputHTMLAttributes } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-const baseStyles = "outline-none border-2 border-primary-light/50 hover:border-primary-light focus:border-primary-light text-text-main"
+const baseStyles = "outline-none border border-primary-light/50 hover:border-primary-light focus:border-primary-light text-text-main"
 
 const stylesByType: Record<string, string> = {
     default: "p-2 w-full rounded-lg",

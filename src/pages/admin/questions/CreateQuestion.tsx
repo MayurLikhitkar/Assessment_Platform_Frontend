@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { createQuestion } from '../../../services/axios/adminApi';
 import type { ApiResponse } from '../../../types/types';
-import { QuestionType, Difficulty, ProgrammingLanguage, DatabaseType, type QuestionInterface } from '../../../types/questionTypes';
+import { QuestionType, Difficulty, ProgrammingLanguage, DatabaseType, type FormQuestionInterface } from '../../../types/questionTypes';
 
 import BackButton from '../../../components/common/BackButton';
 import { Page, PageBody, PageHeader } from '../../../components/ui/Page';
@@ -29,27 +29,41 @@ const CreateQuestion: React.FC = () => {
         },
     });
 
-    const initialValues: Partial<QuestionInterface> = {
+    const initialValues: Partial<FormQuestionInterface> = {
         type: QuestionType.MCQ,
         question: '',
         questionExplanation: '',
+        answerExplanation: '',
         marks: 1,
         negativeMarks: 0,
         difficulty: Difficulty.EASY,
+        timeLimitInSeconds: 30,
+        isActive: false,
         tags: [],
         hints: [],
-        answerExplanation: '',
+
         options: [
-            { text: '', isCorrect: false },
-            { text: '', isCorrect: false }
+            { _id: '', text: '', isCorrect: false },
+            { _id: '', text: '', isCorrect: false }
         ],
-        timeLimitInSeconds: 30,
-        memoryLimitInMB: 256,
+        isMultiSelect: false,
+
+        memoryLimitInMB: 128,
         testCases: [],
         constraints: [],
-        allowedLanguages: [ProgrammingLanguage.JAVASCRIPT],
-        databaseType: DatabaseType.POSTGRESQL,
+        programmingLanguages: [ProgrammingLanguage.JAVASCRIPT],
+
         expectedKeywords: [],
+        minLength: 0,
+        maxLength: 0,
+        sampleAnswer: '',
+
+        databaseType: DatabaseType.MYSQL,
+        databaseSchema: '',
+        sampleData: '',
+        expectedQuery: '',
+        allowedKeywords: [],
+        forbiddenKeywords: []
     };
 
     return (

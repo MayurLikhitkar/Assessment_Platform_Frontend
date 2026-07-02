@@ -70,7 +70,7 @@ export const createQuestion = async (data: Partial<QuestionInterface>) => {
     }
 }
 
-export const deleteQuestion = async (id: number) => {
+export const deleteQuestion = async (id: string) => {
     try {
         const response = await api.delete<ApiResponse<null>>(`/questions/${id}`)
         return response.data;
@@ -90,7 +90,7 @@ export const createAssessment = async (data: Partial<AssessmentInterface>) => {
     }
 }
 
-export const getQuestionById = async (id: string | number) => {
+export const getQuestionById = async (id: string) => {
     try {
         const response = await api.get<ApiResponse<QuestionInterface>>(`/questions/${id}`);
         return response.data;
@@ -100,7 +100,7 @@ export const getQuestionById = async (id: string | number) => {
     }
 };
 
-export const updateQuestion = async ({ id, data }: { id: string | number, data: Partial<QuestionInterface> }) => {
+export const updateQuestion = async ({ id, data }: { id: string, data: Partial<QuestionInterface> }) => {
     try {
         const response = await api.put<ApiResponse<QuestionInterface>>(`/questions/${id}`, data);
         return response.data;
@@ -110,7 +110,7 @@ export const updateQuestion = async ({ id, data }: { id: string | number, data: 
     }
 };
 
-export const getAssessmentById = async (id: string | number) => {
+export const getAssessmentById = async (id: string) => {
     try {
         const response = await api.get<ApiResponse<AssessmentInterface>>(`/assessments/${id}`);
         return response.data;
@@ -120,7 +120,7 @@ export const getAssessmentById = async (id: string | number) => {
     }
 };
 
-export const updateAssessment = async ({ id, data }: { id: string | number, data: Partial<AssessmentInterface> }) => {
+export const updateAssessment = async ({ id, data }: { id: string, data: Partial<AssessmentInterface> }) => {
     try {
         const response = await api.put<ApiResponse<AssessmentInterface>>(`/assessments/${id}`, data);
         return response.data;

@@ -95,8 +95,15 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         enableReinitialize: true,
         validationSchema: assessmentSchema,
         onSubmit: async (values) => {
-            // console.info(values)
-            onSubmit(values);
+            const payload: Partial<AssessmentInterface> = {
+                ...values,
+                webcam: { allowed: values.requireWebcam || false },
+                microphone: { allowed: values.requireMicrophone || false },
+                tabSwitch: { allowed: values.allowTabSwitch || false, max: values.maxTabSwitches },
+                fullscreenExit: { allowed: values.allowFullscreenExit || false, max: values.maxFullscreenExits }
+            };
+
+            onSubmit(payload);
         },
     });
 

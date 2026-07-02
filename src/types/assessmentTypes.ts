@@ -24,8 +24,6 @@ export interface IRecord {
 }
 
 export interface AssessmentInterface {
-    _id: string;
-    id: number;
     title: string;
     description: string;
     type: AssessmentType[];
@@ -41,6 +39,8 @@ export interface AssessmentInterface {
     isActive: boolean;
     isPublic: boolean;
     negativeMarking: boolean;
+    createdAt: Date;
+    updatedAt: Date;
 
     // Proctoring settings
     webcam: IRecord;
@@ -51,13 +51,9 @@ export interface AssessmentInterface {
 
     createdBy: string;
     updatedBy: string;
-    createdAt: Date;
-    updatedAt: Date;
 }
 
 export interface FormAssessmentInterface {
-    _id: string;
-    id: number;
     title: string;
     description: string;
     type: AssessmentType[];

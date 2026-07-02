@@ -10,7 +10,7 @@ interface LableProps extends LabelHTMLAttributes<HTMLLabelElement> {
 const Label: React.FC<LableProps> = ({ className, label, required = false, ...props }) => {
     return (
         <label
-            className={twMerge("w-full mb-2 block text-base font-medium text-text-main", className)}
+            className={twMerge("w-full mb-2 block text-base text-text-dark", className)}
             {...props}
         >
             {label}
