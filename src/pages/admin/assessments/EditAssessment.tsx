@@ -9,7 +9,7 @@ import AssessmentForm from '../../../components/forms/AssessmentForm';
 
 import { getAssessmentById, updateAssessment } from '../../../services/axios/adminApi';
 import type { ApiResponse } from '../../../types/types';
-import type { AssessmentInterface } from '../../../types/assessmentTypes';
+import type { AssessmentInterface, FormAssessmentInterface } from '../../../types/assessmentTypes';
 import DataLoader from '../../../components/common/DataLoader';
 
 const EditAssessment: React.FC = () => {
@@ -26,7 +26,7 @@ const EditAssessment: React.FC = () => {
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['assessment', id],
-        queryFn: () => getAssessmentById(id as string | number),
+        queryFn: () => getAssessmentById(id as string),
         enabled: !!id,
     });
 
@@ -45,6 +45,33 @@ const EditAssessment: React.FC = () => {
         },
     });
 
+    const assessment = response?.data;
+
+    const initialValues: Partial<FormAssessmentInterface> = {
+        title: assessment?.title,
+        description: assessment?.description,
+        type: assessment?.type,
+        difficulty: assessment?.difficulty,
+        durationInMinutes: assessment?.durationInMinutes,
+        totalMarks: assessment?.totalMarks,
+        passingMarks: assessment?.passingMarks,
+        negativeMarking: assessment?.negativeMarking,
+        startDate: assessment?.startDate,
+        endDate: assessment?.endDate,
+        tags: assessment?.tags,
+        instructions: assessment?.instructions,
+        questions: assessment?.questions,
+        requireWebcam: assessment?.webcam.allowed,
+        requireMicrophone: assessment?.microphone.allowed,
+        enableRecording: assessment?.enableRecording,
+        allowTabSwitch: assessment?.tabSwitch.allowed,
+        maxTabSwitches: assessment?.tabSwitch.max,
+        allowFullscreenExit: assessment?.fullscreenExit.allowed,
+        maxFullscreenExits: assessment?.fullscreenExit.max,
+        isActive: assessment?.isActive,
+        isPublic: assessment?.isPublic,
+    };
+
     return (
         <Page>
             <PageHeader>
@@ -57,7 +84,7 @@ const EditAssessment: React.FC = () => {
                     <DataLoader />
                 ) : response?.data ? (
                     <AssessmentForm
-                        initialValues={response.data}
+                        initialValues={initialValues}
                         onSubmit={(values) => updateMutation.mutate(values)}
                         handleCancel={() => navigate(-1)}
                         isLoading={updateMutation.isPending}

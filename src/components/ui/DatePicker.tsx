@@ -35,7 +35,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
                 size: 'small',
                 className: [
                     '[&_.MuiPickersOutlinedInput-root]:rounded-lg!',
-                    '[&_.MuiPickersOutlinedInput-notchedOutline]:border-2!',
+                    '[&_.MuiPickersOutlinedInput-notchedOutline]:border!',
                     !hasError && '[&_.MuiPickersOutlinedInput-notchedOutline]:border-primary-light/50!',
                     !hasError && '[&_.MuiPickersOutlinedInput-root.Mui-focused_.MuiPickersOutlinedInput-notchedOutline]:border-primary-light!',
                     !hasError && '[&_.MuiPickersOutlinedInput-root:hover_.MuiPickersOutlinedInput-notchedOutline]:border-primary-light!',

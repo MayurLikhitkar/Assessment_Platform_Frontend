@@ -184,8 +184,8 @@ const AdminAssessments: React.FC = () => {
             filter: false,
             sortable: false,
             cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data?.id) return 'N/A';
-                const id = params.data.id;
+                if (!params.data?._id) return 'N/A';
+                const id = params.data._id;
                 return <ActionCell
                     onEdit={() => navigate(`/app/assessments/${id}/edit`)}
                 />

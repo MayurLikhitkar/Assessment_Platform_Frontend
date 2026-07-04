@@ -14,8 +14,6 @@ export enum UserStatus {
 }
 
 export interface UserInterface {
-    _id: string;
-    id: number;
     fullName: string;
     email: string;
     password: string;
@@ -38,8 +36,6 @@ export interface UserInterface {
     lastLogin?: Date;
     resetPasswordToken: string | null;
     resetPasswordExpires: Date | null;
-    requireWebcam: boolean;
-    requireMicrophone: boolean;
 }
 
 export interface AuthState {

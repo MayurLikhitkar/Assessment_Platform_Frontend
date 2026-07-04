@@ -45,16 +45,36 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
     // Validation Schema
     const assessmentSchema = Yup.object({
-        title: Yup.string().required('Title is required'),
-        description: Yup.string().required('Description is required'),
+        title: Yup.string()
+            .trim()
+            .required('Title is required')
+            .max(200, 'Title cannot exceed 200 characters'),
+        description: Yup.string()
+            .max(10000, 'Description cannot exceed 10000 characters').required('Description is required'),
         type: Yup.array()
-            .of(Yup.string().oneOf(['aptitude', 'coding', 'query', 'subjective', 'mcq']))
+            .of(Yup.string().oneOf(Object.values(AssessmentType)))
             .min(1, 'Select at least one type')
             .required('Type is required'),
-        difficulty: Yup.string().required('Difficulty is required'),
-        durationInMinutes: Yup.number().min(10, 'Minimum 10 mins').max(240, 'Maximum 240 mins').required('Duration is required'),
-        totalMarks: Yup.number().min(1).required('Total marks is required'),
-        passingMarks: Yup.number().min(1).required('Passing marks is required'),
+        difficulty: Yup.string()
+            .oneOf(Object.values(AssessmentDifficulty))
+            .required('Difficulty is required'),
+        durationInMinutes: Yup.number()
+            .min(5, 'Minimum 5 mins')
+            .max(300, 'Maximum 300 mins')
+            .required('Duration is required'),
+        totalMarks: Yup.number()
+            .min(0, 'Total marks must be 0 or greater'),
+        passingMarks: Yup.number()
+            .min(0, 'Passing marks must be 0 or greater')
+            .test(
+                'passing-lte-total',
+                'Passing marks cannot exceed total marks',
+                function (value) {
+                    const { totalMarks } = this.parent;
+                    if (value === undefined || totalMarks === undefined) return true;
+                    return value <= totalMarks;
+                }
+            ),
         startDate: Yup.date()
             .nullable()
             .test('start-date-min', 'Start date cannot be in the past', function (value) {
@@ -64,13 +84,22 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             }),
         endDate: Yup.date()
             .nullable()
-            .when('startDate', (startDate: Date[], schema) => {
-                return startDate?.[0]
-                    ? schema.min(startDate[0], 'End date must be after Start date')
-                    : schema;
+            .test('end-after-start', 'End date must be after start date',
+                function (value) {
+                    const { startDate } = this.parent;
+                    if (!value || !startDate) return true;
+                    return new Date(value) > new Date(startDate);
+                }
+            ),
+        tags: Yup.array().of(Yup.string().trim().min(1, 'Tag cannot be empty')).min(1, 'At least one tag is required').required('Tags are required'),
+        questions: Yup.array().of(Yup.string().trim().min(1, 'Question Id cannot be empty'))
+            .test('unique-questions', 'Duplicate questions not allowed', (questions) => {
+                if (!questions) return true;
+                const unique = new Set(questions.map((q) => q?.toString()));
+                return unique.size === questions.length;
             }),
-        tags: Yup.array().of(Yup.string()).min(1, 'Add at least one tag').required('Required'),
-        instructions: Yup.string(),
+        instructions: Yup.string()
+            .max(5000, 'Instructions cannot exceed 5000 characters'),
         isActive: Yup.boolean(),
         isPublic: Yup.boolean(),
         requireWebcam: Yup.boolean(),
@@ -78,16 +107,17 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         allowTabSwitch: Yup.boolean(),
         maxTabSwitches: Yup.number().when('allowTabSwitch', {
             is: true,
-            then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
+            then: (schema) => schema.min(0, 'Must be 0 or greater').required('Required'),
             otherwise: (schema) => schema.notRequired()
         }),
         allowFullscreenExit: Yup.boolean(),
         maxFullscreenExits: Yup.number().when('allowFullscreenExit', {
             is: true,
-            then: (schema) => schema.min(1, 'Minimum 1').required('Required'),
+            then: (schema) => schema.min(0, 'Must be 0 or greater').required('Required'),
             otherwise: (schema) => schema.notRequired()
         }),
-        enableRecording: Yup.boolean()
+        enableRecording: Yup.boolean(),
+        negativeMarking: Yup.boolean(),
     });
 
     const formik = useFormik<Partial<FormAssessmentInterface>>({
@@ -203,8 +233,15 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         required
                     />
                     <FormInput id="durationInMinutes" name="durationInMinutes" label="Duration (In Min)" type="number" formik={formik} required />
-                    <FormInput id="totalMarks" name="totalMarks" label="Maximum Marks" type="number" formik={formik} required />
-                    <FormInput id="passingMarks" name="passingMarks" label="Minimum Passing Marks" type="number" formik={formik} required />
+                    <FormInput id="totalMarks" name="totalMarks" label="Maximum Marks" type="number" formik={formik} />
+                    <FormInput id="passingMarks" name="passingMarks" label="Minimum Passing Marks" type="number" formik={formik} />
+                    <FormSelect
+                        id="negativeMarking"
+                        name="negativeMarking"
+                        label="Negative Marking"
+                        options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
+                        formik={formik}
+                    />
                 </div>
             </ContentBox>
 
@@ -224,8 +261,8 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
                         formik={formik}
                     />
-                    <FormDatePicker withTime id="startDate" name="startDate" label="Start Date" formik={formik} />
-                    <FormDatePicker withTime id="endDate" name="endDate" label="End Date" formik={formik} />
+                    <FormDatePicker withTime id="startDate" name="startDate" disablePast={!isEditMode} label="Start Date" formik={formik} />
+                    <FormDatePicker withTime disablePast id="endDate" name="endDate" label="End Date" formik={formik} />
                 </div>
                 <FormMultiInput id="tags" name="tags" label="Tags" formik={formik} placeholder="Type and press enter" required />
 

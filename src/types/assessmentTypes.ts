@@ -24,6 +24,7 @@ export interface IRecord {
 }
 
 export interface AssessmentInterface {
+    _id: string;
     title: string;
     description: string;
     type: AssessmentType[];
@@ -78,11 +79,6 @@ export interface FormAssessmentInterface {
     allowFullscreenExit: boolean;
     maxFullscreenExits?: number;
     enableRecording: boolean;
-
-    createdBy: string;
-    updatedBy: string;
-    createdAt: Date;
-    updatedAt: Date;
 }
 
 export type AssessmentSortableFields = Pick<AssessmentInterface, 'createdAt' | 'title' | 'difficulty' | 'durationInMinutes' | 'startDate' | 'endDate'>;
