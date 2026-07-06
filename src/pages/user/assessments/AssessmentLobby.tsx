@@ -70,7 +70,7 @@ const AssessmentLobby: React.FC = () => {
 
     const { data: assessmentData, isLoading } = useQuery({
         queryKey: ['assessment', id],
-        queryFn: () => getAssessment(id as string | number),
+        queryFn: () => getAssessment(id as string),
         enabled: !!id,
     });
 
@@ -155,9 +155,9 @@ const AssessmentLobby: React.FC = () => {
         if (!assessment) return null;
 
         return {
-            webcamRequired: assessment.requireWebcam,
-            microphoneRequired: assessment.requireMicrophone,
-            fullscreenRequired: !assessment.allowFullscreenExit,
+            webcamRequired: assessment.webcam.allowed,
+            microphoneRequired: assessment.microphone.allowed,
+            fullscreenRequired: !assessment.fullscreenExit.allowed,
         };
     }, [assessment]);
 
@@ -195,7 +195,7 @@ const AssessmentLobby: React.FC = () => {
     const startMutation = useMutation({
         mutationFn: () => startAssessment(assessment?._id as string),
         onSuccess: () => {
-            navigate(`/assessments/${assessment?.id}/take`);
+            navigate(`/assessments/${assessment?._id}/take`);
         },
         onError: (error: ApiResponse<null>) => {
             toast.error(error.responseMessage || 'Failed to start assessment');
@@ -204,7 +204,7 @@ const AssessmentLobby: React.FC = () => {
 
     if (isLoading || !assessment) return <PageLoader />;
 
-    const enableProctoring = assessment.requireWebcam || assessment.requireMicrophone || !assessment.allowTabSwitch || !assessment.allowFullscreenExit || assessment.enableRecording;
+    const enableProctoring = assessment.webcam.allowed || assessment.microphone.allowed || !assessment.tabSwitch.allowed || !assessment.fullscreenExit.allowed || assessment.enableRecording;
 
     const data = [
         { Icon: RiTimeLine, label: 'Duration', value: `${assessment.durationInMinutes} mins` },
@@ -214,11 +214,11 @@ const AssessmentLobby: React.FC = () => {
     ]
 
     const rules = [
-        { icon: RiEyeLine, iconClass: 'bg-warn-main/20 text-warn-dark', active: !assessment.allowTabSwitch, label: 'Switching tabs or leaving the window will be flagged as a violation. Too many violations will terminate your session.' },
-        { icon: IoVideocam, active: assessment?.requireWebcam, iconClass: 'bg-error-main/20 text-error-dark', label: 'Your webcam will be active throughout the assessment for identity verification and proctoring.' },
-        { icon: TbArrowsMaximize, iconClass: 'bg-muted-main text-text-light', active: !assessment.allowFullscreenExit, label: 'You must remain in fullscreen mode. Exiting fullscreen will be logged as a violation.' },
+        { icon: RiEyeLine, iconClass: 'bg-warn-main/20 text-warn-dark', active: !assessment.tabSwitch.allowed, label: 'Switching tabs or leaving the window will be flagged as a violation. Too many violations will terminate your session.' },
+        { icon: IoVideocam, active: assessment?.webcam.allowed, iconClass: 'bg-error-main/20 text-error-dark', label: 'Your webcam will be active throughout the assessment for identity verification and proctoring.' },
+        { icon: TbArrowsMaximize, iconClass: 'bg-muted-main text-text-light', active: !assessment.fullscreenExit.allowed, label: 'You must remain in fullscreen mode. Exiting fullscreen will be logged as a violation.' },
         { icon: BsDisplay, iconClass: 'bg-muted-main text-text-light', active: assessment.enableRecording, label: 'Screen recording may be active during this assessment for post-review purposes.' },
-        { icon: FaMicrophone, iconClass: 'bg-primary-main/20 text-primary-dark', active: assessment?.requireMicrophone, label: 'Your microphone will be monitored to detect background noise and ensure academic integrity.' },
+        { icon: FaMicrophone, iconClass: 'bg-primary-main/20 text-primary-dark', active: assessment?.microphone.allowed, label: 'Your microphone will be monitored to detect background noise and ensure academic integrity.' },
         { icon: TbBrowserX, active: true, iconClass: 'bg-secondary-main/20 text-secondary-dark', label: 'Do not refresh or close the browser during the assessment. Your progress may not be recoverable.' },
     ].filter((r) => r.active);
 

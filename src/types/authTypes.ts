@@ -3,7 +3,7 @@ export enum UserRole {
     EVALUATOR = 'evaluator',
     ADMIN = 'admin',
     SUPER_ADMIN = 'super_admin',
-    PROCTOR = 'proctor', // important for live proctoring
+    PROCTOR = 'proctor',
 }
 
 export enum UserStatus {
@@ -13,29 +13,83 @@ export enum UserStatus {
     BANNED = 'banned',
 }
 
-export interface UserInterface {
-    fullName: string;
-    email: string;
-    password: string;
-    role: UserRole;
-    status: UserStatus;
+export enum Gender {
+    MALE = 'male',
+    FEMALE = 'female',
+    OTHER = 'other',
+}
+
+export interface PersonalInfo {
+    dateOfBirth?: Date;
     profilePicture?: string;
+    nickName?: string;
+    gender?: Gender;
+}
+
+export interface Education {
+    institution: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: Date;
+    endDate?: Date;
+    isCurrent: boolean;
+}
+
+export interface WorkExperience {
+    company: string;
+    role: string;
+    startDate: Date;
+    endDate?: Date;
+    isCurrent: boolean;
+}
+
+export interface Qualification {
+    skills: string[];
+    languages: string[];
+    education: Education[];
+    workExperience: WorkExperience[];
+    totalExperience: number;
+}
+
+export interface Location {
+    address?: string;
     city?: string;
     state?: string;
     country?: string;
+}
+
+export interface SocialProfile {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    portfolio?: string;
+    website?: string;
+}
+
+export interface UserInterface {
+    _id: string;
+    fullName: string;
+    email: string;
     phone?: string;
-    dateOfBirth?: Date;
-    skills: string[];
-    experience?: number;
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
+    password: string;
+    role: UserRole;
+    status: UserStatus;
+
+    personalInfo: PersonalInfo;
+    qualification: Qualification;
+    location: Location;
+    socialProfile: SocialProfile;
+
+    lastLogin?: Date;
+    resetPasswordToken: string | null;
+    resetPasswordExpires: Date | null;
+
     createdAt: Date;
     updatedAt: Date;
     createdBy?: string;
     updatedBy?: string;
-    lastLogin?: Date;
-    resetPasswordToken: string | null;
-    resetPasswordExpires: Date | null;
 }
 
 export interface AuthState {

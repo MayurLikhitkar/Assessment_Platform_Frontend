@@ -6,9 +6,7 @@ import Button from '../../../components/ui/Button';
 import { getAssessment } from '../../../services/axios/userApi';
 import toast from 'react-hot-toast';
 import DataLoader from '../../../components/common/DataLoader';
-import {
-    RiTimeLine, RiAwardLine,
-} from "react-icons/ri";
+import { RiTimeLine, RiAwardLine, } from "react-icons/ri";
 import { MdLibraryAddCheck, MdOutlineCalendarToday, MdOutlineCancel, MdQuiz, MdRefresh } from 'react-icons/md';
 import { FaMicrophone, FaLock, FaRegSquareCheck, } from "react-icons/fa6";
 import { IoShareSocial, IoVideocam, IoWifi } from "react-icons/io5";
@@ -32,17 +30,17 @@ const AssessmentDetails: React.FC = () => {
 
     const { data: assessmentData, isLoading } = useQuery({
         queryKey: ['assessment', id],
-        queryFn: () => getAssessment(id as string | number),
+        queryFn: () => getAssessment(id as string),
         enabled: !!id,
     });
 
     const assessment = assessmentData?.data;
 
     const proctoringFeatures = [
-        { icon: IoVideocam, active: assessment?.requireWebcam, label: 'Webcam' },
-        { icon: FaMicrophone, active: assessment?.requireMicrophone, label: 'Mic' },
-        { icon: TbBrowserX, active: !assessment?.allowTabSwitch, label: 'Tab Lock' },
-        { icon: FaLock, active: !assessment?.allowFullscreenExit, label: 'Fullscreen' },
+        { icon: IoVideocam, active: assessment?.webcam.allowed, label: 'Webcam' },
+        { icon: FaMicrophone, active: assessment?.microphone.allowed, label: 'Mic' },
+        { icon: TbBrowserX, active: !assessment?.tabSwitch.allowed, label: 'Tab Lock' },
+        { icon: FaLock, active: !assessment?.fullscreenExit.allowed, label: 'Fullscreen' },
     ];
 
     const stats = [
@@ -51,14 +49,14 @@ const AssessmentDetails: React.FC = () => {
         { icon: MdQuiz, label: "Questions", value: assessment?.questions?.length },
     ]
 
-    const hasProctoring = assessment?.requireWebcam || assessment?.requireMicrophone || assessment?.allowTabSwitch === false || assessment?.allowFullscreenExit === false || assessment?.enableRecording;
+    const hasProctoring = assessment?.webcam.allowed || assessment?.microphone.allowed || assessment?.tabSwitch.allowed || assessment?.fullscreenExit.allowed || assessment?.enableRecording;
 
     const handleStartConfirm = () => {
         setStart(false);
         document.documentElement.requestFullscreen().catch(() => {
             // Fullscreen request failed (e.g. browser blocked it), proceed anyway
         }).finally(() => {
-            navigate(`/assessments/${assessment?.id}/lobby`);
+            navigate(`/assessments/${assessment?._id}/lobby`);
         });
     };
 
@@ -163,10 +161,10 @@ const AssessmentDetails: React.FC = () => {
                                             </h4>
                                             <ul className="space-y-2 text-sm text-text-light">
                                                 {[
-                                                    { condition: assessment.requireWebcam, color: 'text-dark-light', icon: IoVideocam, label: 'Webcam', value: 'Webcam access is required and must remain unobstructed.', },
-                                                    { condition: assessment.requireMicrophone, color: 'text-dark-light', icon: FaMicrophone, label: 'Microphone', value: 'Microphone must be enabled in a quiet environment.', },
-                                                    { condition: assessment.allowTabSwitch === false, color: 'text-dark-light', icon: TbBrowserX, label: 'Tab Switch', value: 'Switching browser tabs or applications is strictly prohibited.', },
-                                                    { condition: assessment.allowFullscreenExit === false, color: 'text-dark-light', icon: FaLock, label: 'Fullscreen', value: 'Exiting fullscreen mode will trigger a warning.', },
+                                                    { condition: assessment.webcam.allowed, color: 'text-dark-light', icon: IoVideocam, label: 'Webcam', value: 'Webcam access is required and must remain unobstructed.', },
+                                                    { condition: assessment.microphone.allowed, color: 'text-dark-light', icon: FaMicrophone, label: 'Microphone', value: 'Microphone must be enabled in a quiet environment.', },
+                                                    { condition: assessment.tabSwitch.allowed, color: 'text-dark-light', icon: TbBrowserX, label: 'Tab Switch', value: 'Switching browser tabs or applications is strictly prohibited.', },
+                                                    { condition: assessment.fullscreenExit.allowed, color: 'text-dark-light', icon: FaLock, label: 'Fullscreen', value: 'Exiting fullscreen mode will trigger a warning.', },
                                                     { condition: assessment.enableRecording, color: 'text-error-main', icon: BsRecordCircle, label: 'Recording', value: 'Your screen and video session will be recorded for monitoring.', className: 'animate-pulse', },
                                                 ]
                                                     .filter(rule => rule.condition)
@@ -209,7 +207,6 @@ const AssessmentDetails: React.FC = () => {
                                 <h3 className="text-xl font-semibold">Ready to Go?</h3>
                                 <p className="">Ensure your camera and microphone are working before starting the session.</p>
 
-                                {/* <Button className='w-full' size='md' onClick={() => navigate(`/assessment/${assessment.id}/take`)}> */}
                                 <Button variant='custom' className='w-full bg-secondary-main text-text-inverse rounded-lg tracking-wider' size='md' onClick={() => setStart(true)}>
                                     START ASSESSMENT
                                 </Button>

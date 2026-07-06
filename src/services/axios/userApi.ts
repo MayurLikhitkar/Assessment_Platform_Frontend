@@ -5,9 +5,9 @@ import type { ApiResponse } from "../../types/types"
 import type { UserAssessmentAnswerInterface, UserAssessmentInterface } from "../../types/userAssessmentTypes";
 import api from "./api"
 
-export const getAssessments = async (params: GetAssessmentsParams = { isPublic: true, isActive: true }) => {
+export const getProfile = async () => {
     try {
-        const response = await api.get<ApiResponse<AssessmentInterface[]>>('/assessments', { params })
+        const response = await api.get<ApiResponse<UserInterface>>('/user/profile')
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -15,9 +15,19 @@ export const getAssessments = async (params: GetAssessmentsParams = { isPublic: 
     }
 }
 
-export const getAssessment = async (id: string | number) => {
+export const getAssessments = async (params?: GetAssessmentsParams) => {
     try {
-        const response = await api.get<ApiResponse<AssessmentInterface>>(`/assessments/${id}`)
+        const response = await api.get<ApiResponse<AssessmentInterface[]>>('/user/assessments', { params })
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+}
+
+export const getAssessment = async (id: string) => {
+    try {
+        const response = await api.get<ApiResponse<AssessmentInterface>>(`/user/assessments/${id}`)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -27,7 +37,7 @@ export const getAssessment = async (id: string | number) => {
 
 export const updateProfile = async (data: Partial<UserInterface>) => {
     try {
-        const response = await api.put<ApiResponse<UserInterface>>('/auth/profile', data)
+        const response = await api.put<ApiResponse<UserInterface>>('/user/profile', data)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -35,9 +45,9 @@ export const updateProfile = async (data: Partial<UserInterface>) => {
     }
 }
 
-export const startAssessment = async (id: string | number) => {
+export const startAssessment = async (id: string) => {
     try {
-        const response = await api.post<ApiResponse<UserAssessmentInterface>>(`/assessments/${id}/start`)
+        const response = await api.post<ApiResponse<UserAssessmentInterface>>(`/user/assessments/${id}/start`)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -45,9 +55,9 @@ export const startAssessment = async (id: string | number) => {
     }
 }
 
-export const submitAssessment = async (id: string | number, data: UserAssessmentAnswerInterface[]) => {
+export const submitAssessment = async (id: string, data: UserAssessmentAnswerInterface[]) => {
     try {
-        const response = await api.post<ApiResponse<UserAssessmentInterface>>(`/assessments/${id}/submit`, data)
+        const response = await api.post<ApiResponse<UserAssessmentInterface>>(`/user/assessments/${id}/submit`, data)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>
@@ -55,9 +65,9 @@ export const submitAssessment = async (id: string | number, data: UserAssessment
     }
 }
 
-export const getAssessmentQuestions = async (id: string | number) => {
+export const getAssessmentQuestions = async (id: string) => {
     try {
-        const response = await api.get<ApiResponse<QuestionInterface[]>>(`assessments/${id}/questions`)
+        const response = await api.get<ApiResponse<QuestionInterface[]>>(`/user/assessments/${id}/questions`)
         return response.data;
     } catch (error) {
         const apiError = error as ApiResponse<null>

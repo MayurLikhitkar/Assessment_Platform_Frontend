@@ -58,24 +58,9 @@ const AdminAssessments: React.FC = () => {
             },
         },
         {
-            headerName: 'Difficulty',
-            field: 'difficulty',
-            minWidth: 130,
-            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
-                if (!params.data?.difficulty) return 'N/A';
-                const difficulty = params.data.difficulty;
-                const colorMap: Record<AssessmentDifficulty, string> = {
-                    beginner: 'text-success-main bg-success-main/20',
-                    intermediate: 'text-primary-main bg-primary-main/20',
-                    advanced: 'text-warn-main bg-warn-main/20',
-                    expert: 'text-error-main bg-error-main/20',
-                };
-                return (
-                    <span className={`${colorMap[difficulty]} px-2 py-0.5 rounded text-xs capitalize font-semibold`}>
-                        {difficulty}
-                    </span>
-                );
-            },
+            headerName: 'Questions',
+            minWidth: 100,
+            valueFormatter: (params) => String(params.data?.questions?.length || 'N/A'),
         },
         {
             headerName: 'Start Date',
@@ -110,6 +95,26 @@ const AdminAssessments: React.FC = () => {
             },
         },
         {
+            headerName: 'Difficulty',
+            field: 'difficulty',
+            minWidth: 130,
+            cellRenderer: (params: ICellRendererParams<AssessmentInterface>) => {
+                if (!params.data?.difficulty) return 'N/A';
+                const difficulty = params.data.difficulty;
+                const colorMap: Record<AssessmentDifficulty, string> = {
+                    beginner: 'text-success-main bg-success-main/20',
+                    intermediate: 'text-primary-main bg-primary-main/20',
+                    advanced: 'text-warn-main bg-warn-main/20',
+                    expert: 'text-error-main bg-error-main/20',
+                };
+                return (
+                    <span className={`${colorMap[difficulty]} px-2 py-0.5 rounded text-xs capitalize font-semibold`}>
+                        {difficulty}
+                    </span>
+                );
+            },
+        },
+        {
             headerName: 'Tags',
             field: 'tags',
             minWidth: 150,
@@ -129,11 +134,6 @@ const AdminAssessments: React.FC = () => {
             field: 'totalMarks',
             minWidth: 100,
             valueFormatter: (params) => params.value ?? 'N/A',
-        },
-        {
-            headerName: 'Questions',
-            minWidth: 100,
-            valueFormatter: (params) => String(params.data?.questions?.length || 'N/A'),
         },
         {
             headerName: 'Visibility',

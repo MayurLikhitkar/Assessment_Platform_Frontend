@@ -123,19 +123,19 @@ const TakeAssessment: React.FC = () => {
 
     const { data: assessmentData, isLoading } = useQuery({
         queryKey: ['assessment', id],
-        queryFn: () => getAssessment(id as string | number),
+        queryFn: () => getAssessment(id as string),
         enabled: !!id,
     });
 
     const { data: assessmentQuestions, isLoading: isLoadingAssessmentQuestions } = useQuery({
         queryKey: ['assessment-questions', id],
-        queryFn: () => getAssessmentQuestions(id as string | number),
+        queryFn: () => getAssessmentQuestions(id as string),
         enabled: !!id,
     });
-
+console.log(assessmentQuestions)
     const assessment = assessmentData?.data;
     const questions = assessmentQuestions?.data ?? [];
-console.log(assessment)
+
     // ── proctoring state ──────────────────────────────────────────────────────
     const [tabViolations, setTabViolations] = useState(0);
     const [fsViolations, setFsViolations] = useState(0);
@@ -169,7 +169,7 @@ console.log(assessment)
     function addTabViolation(detail: string) {
         setTabViolations((prev) => {
             const next = prev + 1;
-            const max = assessment?.maxTabSwitches ?? 2;
+            const max = assessment?.tabSwitch.max ?? 2;
 
             if (next >= max) {
                 terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
@@ -194,7 +194,7 @@ console.log(assessment)
     function addFsViolation() {
         setFsViolations((prev) => {
             const next = prev + 1;
-            const max = assessment?.maxFullscreenExits ?? 1;
+            const max = assessment?.fullscreenExit.max ?? 1;
 
             if (next >= max) {
                 terminate(`Assessment terminated: You exited fullscreen more than ${max - 1} time(s) allowed.`);
@@ -311,30 +311,30 @@ console.log(assessment)
 
     // Tab monitoring
     useEffect(() => {
-        if (!assessment || terminated || assessment.allowTabSwitch) return;
+        if (!assessment || terminated || assessment.tabSwitch.allowed) return;
 
-        const onVisibilityChange = () => {
-            if (document.hidden) addTabViolation('Tab switch / window minimised detected.');
-        };
-        const onBlur = () => addTabViolation('Window lost focus (potential tab switch).');
+        // const onVisibilityChange = () => {
+        //     if (document.hidden) addTabViolation('Tab switch / window minimised detected.');
+        // };
+        // const onBlur = () => addTabViolation('Window lost focus (potential tab switch).');
 
-        document.addEventListener('visibilitychange', onVisibilityChange);
-        window.addEventListener('blur', onBlur);
+        // document.addEventListener('visibilitychange', onVisibilityChange);
+        // window.addEventListener('blur', onBlur);
 
-        return () => {
-            document.removeEventListener('visibilitychange', onVisibilityChange);
-            window.removeEventListener('blur', onBlur);
-        };
+        // return () => {
+        //     document.removeEventListener('visibilitychange', onVisibilityChange);
+        //     window.removeEventListener('blur', onBlur);
+        // };
     }, [terminated, assessment]);
 
     // Fullscreen monitoring
     useEffect(() => {
-        if (!assessment || terminated || assessment.allowFullscreenExit) return;
+        if (!assessment || terminated || assessment.fullscreenExit.allowed) return;
 
         const onFullscreenChange = () => {
             if (document.fullscreenElement) return;
             // fullscreenExitCount.current += 1;
-            addFsViolation();
+            // addFsViolation();
         };
 
         document.addEventListener('fullscreenchange', onFullscreenChange);
@@ -367,6 +367,10 @@ console.log(assessment)
 
     const totalViolations = tabViolations + fsViolations;
 
+    if (isLoading) {
+        return <PageLoader />
+    }
+
     return (
         <div className="p-3">
             <div className="max-w-7xl mx-auto space-y-6 bg-background-main flex flex-col font-semibold text-text-main">
@@ -375,7 +379,7 @@ console.log(assessment)
                         isOpen={!!warningMessage}
                         message={warningMessage || ''}
                         violationCount={totalViolations}
-                        maxViolations={(assessment.maxTabSwitches ?? 2) + (assessment.maxFullscreenExits ?? 1)}
+                        maxViolations={(assessment.tabSwitch.max ?? 2) + (assessment.fullscreenExit.max ?? 1)}
                         onDismiss={() => setWarningMessage(null)}
                     />
                 )}
@@ -467,7 +471,7 @@ console.log(assessment)
 
                         {/* Right group */}
                         <div className="flex items-center gap-3">
-                            <Button variant='custom'
+                            {!isLoadingAssessmentQuestions && <Button variant='custom'
                                 onClick={() => toggleFlag(currentQuestion._id)}
                                 className={`border rounded-md text-text-light bg-background-light ${flagged.has(currentQuestion?._id)
                                     ? "bg-warn-light/30 border-warn-light"
@@ -479,7 +483,7 @@ console.log(assessment)
                                         ? "Unflag"
                                         : "Flag for review"}
                                 </span>
-                            </Button>
+                            </Button>}
 
                             {activeStep < questions.length - 1 ? (
                                 <Button className='rounded-md' variant='accent'
@@ -504,7 +508,7 @@ console.log(assessment)
                 {/* {Paste here} */}
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* ── Question Area ────────────────────────────────── */}
-                    {isLoadingAssessmentQuestions ? <DataLoader /> : (
+                    {currentQuestion ? (
                         <main className="lg:col-span-3 space-y-4">
                             <ContentBox className="space-y-5 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
                                 {/* Question header */}
@@ -534,11 +538,11 @@ console.log(assessment)
                                     </p>
 
                                     {/* ── MCQ ── */}
-                                    {currentQuestion.type === QuestionType.MCQ && currentQuestion.options && (
+                                    {currentQuestion.type === QuestionType.MCQ && currentQuestion?.mcqFields?.options && (
                                         <MultiChoice
                                             id={currentQuestion._id}
-                                            options={currentQuestion.options}
-                                            isMultiSelect={currentQuestion.isMultiSelect}
+                                            options={currentQuestion.mcqFields.options}
+                                            isMultiSelect={currentQuestion.mcqFields.isMultiSelect}
                                             value={currentAnswer?.answerMCQ || []}
                                             onChange={(selected: string[]) =>
                                                 handleAnswerChange(
@@ -625,11 +629,11 @@ console.log(assessment)
                                 </div>
                             </ContentBox>
                         </main>
-                    )}
+                    ) : <div className="lg:col-span-3" ><DataLoader /></div>}
 
                     {/* ── Question Navigator (sidebar) ─────────────────── */}
                     {isLoadingAssessmentQuestions ? <DataLoader /> : (
-                        <aside className="lg:col-span-1">
+                        <aside className="">
                             <ContentBox className="space-y-3 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
                                 <h3 className="text-text-light"><LuClipboard className="inline-block mr-2 text-lg text-accent-main" />Questions</h3>
 
@@ -667,19 +671,19 @@ console.log(assessment)
                                     ))}
                                 </div>
 
-                                {!assessment.allowTabSwitch && (
+                                {!assessment.tabSwitch.allowed && (
                                     <div className="border-t border-slate-100 pt-3 space-y-1.5">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proctoring</p>
                                         <ProctoringStatus
                                             label="Tab Switches"
                                             used={tabViolations}
-                                            max={assessment.maxTabSwitches ?? 2}
+                                            max={assessment.tabSwitch.max ?? 2}
                                         />
-                                        {!assessment.allowFullscreenExit && (
+                                        {!assessment.fullscreenExit.allowed && (
                                             <ProctoringStatus
                                                 label="Fullscreen Exits"
                                                 used={fsViolations}
-                                                max={assessment.maxFullscreenExits ?? 1}
+                                                max={assessment.fullscreenExit.max ?? 1}
                                             />
                                         )}
                                     </div>

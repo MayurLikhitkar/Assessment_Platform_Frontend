@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
 import type { ApiError } from '../../../types/types';
 import type { UserInterface, ChangePasswordRequest } from '../../../types/authTypes';
-import { changePassword, getProfile, updateProfile } from '../../../services/axios/authApi';
+import { changePassword, updateProfile } from '../../../services/axios/authApi';
 import Button from '../../../components/ui/Button';
 import FormInput from '../../../components/ui/FormInput';
 import DataLoader from '../../../components/common/DataLoader';
@@ -18,6 +18,7 @@ import InfoField from '../../../components/ui/InfoField';
 import Label from '../../../components/ui/Label';
 import { Page, PageBody } from '../../../components/ui/Page';
 import FormMultiInput from '../../../components/ui/FormMultiInput';
+import { getProfile } from '../../../services/axios/userApi';
 
 const ProfileSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -47,7 +48,7 @@ const Profile: React.FC = () => {
 
     // Fetch user profile data
     const { data: profileData, refetch } = useQuery({
-        queryKey: ['userProfile', user?.id],
+        queryKey: ['userProfile', user?._id],
         queryFn: () => getProfile(),
         enabled: !!user,
     });

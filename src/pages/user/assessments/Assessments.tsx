@@ -195,7 +195,7 @@ const Assessments: React.FC = () => {
                                     };
                                     return (
                                         <ContentBox
-                                            key={assessment.id}
+                                            key={assessment._id}
                                             className="group flex flex-col gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                                             {/* Badges Row */}
                                             <div className="flex flex-wrap items-center gap-2 font-semibold text-xs">
@@ -272,7 +272,7 @@ const Assessments: React.FC = () => {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <Button className="text-secondary-main gap-1" variant='text' onClick={() => navigate(`/assessments/${assessment.id}`)}>
+                                                <Button className="text-secondary-main gap-1" variant='text' onClick={() => navigate(`/assessments/${assessment._id}`)}>
                                                     View Details
                                                     <FaCaretRight className="w-4 h-4 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
                                                 </Button>
