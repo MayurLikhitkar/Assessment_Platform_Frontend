@@ -165,7 +165,7 @@ const AssessmentDetails: React.FC = () => {
                                                     { condition: assessment.microphone.allowed, color: 'text-dark-light', icon: FaMicrophone, label: 'Microphone', value: 'Microphone must be enabled in a quiet environment.', },
                                                     { condition: assessment.tabSwitch.allowed, color: 'text-dark-light', icon: TbBrowserX, label: 'Tab Switch', value: 'Switching browser tabs or applications is strictly prohibited.', },
                                                     { condition: assessment.fullscreenExit.allowed, color: 'text-dark-light', icon: FaLock, label: 'Fullscreen', value: 'Exiting fullscreen mode will trigger a warning.', },
-                                                    { condition: assessment.enableRecording, color: 'text-error-main', icon: BsRecordCircle, label: 'Recording', value: 'Your screen and video session will be recorded for monitoring.', className: 'animate-pulse', },
+                                                    { condition: assessment.enableRecording, color: 'text-error-main', icon: BsRecordCircle, label: 'Recording', value: 'Your screen will be recorded for monitoring.', className: 'animate-pulse', },
                                                 ]
                                                     .filter(rule => rule.condition)
                                                     .map(rule => (

@@ -152,7 +152,6 @@ const Assessments: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // Fetch user assessments
     const { data: allAssessments, isLoading: assessmentsLoading } = useQuery({
         queryKey: ['assessments'],
         queryFn: () => getAssessments(),

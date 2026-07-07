@@ -194,7 +194,8 @@ const AssessmentLobby: React.FC = () => {
 
     const startMutation = useMutation({
         mutationFn: () => startAssessment(assessment?._id as string),
-        onSuccess: () => {
+        onSuccess: (data) => {
+            // console.log("DATA", data)
             navigate(`/assessments/${assessment?._id}/take`);
         },
         onError: (error: ApiResponse<null>) => {

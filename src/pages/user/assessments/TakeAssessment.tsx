@@ -88,23 +88,6 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
     );
 };
 
-const ProctoringStatus: React.FC<{ label: string; used: number; max: number }> = ({ label, used, max }) => {
-    const pct = Math.min((used / max) * 100, 100);
-    const color = pct >= 100 ? 'bg-error-main' : pct >= 66 ? 'bg-warn-main' : 'bg-success-main';
-
-    return (
-        <div>
-            <div className="flex justify-between text-xs text-text-light mb-0.5">
-                <span>{label}</span>
-                <span className={used >= max ? 'text-error-main font-bold' : ''}>{used}/{max}</span>
-            </div>
-            <div className="h-1.5 bg-background-main rounded-full overflow-hidden">
-                <div className={twMerge('h-full rounded-full transition-all duration-500', color)} style={{ width: `${pct}%` }} />
-            </div>
-        </div>
-    );
-};
-
 const TakeAssessment: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -132,7 +115,7 @@ const TakeAssessment: React.FC = () => {
         queryFn: () => getAssessmentQuestions(id as string),
         enabled: !!id,
     });
-console.log(assessmentQuestions)
+
     const assessment = assessmentData?.data;
     const questions = assessmentQuestions?.data ?? [];
 
@@ -142,21 +125,19 @@ console.log(assessmentQuestions)
     const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
     // ── timer state ───────────────────────────────────────────────────────────
-    const [timeLeft, setTimeLeft] = useState<number | null>(null); // null = not yet initialized
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const [timeSpentSeconds, setTimeSpentSeconds] = useState(0);
 
     // ── refs ──────────────────────────────────────────────────────────────────
-    // Replace totalSecondsRef with this:
     const totalSeconds = React.useMemo(
         () => (assessment?.durationInMinutes ?? 0) * 60,
         [assessment?.durationInMinutes]
     );
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const timerInitialized = useRef(false);          // guard: start timer only once
+    const timerInitialized = useRef(false);
     const stepStartRef = useRef<number>(0);
     const answerTimers = useRef<Record<string, number>>({});
-    const fullscreenExitCount = useRef(0);         // fullscreen exit counter
-    const startTimestamp = useRef<number>(0);      // wall-clock start
+    const startTimestamp = useRef<number>(0);
 
     const currentQuestion = questions[activeStep];
     const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
@@ -171,21 +152,21 @@ console.log(assessmentQuestions)
             const next = prev + 1;
             const max = assessment?.tabSwitch.max ?? 2;
 
-            if (next >= max) {
-                terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
-                return next;
-            }
+            // if (next >= max) {
+            //     terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
+            //     return next;
+            // }
 
-            const remaining = max - next;
-            if (remaining == 0) {
-                setWarningMessage(
-                    `⚠ Final warning: You have used ${next} of ${max} allowed tab switches. One more violation will immediately terminate your assessment.`
-                );
-            } else {
-                setWarningMessage(
-                    `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. You have ${remaining} chances remaining.`
-                );
-            }
+            // const remaining = max - next;
+            // if (remaining == 0) {
+            //     setWarningMessage(
+            //         `⚠ Final warning: You have used ${next} of ${max} allowed tab switches. One more violation will immediately terminate your assessment.`
+            //     );
+            // } else {
+            //     setWarningMessage(
+            //         `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. You have ${remaining} chances remaining.`
+            //     );
+            // }
 
             return next;
         });
@@ -196,23 +177,23 @@ console.log(assessmentQuestions)
             const next = prev + 1;
             const max = assessment?.fullscreenExit.max ?? 1;
 
-            if (next >= max) {
-                terminate(`Assessment terminated: You exited fullscreen more than ${max - 1} time(s) allowed.`);
-                return next;
-            }
+            // if (next >= max) {
+            //     terminate(`Assessment terminated: You exited fullscreen more than ${max - 1} time(s) allowed.`);
+            //     return next;
+            // }
 
-            const remaining = max - next;
-            if (remaining === 1) {
-                setWarningMessage(
-                    `⚠ Final warning: You have exited fullscreen ${next} of ${max} allowed times. One more exit will immediately terminate your assessment.`
-                );
-            } else {
-                setWarningMessage(
-                    `⚠ Fullscreen exit detected (${next}/${max}). You have ${remaining} chances remaining.`
-                );
-            }
-            // Attempt to re-enter fullscreen
-            document.documentElement.requestFullscreen?.().catch(() => { });
+            // const remaining = max - next;
+            // if (remaining === 1) {
+            //     setWarningMessage(
+            //         `⚠ Final warning: You have exited fullscreen ${next} of ${max} allowed times. One more exit will immediately terminate your assessment.`
+            //     );
+            // } else {
+            //     setWarningMessage(
+            //         `⚠ Fullscreen exit detected (${next}/${max}). You have ${remaining} chances remaining.`
+            //     );
+            // }
+            // // Attempt to re-enter fullscreen
+            // document.documentElement.requestFullscreen?.().catch(() => { });
 
             return next;
         });
@@ -313,18 +294,18 @@ console.log(assessmentQuestions)
     useEffect(() => {
         if (!assessment || terminated || assessment.tabSwitch.allowed) return;
 
-        // const onVisibilityChange = () => {
-        //     if (document.hidden) addTabViolation('Tab switch / window minimised detected.');
-        // };
-        // const onBlur = () => addTabViolation('Window lost focus (potential tab switch).');
+        const onVisibilityChange = () => {
+            if (document.hidden) addTabViolation('Tab switch / window minimised detected.');
+        };
+        const onBlur = () => addTabViolation('Window lost focus (potential tab switch).');
 
-        // document.addEventListener('visibilitychange', onVisibilityChange);
-        // window.addEventListener('blur', onBlur);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('blur', onBlur);
 
-        // return () => {
-        //     document.removeEventListener('visibilitychange', onVisibilityChange);
-        //     window.removeEventListener('blur', onBlur);
-        // };
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('blur', onBlur);
+        };
     }, [terminated, assessment]);
 
     // Fullscreen monitoring
@@ -332,9 +313,10 @@ console.log(assessmentQuestions)
         if (!assessment || terminated || assessment.fullscreenExit.allowed) return;
 
         const onFullscreenChange = () => {
+            console.log("fullscreen changed", document.fullscreenElement);
             if (document.fullscreenElement) return;
-            // fullscreenExitCount.current += 1;
-            // addFsViolation();
+            addFsViolation();
+            document.documentElement.requestFullscreen().catch(() => { });
         };
 
         document.addEventListener('fullscreenchange', onFullscreenChange);
@@ -400,7 +382,6 @@ console.log(assessmentQuestions)
                     />
                 )}
 
-                {/* <div className='sticky top-0 left-0 right-0 z-40 space-y-4'> */}
                 <div className='space-y-4'>
                     <ContentBox className="py-2">
                         <div className="flex items-center justify-between h-16 gap-4">
@@ -416,6 +397,10 @@ console.log(assessmentQuestions)
 
                             {/* Right controls */}
                             <div className="flex items-center gap-3 shrink-0">
+                                <div className="text-xs text-error-main font-bold">
+                                    Violations: {totalViolations}
+                                </div>
+
                                 {/* Recording badge */}
                                 {assessment?.enableRecording && (
                                     <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error-light/20 border border-error-light/40">
@@ -637,7 +622,7 @@ console.log(assessmentQuestions)
                             <ContentBox className="space-y-3 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
                                 <h3 className="text-text-light"><LuClipboard className="inline-block mr-2 text-lg text-accent-main" />Questions</h3>
 
-                                <div className="space-y-1">
+                                <div className="space-y-2">
                                     {questions.map((q, idx) => {
                                         const isAnswered = answers.some(
                                             (a) => a.questionId === q._id
@@ -670,24 +655,6 @@ console.log(assessmentQuestions)
                                         </div>
                                     ))}
                                 </div>
-
-                                {!assessment.tabSwitch.allowed && (
-                                    <div className="border-t border-slate-100 pt-3 space-y-1.5">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proctoring</p>
-                                        <ProctoringStatus
-                                            label="Tab Switches"
-                                            used={tabViolations}
-                                            max={assessment.tabSwitch.max ?? 2}
-                                        />
-                                        {!assessment.fullscreenExit.allowed && (
-                                            <ProctoringStatus
-                                                label="Fullscreen Exits"
-                                                used={fsViolations}
-                                                max={assessment.fullscreenExit.max ?? 1}
-                                            />
-                                        )}
-                                    </div>
-                                )}
                             </ContentBox>
                         </aside>
                     )}
