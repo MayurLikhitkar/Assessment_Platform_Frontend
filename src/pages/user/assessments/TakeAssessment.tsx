@@ -22,6 +22,7 @@ import WarningModal from '../../../components/assessment/WarningModal';
 import SubmitModal from '../../../components/assessment/SubmitModal';
 import SuccessModal from '../../../components/assessment/SuccessScreen';
 import { LuClipboard } from 'react-icons/lu';
+import { TbArrowsMaximize } from 'react-icons/tb';
 
 type NavButtonProps = {
     index: number;
@@ -99,6 +100,9 @@ const TakeAssessment: React.FC = () => {
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [isAutoSubmit, setIsAutoSubmit] = useState(false);
 
+    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+    const hasStartedFullscreen = useRef(!!document.fullscreenElement);
+
     // ── answer / navigation ───────────────────────────────────────────────────
     const [activeStep, setActiveStep] = useState(0);
     const [answers, setAnswers] = useState<Omit<UserAssessmentAnswerInterface, 'timeSpentInSeconds' | 'marksObtained'>[]>([]);
@@ -150,23 +154,23 @@ const TakeAssessment: React.FC = () => {
     function addTabViolation(detail: string) {
         setTabViolations((prev) => {
             const next = prev + 1;
-            const max = assessment?.tabSwitch.max ?? 2;
+            const max = 4;
 
-            // if (next >= max) {
-            //     terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
-            //     return next;
-            // }
+            if (next >= max) {
+                terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
+                return next;
+            }
 
-            // const remaining = max - next;
-            // if (remaining == 0) {
-            //     setWarningMessage(
-            //         `⚠ Final warning: You have used ${next} of ${max} allowed tab switches. One more violation will immediately terminate your assessment.`
-            //     );
-            // } else {
-            //     setWarningMessage(
-            //         `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. You have ${remaining} chances remaining.`
-            //     );
-            // }
+            const remaining = max - next;
+            if (remaining == 0) {
+                setWarningMessage(
+                    `⚠ Final warning: You have used ${next} of ${max} allowed tab switches. One more violation will immediately terminate your assessment.`
+                );
+            } else {
+                setWarningMessage(
+                    `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. You have ${remaining} chances remaining.`
+                );
+            }
 
             return next;
         });
@@ -175,25 +179,23 @@ const TakeAssessment: React.FC = () => {
     function addFsViolation() {
         setFsViolations((prev) => {
             const next = prev + 1;
-            const max = assessment?.fullscreenExit.max ?? 1;
+            const max = 2;
 
-            // if (next >= max) {
-            //     terminate(`Assessment terminated: You exited fullscreen more than ${max - 1} time(s) allowed.`);
-            //     return next;
-            // }
+            if (next >= max) {
+                terminate(`Assessment terminated: You exited fullscreen more than ${max - 1} time(s) allowed.`);
+                return next;
+            }
 
-            // const remaining = max - next;
-            // if (remaining === 1) {
-            //     setWarningMessage(
-            //         `⚠ Final warning: You have exited fullscreen ${next} of ${max} allowed times. One more exit will immediately terminate your assessment.`
-            //     );
-            // } else {
-            //     setWarningMessage(
-            //         `⚠ Fullscreen exit detected (${next}/${max}). You have ${remaining} chances remaining.`
-            //     );
-            // }
-            // // Attempt to re-enter fullscreen
-            // document.documentElement.requestFullscreen?.().catch(() => { });
+            const remaining = max - next;
+            if (remaining === 1) {
+                setWarningMessage(
+                    `⚠ Final warning: You have exited fullscreen ${next} of ${max} allowed times. One more exit will immediately terminate your assessment.`
+                );
+            } else {
+                setWarningMessage(
+                    `⚠ Fullscreen exit detected (${next}/${max}). You have ${remaining} chances remaining.`
+                );
+            }
 
             return next;
         });
@@ -294,17 +296,21 @@ const TakeAssessment: React.FC = () => {
     useEffect(() => {
         if (!assessment || terminated || assessment.tabSwitch.allowed) return;
 
+        let hidden = false;
+
         const onVisibilityChange = () => {
-            if (document.hidden) addTabViolation('Tab switch / window minimised detected.');
+            if (document.hidden && !hidden) {
+                hidden = true;
+                addTabViolation('Tab switch / window minimised detected.');
+            } else if (!document.hidden) {
+                hidden = false;
+            }
         };
-        const onBlur = () => addTabViolation('Window lost focus (potential tab switch).');
 
         document.addEventListener('visibilitychange', onVisibilityChange);
-        window.addEventListener('blur', onBlur);
 
         return () => {
             document.removeEventListener('visibilitychange', onVisibilityChange);
-            window.removeEventListener('blur', onBlur);
         };
     }, [terminated, assessment]);
 
@@ -313,15 +319,31 @@ const TakeAssessment: React.FC = () => {
         if (!assessment || terminated || assessment.fullscreenExit.allowed) return;
 
         const onFullscreenChange = () => {
-            console.log("fullscreen changed", document.fullscreenElement);
-            if (document.fullscreenElement) return;
-            addFsViolation();
-            document.documentElement.requestFullscreen().catch(() => { });
+            const active = !!document.fullscreenElement;
+            setIsFullscreen(active);
+
+            if (active) {
+                hasStartedFullscreen.current = true;
+                return;
+            }
+
+            // Only count as a violation if they were already in fullscreen and left it.
+            // If they simply haven't entered fullscreen yet (fresh load / refresh),
+            // the gate screen below handles it — no violation yet.
+            if (hasStartedFullscreen.current) {
+                addFsViolation();
+            }
         };
 
         document.addEventListener('fullscreenchange', onFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
     }, [terminated, assessment]);
+
+    const enterFullscreen = useCallback(() => {
+        document.documentElement.requestFullscreen?.().catch(() => {
+            toast.error('Please allow fullscreen to continue the assessment.');
+        });
+    }, []);
 
     if (!assessment) {
         return <PageLoader />
@@ -348,6 +370,27 @@ const TakeAssessment: React.FC = () => {
     }
 
     const totalViolations = tabViolations + fsViolations;
+
+    if (!assessment.fullscreenExit.allowed && !isFullscreen) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <ContentBox className="max-w-md w-full text-center space-y-4 py-8">
+                    <TbArrowsMaximize className="w-10 h-10 mx-auto text-accent-main" />
+                    <h2 className="font-bold text-lg">Fullscreen Required</h2>
+                    <p className="text-sm text-text-light">
+                        This assessment must be taken in fullscreen mode. Click below to continue.
+                    </p>
+                    <Button
+                        variant="accent"
+                        className="rounded-md mx-auto"
+                        onClick={enterFullscreen}
+                    >
+                        Enter Fullscreen &amp; Continue
+                    </Button>
+                </ContentBox>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return <PageLoader />

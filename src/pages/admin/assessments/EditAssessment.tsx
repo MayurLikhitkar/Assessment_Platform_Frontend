@@ -56,6 +56,7 @@ const EditAssessment: React.FC = () => {
         totalMarks: assessment?.totalMarks,
         passingMarks: assessment?.passingMarks,
         negativeMarking: assessment?.negativeMarking,
+        maxAttempts: assessment?.maxAttempts,
         startDate: assessment?.startDate,
         endDate: assessment?.endDate,
         tags: assessment?.tags,

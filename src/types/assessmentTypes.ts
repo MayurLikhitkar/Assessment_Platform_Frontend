@@ -40,6 +40,7 @@ export interface AssessmentInterface {
     isActive: boolean;
     isPublic: boolean;
     negativeMarking: boolean;
+    maxAttempts: number;
     createdAt: Date;
     updatedAt: Date;
 
@@ -70,6 +71,7 @@ export interface FormAssessmentInterface {
     tags: string[];
     instructions: string;
     negativeMarking: boolean;
+    maxAttempts: number;
 
     // Proctoring settings
     requireWebcam: boolean;

@@ -242,6 +242,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         options={[{ label: 'Yes', value: true }, { label: 'No', value: false }]}
                         formik={formik}
                     />
+                    <FormInput id="maxAttempts" name="maxAttempts" label="Maximum Attempts" type="number" formik={formik} />
                 </div>
             </ContentBox>
 

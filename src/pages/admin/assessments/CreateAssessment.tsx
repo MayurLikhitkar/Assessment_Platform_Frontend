@@ -38,6 +38,7 @@ const CreateAssessment: React.FC = () => {
         totalMarks: 0,
         passingMarks: 0,
         negativeMarking: false,
+        maxAttempts: 0,
         startDate: undefined,
         endDate: undefined,
         tags: [],
