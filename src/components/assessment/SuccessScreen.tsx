@@ -1,6 +1,8 @@
 import React from 'react';
 import Modal from '../ui/Modal';
 import moment from 'moment';
+import { PiCheckBold } from "react-icons/pi";
+import Button from '../ui/Button';
 
 interface SuccessModalProps {
     isOpen: boolean;
@@ -31,53 +33,50 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
             <div className="text-center space-y-6">
 
                 {/* Checkmark */}
-                <div className="relative w-20 h-20 mx-auto">
-                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
+                <div className="w-20 h-20 mx-auto rounded-full bg-background-dark border border-border-light flex items-center justify-center">
+                    <PiCheckBold className="w-10 h-10 text-success-main" />
                 </div>
 
                 {/* Title */}
                 <div>
-                    <p className="text-sm text-slate-500">{title}</p>
+                    <p className="text-sm text-text-light font-semibold">{title}</p>
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4">
-                    <div className="p-3 rounded-xl bg-slate-50 border">
+                    <div className="p-3 rounded-xl text-success-main bg-background-main border border-border-light">
                         <p className="text-xl font-bold">{answeredCount}</p>
-                        <p className="text-xs text-slate-500">Answered</p>
+                        <p className="text-xs">Answered</p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-indigo-50 border">
-                        <p className="text-xl font-bold text-indigo-600">{pct}%</p>
-                        <p className="text-xs text-indigo-400">Completion</p>
+                    <div className="p-3 rounded-xl text-accent-main bg-background-main border border-border-light">
+                        <p className="text-xl font-bold">{pct}%</p>
+                        <p className="text-xs">Completion</p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-50 border">
-                        <p className="text-sm font-bold">
+                    <div className="p-3 rounded-xl text-warn-main bg-background-main border border-border-light">
+                        <p className="text-xl font-bold">
                             {moment
                                 .utc(moment.duration(timeSpentSeconds, 'seconds').asMilliseconds())
-                                .format('HH:mm:ss')}
+                                .format('HH:mm')}
                         </p>
-                        <p className="text-xs text-slate-500">Time</p>
+                        <p className="text-xs">Time</p>
                     </div>
                 </div>
 
                 {/* Message */}
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-text-light">
                     Your responses have been recorded. Results will be shared after evaluation.
                 </p>
 
                 {/* Action */}
-                <button
+                <Button
+                    size='md' variant='accent'
                     onClick={onExit}
-                    className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm"
+                    className="w-full rounded-xl"
                 >
                     Back to Dashboard
-                </button>
+                </Button>
             </div>
         </Modal>
     );

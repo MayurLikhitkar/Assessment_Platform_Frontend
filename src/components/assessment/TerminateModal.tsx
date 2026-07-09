@@ -1,5 +1,7 @@
 import React from 'react';
 import Modal from '../ui/Modal';
+import { FaBan } from 'react-icons/fa';
+import Button from '../ui/Button';
 
 interface TerminateModalProps {
     isOpen: boolean;
@@ -18,51 +20,38 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
             onClose={() => { }} // prevent closing
             title="Assessment Terminated"
             maxWidth="md"
-            className="border border-red-200"
+            className="border border-error-light/50"
         >
             <div className="space-y-5">
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                        <svg
-                            className="w-6 h-6 text-red-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636"
-                            />
-                        </svg>
+                    <div className="rounded-full text-error-main flex items-center justify-center shrink-0">
+                        <FaBan className='w-8 h-8' />
                     </div>
 
-                    <div>
-                        <p className="text-xs text-red-500 font-medium">
-                            Proctoring violation limit exceeded
-                        </p>
-                    </div>
+                    <p className="text-lg font-semibold">
+                        Proctoring violation limit exceeded
+                    </p>
                 </div>
 
                 {/* Reason */}
-                <p className="text-sm text-slate-700 leading-relaxed">
+                <p className="text-sm leading-relaxed">
                     {reason}
                 </p>
 
                 {/* Info */}
-                <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-700">
+                <div className="text-error-dark border border-error-light/50 rounded-xl p-3 text-sm">
                     Your progress has been recorded. Please contact your administrator.
                 </div>
 
                 {/* Action */}
-                <button
-                    onClick={onExit}
-                    className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm"
+                <Button
+                    size='md'
+                    onClick={onExit} variant='danger'
+                    className="w-full rounded-xl"
                 >
                     Exit Assessment
-                </button>
+                </Button>
             </div>
         </Modal>
     );

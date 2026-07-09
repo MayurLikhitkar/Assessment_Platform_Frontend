@@ -24,13 +24,13 @@
     --color-text-dark: #000000;
     --color-text-inverse: #fafafa;
 
-    --color-success-light: #86efac;
-    --color-success-main: #22c55e;
-    --color-success-dark: #16a34a;
+    --color-success-light: #00D100;
+    --color-success-main: #00A300;
+    --color-success-dark: #008000;
 
-    --color-error-light: #fca5a5;
-    --color-error-main: #ef4444;
-    --color-error-dark: #dc2626;
+    --color-error-light: #FF3030;
+    --color-error-main: #FF0000;
+    --color-error-dark: #D10000;
 
     --color-warn-light: #fcd34d;
     --color-warn-main: #f59e0b;

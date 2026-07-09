@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from '../ui/Modal';
+import Button from '../ui/Button';
 
 interface SubmitModalProps {
     isOpen: boolean;
@@ -33,7 +34,7 @@ const SubmitModal: React.FC<SubmitModalProps> = ({
         >
             <div className="space-y-5">
                 {/* Subtitle */}
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-text-light">
                     {isAutoSubmit
                         ? 'Your assessment is being submitted automatically.'
                         : 'Please review before submitting.'}
@@ -41,35 +42,35 @@ const SubmitModal: React.FC<SubmitModalProps> = ({
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <p className="text-2xl font-bold text-slate-800">{totalQuestions}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Total</p>
+                    <div className="text-center p-3 rounded-xl bg-background-main border border-border-light">
+                        <p className="text-2xl font-bold">{totalQuestions}</p>
+                        <p className="text-xs">Total</p>
                     </div>
 
-                    <div className="text-center p-3 rounded-xl bg-emerald-50 border border-emerald-100">
-                        <p className="text-2xl font-bold text-emerald-600">{answeredCount}</p>
-                        <p className="text-xs text-emerald-500 mt-0.5">Answered</p>
+                    <div className="text-center text-success-main p-3 rounded-xl bg-background-main border border-border-light">
+                        <p className="text-2xl font-bold">{answeredCount}</p>
+                        <p className="text-xs">Answered</p>
                     </div>
 
-                    <div className="text-center p-3 rounded-xl bg-red-50 border border-red-100">
-                        <p className="text-2xl font-bold text-red-500">{unanswered}</p>
-                        <p className="text-xs text-red-400 mt-0.5">Unanswered</p>
+                    <div className="text-center text-error-main p-3 rounded-xl bg-background-main border border-border-light">
+                        <p className="text-2xl font-bold">{unanswered}</p>
+                        <p className="text-xs">Unanswered</p>
                     </div>
                 </div>
 
                 {/* Flagged */}
                 {flaggedCount > 0 && (
-                    <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-700">
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-background-main border border-border-light text-sm text-warn-dark">
                         <span>
-                            <strong>{flaggedCount}</strong> question
-                            {flaggedCount > 1 ? 's' : ''} flagged for review
+                            You flagged <strong>{flaggedCount}</strong> question
+                            {flaggedCount > 1 ? 's' : ''} for review
                         </span>
                     </div>
                 )}
 
                 {/* Unanswered warning */}
                 {unanswered > 0 && !isAutoSubmit && (
-                    <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-700">
+                    <div className="flex items-center gap-2 p-3 rounded-xl border border-warn-light text-sm bg-warn-light/30">
                         <span>
                             You have <strong>{unanswered}</strong> unanswered question
                             {unanswered > 1 ? 's' : ''}. Unanswered questions score 0.
@@ -78,33 +79,32 @@ const SubmitModal: React.FC<SubmitModalProps> = ({
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     {!isAutoSubmit && (
-                        <button
+                        <Button
                             onClick={onCancel}
                             disabled={isSubmitting}
-                            className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 disabled:opacity-50"
+                            variant='glass'
+                            size='md'
+                            className='rounded-xl'
                         >
                             Review Answers
-                        </button>
+                        </Button>
                     )}
 
-                    <button
+                    <Button
                         onClick={onConfirm}
                         disabled={isSubmitting}
-                        className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                        variant='accent'
+                        size='md'
+                        className='rounded-xl'
                     >
                         {isSubmitting ? (
-                            <>
-                                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                </svg>
-                                Submitting…
-                            </>
+                            'Submitting…'
                         ) : (
                             'Submit Assessment'
                         )}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </Modal>

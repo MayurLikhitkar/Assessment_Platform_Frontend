@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { MdClose } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
 import Button from './Button';
+import type { IconType } from 'react-icons/lib';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -10,6 +11,7 @@ export interface ModalProps {
     children: React.ReactNode;
     className?: string;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'full';
+    icon?: IconType;
 }
 
 const maxWidthClasses = {
@@ -30,6 +32,7 @@ const Modal: React.FC<ModalProps> = ({
     isOpen,
     onClose,
     title,
+    icon: Icon,
     children,
     className,
     maxWidth = 'md',
@@ -60,7 +63,7 @@ const Modal: React.FC<ModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-background-inverse/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-background-inverse/50 backdrop-blur-sm p-4 animate-in fade-in duration-200 m-0"
             onClick={handleBackdropClick}
         >
             <div
@@ -73,7 +76,7 @@ const Modal: React.FC<ModalProps> = ({
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
-                    <h2 className="text-xl font-semibold text-text-main">{title}</h2>
+                    <h2 className="text-xl font-semibold text-text-main">{Icon && <Icon />}{title}</h2>
                     <Button
                         onClick={onClose}
                         variant="custom"

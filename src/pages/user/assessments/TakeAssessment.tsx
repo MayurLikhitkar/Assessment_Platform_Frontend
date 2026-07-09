@@ -154,21 +154,21 @@ const TakeAssessment: React.FC = () => {
     function addTabViolation(detail: string) {
         setTabViolations((prev) => {
             const next = prev + 1;
-            const max = 4;
+            const max = 2;
 
             if (next >= max) {
-                terminate(`Assessment terminated: You exceeded the maximum allowed tab switches (${max}). ${detail}`);
+                terminate(`Assessment terminated: You switched tab and exited assessment more than ${max - 1} time(s) allowed. ${detail}`);
                 return next;
             }
 
             const remaining = max - next;
             if (remaining == 0) {
                 setWarningMessage(
-                    `⚠ Final warning: You have used ${next} of ${max} allowed tab switches. One more violation will immediately terminate your assessment.`
+                    `Final warning: You have switched tab and exited assessment ${next} allowed times. One more violation will immediately terminate your assessment.`
                 );
             } else {
                 setWarningMessage(
-                    `⚠ Tab switch detected. You have used ${next} of ${max} allowed switches. You have ${remaining} chances remaining.`
+                    `Tab switch detected. You have ${remaining} chances remaining.`
                 );
             }
 
@@ -189,11 +189,11 @@ const TakeAssessment: React.FC = () => {
             const remaining = max - next;
             if (remaining === 1) {
                 setWarningMessage(
-                    `⚠ Final warning: You have exited fullscreen ${next} of ${max} allowed times. One more exit will immediately terminate your assessment.`
+                    `Final warning: You have exited fullscreen ${next} allowed times. One more exit will immediately terminate your assessment.`
                 );
             } else {
                 setWarningMessage(
-                    `⚠ Fullscreen exit detected (${next}/${max}). You have ${remaining} chances remaining.`
+                    `Fullscreen exit detected. You have ${remaining} chances remaining.`
                 );
             }
 
@@ -277,8 +277,17 @@ const TakeAssessment: React.FC = () => {
         await new Promise((r) => setTimeout(r, 1500)); // simulate API call
         setIsSubmitting(false);
         setShowSubmitModal(false);
+
+        // Stop proctoring / timer
+        if (timerRef.current) clearInterval(timerRef.current);
+
         setSubmitted(true);
+
+        // Exit fullscreen after marking submitted so the fs listener (already
+        // guarded by `submitted`) won't count it as a violation
+        if (document.fullscreenElement) document.exitFullscreen?.();
     };
+
 
     const toggleFlag = (questionId: string) => {
         setFlagged((prev) => {
@@ -294,7 +303,7 @@ const TakeAssessment: React.FC = () => {
 
     // Tab monitoring
     useEffect(() => {
-        if (!assessment || terminated || assessment.tabSwitch.allowed) return;
+        if (!assessment || terminated || submitted || assessment.tabSwitch.allowed) return;
 
         let hidden = false;
 
@@ -312,11 +321,11 @@ const TakeAssessment: React.FC = () => {
         return () => {
             document.removeEventListener('visibilitychange', onVisibilityChange);
         };
-    }, [terminated, assessment]);
+    }, [terminated, submitted, assessment]);
 
     // Fullscreen monitoring
     useEffect(() => {
-        if (!assessment || terminated || assessment.fullscreenExit.allowed) return;
+        if (!assessment || terminated || submitted || assessment.fullscreenExit.allowed) return;
 
         const onFullscreenChange = () => {
             const active = !!document.fullscreenElement;
@@ -337,7 +346,7 @@ const TakeAssessment: React.FC = () => {
 
         document.addEventListener('fullscreenchange', onFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-    }, [terminated, assessment]);
+    }, [terminated, submitted, assessment]);
 
     const enterFullscreen = useCallback(() => {
         document.documentElement.requestFullscreen?.().catch(() => {
@@ -371,26 +380,26 @@ const TakeAssessment: React.FC = () => {
 
     const totalViolations = tabViolations + fsViolations;
 
-    if (!assessment.fullscreenExit.allowed && !isFullscreen) {
-        return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <ContentBox className="max-w-md w-full text-center space-y-4 py-8">
-                    <TbArrowsMaximize className="w-10 h-10 mx-auto text-accent-main" />
-                    <h2 className="font-bold text-lg">Fullscreen Required</h2>
-                    <p className="text-sm text-text-light">
-                        This assessment must be taken in fullscreen mode. Click below to continue.
-                    </p>
-                    <Button
-                        variant="accent"
-                        className="rounded-md mx-auto"
-                        onClick={enterFullscreen}
-                    >
-                        Enter Fullscreen &amp; Continue
-                    </Button>
-                </ContentBox>
-            </div>
-        );
-    }
+    // if (!assessment.fullscreenExit.allowed && !isFullscreen) {
+    //     return (
+    //         <div className="min-h-screen flex items-center justify-center p-4">
+    //             <ContentBox className="max-w-md w-full text-center space-y-4 py-8">
+    //                 <TbArrowsMaximize className="w-10 h-10 mx-auto text-accent-main" />
+    //                 <h2 className="font-bold text-lg">Fullscreen Required</h2>
+    //                 <p className="text-sm text-text-light">
+    //                     This assessment must be taken in fullscreen mode. Click below to continue.
+    //                 </p>
+    //                 <Button
+    //                     variant="accent"
+    //                     className="rounded-md mx-auto"
+    //                     onClick={enterFullscreen}
+    //                 >
+    //                     Enter Fullscreen &amp; Continue
+    //                 </Button>
+    //             </ContentBox>
+    //         </div>
+    //     );
+    // }
 
     if (isLoading) {
         return <PageLoader />
