@@ -6,7 +6,6 @@ export enum ProgrammingLanguage {
     CPP = 'cpp',
     CSHARP = 'csharp',
     R = 'r',
-    SQL = 'sql',
     HTML = 'html',
     CSS = 'css'
 }

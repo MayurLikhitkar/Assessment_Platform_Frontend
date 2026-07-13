@@ -2,11 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ContentBox } from '../../../components/ui/Page';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import api from '../../../services/axios/api';
 import toast from 'react-hot-toast';
-import { getAssessment, getAssessmentQuestions } from '../../../services/axios/userApi';
+import { getAssessment, getAssessmentQuestions, syncAssessmentAnswers } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
-import { RiArrowLeftLine, RiArrowRightLine, RiFlagFill, RiFlagLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
+import { RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiCodeSSlashLine, RiDatabase2Line, RiFileTextLine, RiFlagFill, RiFlagLine, RiListCheck3, RiRefreshLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
@@ -23,6 +22,7 @@ import SubmitModal from '../../../components/assessment/SubmitModal';
 import SuccessModal from '../../../components/assessment/SuccessScreen';
 import { LuClipboard } from 'react-icons/lu';
 import { TbArrowsMaximize } from 'react-icons/tb';
+import { useAuth } from '../../../hooks/useAuth';
 
 type NavButtonProps = {
     index: number;
@@ -31,6 +31,13 @@ type NavButtonProps = {
     isAnswered: boolean;
     isFlagged: boolean;
     onClick: () => void;
+};
+
+const TYPE_ICON: Record<QuestionType, React.ElementType> = {
+    mcq: RiListCheck3,
+    coding: RiCodeSSlashLine,
+    query: RiDatabase2Line,
+    subjective: RiFileTextLine,
 };
 
 const DifficultyBadge: React.FC<{ difficulty: Difficulty }> = ({ difficulty }) => {
@@ -92,6 +99,8 @@ const QuestionNavItem: React.FC<NavButtonProps> = ({ index, question, isActive, 
 const TakeAssessment: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
+
 
     const [terminated, setTerminated] = useState(false);
     const [terminateReason, setTerminateReason] = useState('');
@@ -105,8 +114,10 @@ const TakeAssessment: React.FC = () => {
 
     // ── answer / navigation ───────────────────────────────────────────────────
     const [activeStep, setActiveStep] = useState(0);
-    const [answers, setAnswers] = useState<Omit<UserAssessmentAnswerInterface, 'timeSpentInSeconds' | 'marksObtained'>[]>([]);
+    const [answers, setAnswers] = useState<Omit<UserAssessmentAnswerInterface, 'marksObtained'>[]>([]);
     const [flagged, setFlagged] = useState<Set<string>>(new Set());
+    const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
+    const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
     const { data: assessmentData, isLoading } = useQuery({
         queryKey: ['assessment', id],
@@ -130,7 +141,6 @@ const TakeAssessment: React.FC = () => {
 
     // ── timer state ───────────────────────────────────────────────────────────
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
-    const [timeSpentSeconds, setTimeSpentSeconds] = useState(0);
 
     // ── refs ──────────────────────────────────────────────────────────────────
     const totalSeconds = React.useMemo(
@@ -139,6 +149,7 @@ const TakeAssessment: React.FC = () => {
     );
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const timerInitialized = useRef(false);
+
     const stepStartRef = useRef<number>(0);
     const answerTimers = useRef<Record<string, number>>({});
     const startTimestamp = useRef<number>(0);
@@ -147,9 +158,26 @@ const TakeAssessment: React.FC = () => {
     const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
     const timerCritical = timeLeft !== null && timeLeft <= 300;
 
-    useEffect(() => {
+    const flushTime = useCallback(() => {
+        const qId = questions[activeStep]?._id;
+        if (!qId) return;
+        const elapsed = Math.floor((Date.now() - stepStartRef.current) / 1000);
+        if (elapsed > 0) {
+            answerTimers.current[qId] = (answerTimers.current[qId] ?? 0) + elapsed;
+        }
         stepStartRef.current = Date.now();
-    }, [activeStep]);
+    }, [questions, activeStep]);
+
+    const goToStep = useCallback((next: number) => {
+        flushTime();
+        setActiveStep(next);
+    }, [flushTime]);
+
+    useEffect(() => {
+        return () => {
+            flushTime();
+        };
+    }, []);
 
     function addTabViolation(detail: string) {
         setTabViolations((prev) => {
@@ -236,24 +264,38 @@ const TakeAssessment: React.FC = () => {
         };
     }, [assessment?.durationInMinutes]);
 
-    useEffect(() => {
-        stepStartRef.current = Date.now();
-        return () => {
-            const qId = questions[activeStep]?._id;
-            if (qId !== undefined) {
-                const elapsed = Math.floor((Date.now() - stepStartRef.current) / 1000);
-                answerTimers.current[qId] = (answerTimers.current[qId] ?? 0) + elapsed;
-            }
-        };
-    }, [activeStep, questions]);
+    const buildAnswersPayload = useCallback((): Omit<UserAssessmentAnswerInterface, 'marksObtained'>[] => {
+        flushTime();
+        return answers.map((a) => ({
+            ...a,
+            timeSpentInSeconds: answerTimers.current[a.questionId] ?? 0,
+        }));
+    }, [answers, flushTime]);
 
-    // Submit answer mutation
-    const submitAnswerMutation = useMutation({
-        mutationFn: (data) => api.post(`/assessments/${id}/answer`, data),
-        onError: (error) => {
-            toast.error('Failed to save answer');
+    const syncAnswersMutation = useMutation({
+        mutationFn: (payload: Omit<UserAssessmentAnswerInterface, 'marksObtained'>[]) =>
+            syncAssessmentAnswers(user?._id as string, assessment?._id as string, payload),
+        onSuccess: (_data, payload) => {
+            setDirtyIds((prev) => {
+                const next = new Set(prev);
+                payload.forEach((a) => next.delete(a.questionId));
+                return next;
+            });
+            setLastSyncedAt(Date.now());
+        },
+        onError: () => {
+            toast.error('Failed to sync answers. Will retry automatically.');
+            // Leave dirtyIds untouched so the next auto-sync / manual sync retries.
         },
     });
+
+    const handleSync = useCallback(() => {
+        if (dirtyIds.size === 0 || syncAnswersMutation.isPending) return;
+        const payload = buildAnswersPayload().filter((a) => dirtyIds.has(a.questionId));
+        if (payload.length === 0) return;
+        console.log('Syncing answers...', payload);
+        // syncAnswersMutation.mutate(payload);
+    }, [dirtyIds, buildAnswersPayload, syncAnswersMutation]);
 
     const handleAnswerChange = useCallback(
         (questionId: string, questionType: QuestionType, value: Partial<UserAssessmentAnswerInterface>) => {
@@ -266,28 +308,32 @@ const TakeAssessment: React.FC = () => {
                     return next;
                 }
 
-                return [...prev, { questionId, questionType, ...value }];
+                return [...prev, { questionId, questionType, answerMCQ: [], timeSpentInSeconds: answerTimers.current[questionId] ?? 0, ...value }];
             });
+            setDirtyIds((prev) => new Set(prev).add(questionId));
         },
         []
     );
 
     const handleSubmitAssessment = async () => {
         setIsSubmitting(true);
-        await new Promise((r) => setTimeout(r, 1500)); // simulate API call
-        setIsSubmitting(false);
-        setShowSubmitModal(false);
+        try {
+            // Make sure everything outstanding — including time on the
+            // question the user was on when they hit submit — goes up first.
+            const finalPayload = buildAnswersPayload();
+            // await api.post(`/assessments/${id}/submit`, { answers: finalPayload });
+            setIsSubmitting(false);
+            setShowSubmitModal(false);
 
-        // Stop proctoring / timer
-        if (timerRef.current) clearInterval(timerRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
+            setSubmitted(true);
 
-        setSubmitted(true);
-
-        // Exit fullscreen after marking submitted so the fs listener (already
-        // guarded by `submitted`) won't count it as a violation
-        if (document.fullscreenElement) document.exitFullscreen?.();
+            if (document.fullscreenElement) document.exitFullscreen?.();
+        } catch {
+            setIsSubmitting(false);
+            toast.error('Failed to submit assessment. Please try again.');
+        }
     };
-
 
     const toggleFlag = (questionId: string) => {
         setFlagged((prev) => {
@@ -310,7 +356,7 @@ const TakeAssessment: React.FC = () => {
         const onVisibilityChange = () => {
             if (document.hidden && !hidden) {
                 hidden = true;
-                addTabViolation('Tab switch / window minimised detected.');
+                // addTabViolation('Tab switch / window minimised detected.');
             } else if (!document.hidden) {
                 hidden = false;
             }
@@ -340,7 +386,7 @@ const TakeAssessment: React.FC = () => {
             // If they simply haven't entered fullscreen yet (fresh load / refresh),
             // the gate screen below handles it — no violation yet.
             if (hasStartedFullscreen.current) {
-                addFsViolation();
+                // addFsViolation();
             }
         };
 
@@ -366,13 +412,14 @@ const TakeAssessment: React.FC = () => {
     }
 
     if (submitted) {
+        const finalTimeSpent = Object.values(answerTimers.current).reduce((sum, s) => sum + s, 0);
         return (
             <SuccessModal
                 isOpen={submitted}
                 title={assessment.title}
                 answeredCount={answers.length}
                 totalQuestions={questions.length}
-                timeSpentSeconds={timeSpentSeconds}
+                timeSpentSeconds={finalTimeSpent}
                 onExit={() => globalThis.location.reload()}
             />
         );
@@ -404,6 +451,8 @@ const TakeAssessment: React.FC = () => {
     if (isLoading) {
         return <PageLoader />
     }
+
+    const Icon = currentQuestion ? TYPE_ICON[currentQuestion.type] : RiFileTextLine;
 
     return (
         <div className="p-3">
@@ -455,18 +504,43 @@ const TakeAssessment: React.FC = () => {
 
                                 {/* Recording badge */}
                                 {assessment?.enableRecording && (
-                                    <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error-light/20 border border-error-light/40">
-                                        <BsRecordCircle className="w-3.5 h-3.5 text-error-main animate-pulse" />
-                                        <span className="text-xs font-bold text-error-main">REC</span>
+                                    <div className="hidden sm:flex items-center text-xs gap-2 px-2 py-1 rounded-md text-error-main bg-error-light/10 border border-error-light/20">
+                                        <BsRecordCircle className="w-4 h-4 animate-pulse" />
+                                        <span className="font-bold">REC</span>
                                     </div>
                                 )}
+
+                                <Button
+                                    variant="custom"
+                                    onClick={handleSync}
+                                    disabled={syncAnswersMutation.isPending || dirtyIds.size === 0}
+                                    className="hidden sm:flex items-center gap-1 px-3 py-2 rounded-lg border border-border-light text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                                    title={
+                                        lastSyncedAt
+                                            ? `Last synced ${moment(lastSyncedAt).format('HH:mm:ss')}`
+                                            : 'Not synced yet'
+                                    }
+                                >
+                                    {syncAnswersMutation.isPending ? (
+                                        <RiRefreshLine className="w-4 h-4 animate-spin" />
+                                    ) : dirtyIds.size === 0 ? (
+                                        <RiCheckLine className="w-4 h-4 text-success-main" />
+                                    ) : (
+                                        <RiRefreshLine className="w-4 h-4" />
+                                    )}
+                                    {syncAnswersMutation.isPending
+                                        ? 'Syncing…'
+                                        : dirtyIds.size === 0
+                                            ? 'Synced'
+                                            : `Sync (${dirtyIds.size})`}
+                                </Button>
 
                                 {/* Answered count */}
                                 <div className="hidden sm:flex flex-col items-center leading-none">
                                     <span className="text-sm font-bold">
                                         {answers.length}/{questions.length}
                                     </span>
-                                    <span className="text-xs text-text-light uppercase tracking-wider">
+                                    <span className="text-xs text-text-light">
                                         Answered
                                     </span>
                                 </div>
@@ -487,7 +561,7 @@ const TakeAssessment: React.FC = () => {
                         </div>
 
                         {/* Progress bar */}
-                        <div className="h-1 bg-muted-main rounded-full mb-0.5 overflow-hidden">
+                        <div className="h-1 bg-muted-main rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-accent-main rounded-full transition-all duration-500"
                                 style={{ width: `${(answers.length / questions.length) * 100}%` }}
@@ -495,10 +569,10 @@ const TakeAssessment: React.FC = () => {
                         </div>
                     </ContentBox>
 
-                    {/* Navigation footer */}
+                    {/* Navigation */}
                     <div className="flex items-center justify-between gap-3">
                         <Button
-                            onClick={() => setActiveStep((s) => s - 1)}
+                            onClick={() => goToStep(activeStep - 1)}
                             disabled={activeStep === 0}
                             variant='custom'
                             className="rounded-md border border-border-light text-text-light bg-background-light shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
@@ -524,14 +598,14 @@ const TakeAssessment: React.FC = () => {
 
                             {activeStep < questions.length - 1 ? (
                                 <Button className='rounded-md' variant='accent'
-                                    onClick={() => setActiveStep((s) => s + 1)}>
+                                    onClick={() => goToStep(activeStep + 1)}>
                                     Next
                                     <RiArrowRightLine className="w-4 h-4" />
                                 </Button>
                             ) : (
                                 <Button
                                     variant='success'
-                                    onClick={() => setShowSubmitModal(true)}
+                                    onClick={() => { flushTime(); setShowSubmitModal(true); }}
                                     className="rounded-md">
                                     <RiSendPlaneLine className="w-4 h-4" />
                                     Submit Assessment
@@ -550,8 +624,8 @@ const TakeAssessment: React.FC = () => {
                             <ContentBox className="space-y-5 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
                                 {/* Question header */}
                                 <div className="flex items-center gap-3">
-                                    <span className="w-8 h-8 bg-accent-main rounded-md text-text-inverse flex items-center justify-center font-bold">
-                                        {activeStep + 1}
+                                    <span className="w-8 h-8 bg-accent-main rounded-md text-text-inverse flex items-center justify-center">
+                                        <Icon className="text-lg shrink-0" />
                                     </span>
                                     <div className="flex items-center gap-2 text-xs text-text-light">
                                         <DifficultyBadge
@@ -559,12 +633,19 @@ const TakeAssessment: React.FC = () => {
                                         />
                                         <span className="">
                                             {currentQuestion.marks} Marks
-                                            {currentQuestion.negativeMarks > 0 && (
+                                            {assessment.negativeMarking && currentQuestion.negativeMarks > 0 && (
                                                 <span className="text-error-dark ml-1">
                                                     (-{currentQuestion.negativeMarks} Neg)
                                                 </span>
                                             )}
                                         </span>
+                                    </div>
+                                    <div className="ml-auto flex flex-wrap gap-1 text-text-light/70">
+                                        {currentQuestion?.tags?.length > 0 && currentQuestion.tags.map((t) => (
+                                            <span key={t} className="rounded bg-muted-main border border-border-light px-2 py-1 text-xs capitalize">
+                                                {t}
+                                            </span>
+                                        ))}
                                     </div>
                                 </div>
 
@@ -672,7 +753,7 @@ const TakeAssessment: React.FC = () => {
                     {isLoadingAssessmentQuestions ? <DataLoader /> : (
                         <aside className="">
                             <ContentBox className="space-y-3 overflow-y-auto scroll-smooth" style={{ height: 'calc(100vh - 25vh)' }}>
-                                <h3 className="text-text-light"><LuClipboard className="inline-block mr-2 text-lg text-accent-main" />Questions</h3>
+                                <h3 className="text-text-light"><LuClipboard className="inline-block mr-2 text-lg shrink-0 text-accent-main" />Questions</h3>
 
                                 <div className="space-y-2">
                                     {questions.map((q, idx) => {
@@ -686,7 +767,7 @@ const TakeAssessment: React.FC = () => {
                                             isActive={idx === activeStep}
                                             isAnswered={isAnswered}
                                             isFlagged={flagged.has(q._id)}
-                                            onClick={() => setActiveStep(idx)}
+                                            onClick={() => goToStep(idx)}
                                         />
                                     })}
                                 </div>

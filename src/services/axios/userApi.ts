@@ -74,3 +74,23 @@ export const getAssessmentQuestions = async (id: string) => {
         throw apiError;
     }
 }
+
+export const getUserAssessment = async (userId: string, assessId: string) => {
+    try {
+        const response = await api.get<ApiResponse<UserAssessmentInterface>>(`/user/${userId}/assessment/${assessId}`)
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+}
+
+export const syncAssessmentAnswers = async (userId: string, assessId: string, answers: Omit<UserAssessmentAnswerInterface, 'timeSpentInSeconds' | 'marksObtained'>[]) => {
+    try {
+        const response = await api.put<ApiResponse<UserAssessmentInterface>>(`/user/${userId}/assessment/${assessId}`, answers)
+        return response.data;
+    } catch (error) {
+        const apiError = error as ApiResponse<null>
+        throw apiError;
+    }
+}

@@ -1,193 +1,271 @@
-import React, { useState, useRef } from 'react';
-import Editor from '@monaco-editor/react';
+import { useCallback, useMemo, useState } from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { vscodeDark } from "@uiw/codemirror-theme-vscode";
+import { javascript } from "@codemirror/lang-javascript";
+import { python } from "@codemirror/lang-python";
 import {
-    Box, Select, MenuItem, FormControl, InputLabel,
-    Button, Typography
-} from '@mui/material';
-import { MdPlayArrow, MdRestartAlt } from 'react-icons/md';
+    Play,
+    CheckCircle2,
+    XCircle,
+    AlertCircle,
+    Clock,
+    Cpu,
+    Terminal,
+    ChevronDown,
+    ChevronUp,
+    MemoryStick,
+} from "lucide-react";
+import { cn } from "@/utils/cn";
+import Button from "./ui/Button";
+import Badge from "./ui/Badge";
+import type {
+    CodingFields,
+    CodeExecutionResult,
+} from "@/types/questionTypes";
+import { ProgrammingLanguage } from "@/types/questionTypes";
+import { executeCode, languageLabels } from "@/services/executionService";
 
 interface CodeEditorProps {
-    language: string;
-    starterCode?: string | Record<string, string>;
+    questionId: string;
+    fields: CodingFields;
     value: string;
-    onChange: (code: string) => void;
-    height?: string;
-    readOnly?: boolean;
+    onChange: (value: string) => void;
+    className?: string;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({
-    language,
-    starterCode,
+function languageExtension(language: ProgrammingLanguage) {
+    switch (language) {
+        case "javascript":
+        case "typescript":
+            return javascript({ jsx: false, typescript: language === "typescript" });
+        case "python":
+            return python();
+        default:
+            return javascript();
+    }
+}
+
+export default function CodeEditor({
+    questionId,
+    fields,
     value,
     onChange,
-    height = '400px',
-    readOnly = false,
-}) => {
-    const [selectedLanguage, setSelectedLanguage] = useState(language);
-    const [output, setOutput] = useState<string>('');
+    className,
+}: CodeEditorProps) {
+    const [language, setLanguage] = useState<ProgrammingLanguage>(
+        fields.programmingLanguages[0] ?? ProgrammingLanguage.JAVASCRIPT
+    );
+    const [result, setResult] = useState<CodeExecutionResult | null>(null);
     const [isRunning, setIsRunning] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const editorRef = useRef<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null);
+    const [showDetails, setShowDetails] = useState(true);
 
-    // Monaco language mapping
-    const getMonacoLanguage = (lang: string): string => {
-        const languageMap: Record<string, string> = {
-            'javascript': 'javascript',
-            'python': 'python',
-            'java': 'java',
-            'c++': 'cpp',
-            'cpp': 'cpp',
-            'sql': 'sql',
-        };
-        return languageMap[lang.toLowerCase()] || 'javascript';
-    };
+    const starterCode = useMemo(
+        () => fields.starterCode?.[language] ?? "",
+        [fields.starterCode, language]
+    );
 
-    // Handle language change
-    const handleLanguageChange = (newLang: string) => {
-        setSelectedLanguage(newLang);
-        if (starterCode && typeof starterCode === 'object' && !Array.isArray(starterCode)) {
-            const newStarter = starterCode[newLang];
-            if (newStarter && !value) {
-                onChange(newStarter);
-            }
-        }
-    };
-
-    // Run code (mock implementation)
-    const runCode = async () => {
+    const handleRun = useCallback(async () => {
         setIsRunning(true);
-        setError(null);
-        setOutput('');
-
+        setResult(null);
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const mockOutputs: Record<string, string> = {
-                'javascript': 'Code executed successfully!\nOutput: Hello World',
-                'python': 'Code executed successfully!\nOutput: Hello World',
-                'java': 'Code compiled and executed successfully!\nOutput: Hello World',
-                'c++': 'Code compiled and executed successfully!\nOutput: Hello World',
-                'sql': 'Query executed successfully!\nRows returned: 10',
-            };
-            setOutput(mockOutputs[selectedLanguage] || 'Code executed successfully!');
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to execute code');
+            const res = await executeCode(language, value || starterCode, fields);
+            setResult(res);
         } finally {
             setIsRunning(false);
         }
-    };
+    }, [language, value, starterCode, fields]);
 
-    const resetCode = () => {
-        if (starterCode) {
-            if (typeof starterCode === 'object' && !Array.isArray(starterCode)) {
-                onChange(starterCode[selectedLanguage] || '');
-            } else if (typeof starterCode === 'string') {
-                onChange(starterCode);
-            }
-        } else {
-            onChange('');
-        }
-        setOutput('');
-        setError(null);
-    };
-
-    // Editor options optimized for assessment
-    const editorOptions = {
-        readOnly,
-        minimap: { enabled: false },
-        fontSize: 14,
-        fontFamily: 'Fira Code, Consolas, monospace',
-        lineNumbers: 'on' as const,
-        folding: false,
-        scrollBeyondLastLine: false,
-        wordWrap: 'on' as const,
-        automaticLayout: true,
-        renderLineHighlight: 'gutter' as const,
-    };
+    const allPassed = result && result.passedCount === result.totalCount;
+    const hasErrors = result && (result.error || result.testCases.some((t) => t.error));
 
     return (
-        <Box className="space-y-4">
-            {/* Language Selector and Controls */}
-            <Box className="flex justify-between items-center">
-                <FormControl size="small" className="w-48">
-                    <InputLabel>Language</InputLabel>
-                    <Select
-                        value={selectedLanguage}
-                        label="Language"
-                        onChange={(e) => handleLanguageChange(e.target.value as string)}
-                        disabled={readOnly}
+        <div className={cn("space-y-4", className)}>
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    <label className="text-sm font-medium text-slate-700">Language</label>
+                    <select
+                        id={`lang-${questionId}`}
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value as ProgrammingLanguage)}
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     >
-                        <MenuItem value="javascript">JavaScript</MenuItem>
-                        <MenuItem value="python">Python</MenuItem>
-                        <MenuItem value="java">Java</MenuItem>
-                        <MenuItem value="c++">C++</MenuItem>
-                        <MenuItem value="sql">SQL</MenuItem>
-                    </Select>
-                </FormControl>
+                        {fields.programmingLanguages.map((lang) => (
+                            <option key={lang} value={lang}>
+                                {languageLabels[lang]}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                <Box className="flex space-x-2">
-                    <Button
-                        variant="outlined"
-                        startIcon={<MdRestartAlt />}
-                        onClick={resetCode}
-                        disabled={readOnly}
-                    >
-                        Reset
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<MdPlayArrow />}
-                        onClick={runCode}
-                        disabled={isRunning || readOnly}
-                    >
-                        {isRunning ? 'Running...' : 'Run Code'}
-                    </Button>
-                </Box>
-            </Box>
+                <div className="flex items-center gap-3 text-xs text-slate-500">
+                    {fields.memoryLimitInMB && (
+                        <span className="flex items-center gap-1">
+                            <MemoryStick className="h-3.5 w-3.5" />
+                            Memory limit: {fields.memoryLimitInMB} MB
+                        </span>
+                    )}
+                    {fields.constraints && fields.constraints.length > 0 && (
+                        <span className="hidden sm:inline">
+                            {fields.constraints.length} constraint
+                            {fields.constraints.length > 1 ? "s" : ""}
+                        </span>
+                    )}
+                </div>
 
-            {/* Monaco Editor */}
-            <Box className="border border-gray-300 rounded-lg overflow-hidden">
-                <Editor
-                    height={height}
-                    language={getMonacoLanguage(selectedLanguage)}
-                    theme="vs-dark"
-                    value={value}
-                    onChange={(val) => onChange(val || '')}
-                    onMount={(editor) => {
-                        editorRef.current = editor;
+                <Button
+                    variant="primary"
+                    size="sm"
+                    isLoading={isRunning}
+                    onClick={handleRun}
+                    className="ml-auto"
+                >
+                    <Play className="h-4 w-4" />
+                    Run Tests
+                </Button>
+            </div>
+
+            {/* Editor */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+                <CodeMirror
+                    value={value || starterCode}
+                    height="320px"
+                    theme={vscodeDark}
+                    extensions={[languageExtension(language)]}
+                    onChange={onChange}
+                    basicSetup={{
+                        lineNumbers: true,
+                        highlightActiveLineGutter: true,
+                        highlightActiveLine: true,
+                        foldGutter: true,
                     }}
-                    options={editorOptions}
+                    className="text-sm"
                 />
-            </Box>
+            </div>
 
-            {/* Output Area */}
-            {(output || error) && (
-                <Box className="border border-gray-300 rounded-lg overflow-hidden">
-                    <Box className="bg-gray-800 px-4 py-2">
-                        <Typography variant="subtitle2" className="text-white font-medium">
-                            Output
-                        </Typography>
-                    </Box>
-                    <Box className="p-4 bg-gray-900 text-gray-100 font-mono text-sm">
-                        <pre className="whitespace-pre-wrap">
-                            {error ? (
-                                <span className="text-red-400">{error}</span>
-                            ) : (
-                                output
-                            )}
-                        </pre>
-                    </Box>
-                </Box>
+            {/* Constraints */}
+            {fields.constraints && fields.constraints.length > 0 && (
+                <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-700">
+                        Constraints
+                    </p>
+                    <ul className="list-inside list-disc space-y-1 text-sm text-indigo-900">
+                        {fields.constraints.map((c, i) => (
+                            <li key={i}>{c}</li>
+                        ))}
+                    </ul>
+                </div>
             )}
 
-            {/* Language Info */}
-            <Box className="text-sm text-gray-600">
-                <Typography variant="caption">
-                    Language: {selectedLanguage} | Lines: {value.split('\n').length} |
-                    Characters: {value.length}
-                </Typography>
-            </Box>
-        </Box>
-    );
-};
+            {/* Results */}
+            {result && (
+                <div
+                    className={cn(
+                        "overflow-hidden rounded-xl border",
+                        allPassed && !hasErrors
+                            ? "border-emerald-200 bg-emerald-50/50"
+                            : hasErrors || result.memoryLimitExceeded
+                                ? "border-rose-200 bg-rose-50/50"
+                                : "border-amber-200 bg-amber-50/50"
+                    )}
+                >
+                    <button
+                        onClick={() => setShowDetails((s) => !s)}
+                        className="flex w-full items-center justify-between px-4 py-3 text-left"
+                    >
+                        <div className="flex items-center gap-3">
+                            {allPassed && !hasErrors ? (
+                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                            ) : hasErrors || result.memoryLimitExceeded ? (
+                                <XCircle className="h-5 w-5 text-rose-600" />
+                            ) : (
+                                <AlertCircle className="h-5 w-5 text-amber-600" />
+                            )}
+                            <span className="font-semibold text-slate-900">
+                                {result.memoryLimitExceeded
+                                    ? "Memory Limit Exceeded"
+                                    : `${result.passedCount}/${result.totalCount} test cases passed`}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="hidden items-center gap-3 text-xs text-slate-500 sm:flex">
+                                <span className="flex items-center gap-1">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    {result.executionTimeMs} ms
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <Cpu className="h-3.5 w-3.5" />
+                                    {result.memoryUsedMB} MB
+                                </span>
+                            </div>
+                            {showDetails ? (
+                                <ChevronUp className="h-4 w-4 text-slate-400" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4 text-slate-400" />
+                            )}
+                        </div>
+                    </button>
 
-export default CodeEditor;
+                    {showDetails && (
+                        <div className="border-t border-slate-200 px-4 py-3">
+                            {result.error && (
+                                <div className="mb-3 flex items-start gap-2 rounded-lg bg-rose-100 p-3 text-sm text-rose-800">
+                                    <Terminal className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <pre className="whitespace-pre-wrap font-mono">{result.error}</pre>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                {result.testCases.map((tc, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={cn(
+                                            "rounded-lg border p-3 text-sm",
+                                            tc.passed
+                                                ? "border-emerald-200 bg-emerald-50"
+                                                : "border-rose-200 bg-rose-50"
+                                        )}
+                                    >
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <span className="font-medium text-slate-700">
+                                                Test case {idx + 1}
+                                            </span>
+                                            <Badge variant={tc.passed ? "success" : "danger"}>
+                                                {tc.passed ? "Passed" : "Failed"}
+                                            </Badge>
+                                        </div>
+                                        <div className="grid gap-2 font-mono text-xs text-slate-600">
+                                            {tc.isPublic ? (
+                                                <>
+                                                    <div>
+                                                        <span className="font-semibold">Input:</span>{" "}
+                                                        {tc.input}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-semibold">Expected:</span>{" "}
+                                                        {tc.expectedOutput}
+                                                    </div>
+                                                    {!tc.passed && (
+                                                        <div>
+                                                            <span className="font-semibold">Actual:</span>{" "}
+                                                            {tc.actualOutput ?? "—"}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div className="italic text-slate-400">Hidden test case</div>
+                                            )}
+                                            {tc.error && (
+                                                <div className="text-rose-700">{tc.error}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
