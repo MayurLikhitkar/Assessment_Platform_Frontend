@@ -4,26 +4,21 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import {
-    Play,
-    CheckCircle2,
-    XCircle,
-    AlertCircle,
-    Clock,
-    Cpu,
-    Terminal,
-    ChevronDown,
-    ChevronUp,
-    MemoryStick,
-} from "lucide-react";
-import { cn } from "@/utils/cn";
-import Button from "./ui/Button";
-import Badge from "./ui/Badge";
-import type {
-    CodingFields,
-    CodeExecutionResult,
-} from "@/types/questionTypes";
-import { ProgrammingLanguage } from "@/types/questionTypes";
+    FiPlay,
+    FiCheckCircle,
+    FiXCircle,
+    FiAlertCircle,
+    FiClock,
+    FiCpu,
+    FiTerminal,
+    FiChevronDown,
+    FiChevronUp,
+} from "react-icons/fi";
+import { BsMemory } from "react-icons/bs";
 import { executeCode, languageLabels } from "@/services/executionService";
+import { ProgrammingLanguage, type CodingFields } from "../../types/questionTypes";
+import { twMerge } from "tailwind-merge";
+import Button from "../ui/Button";
 
 interface CodeEditorProps {
     questionId: string;
@@ -45,13 +40,7 @@ function languageExtension(language: ProgrammingLanguage) {
     }
 }
 
-export default function CodeEditor({
-    questionId,
-    fields,
-    value,
-    onChange,
-    className,
-}: CodeEditorProps) {
+const CodeEditor: React.FC<CodeEditorProps> = ({ questionId, fields, value, onChange, className, }) => {
     const [language, setLanguage] = useState<ProgrammingLanguage>(
         fields.programmingLanguages[0] ?? ProgrammingLanguage.JAVASCRIPT
     );
@@ -79,7 +68,7 @@ export default function CodeEditor({
     const hasErrors = result && (result.error || result.testCases.some((t) => t.error));
 
     return (
-        <div className={cn("space-y-4", className)}>
+        <div className={twMerge("space-y-4", className)}>
             {/* Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -101,7 +90,7 @@ export default function CodeEditor({
                 <div className="flex items-center gap-3 text-xs text-slate-500">
                     {fields.memoryLimitInMB && (
                         <span className="flex items-center gap-1">
-                            <MemoryStick className="h-3.5 w-3.5" />
+                            <BsMemory className="h-3.5 w-3.5" />
                             Memory limit: {fields.memoryLimitInMB} MB
                         </span>
                     )}
@@ -120,7 +109,7 @@ export default function CodeEditor({
                     onClick={handleRun}
                     className="ml-auto"
                 >
-                    <Play className="h-4 w-4" />
+                    <FiPlay className="h-4 w-4" />
                     Run Tests
                 </Button>
             </div>
@@ -160,7 +149,7 @@ export default function CodeEditor({
             {/* Results */}
             {result && (
                 <div
-                    className={cn(
+                    className={twMerge(
                         "overflow-hidden rounded-xl border",
                         allPassed && !hasErrors
                             ? "border-emerald-200 bg-emerald-50/50"
@@ -175,11 +164,11 @@ export default function CodeEditor({
                     >
                         <div className="flex items-center gap-3">
                             {allPassed && !hasErrors ? (
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                                <FiCheckCircle className="h-5 w-5 text-emerald-600" />
                             ) : hasErrors || result.memoryLimitExceeded ? (
-                                <XCircle className="h-5 w-5 text-rose-600" />
+                                <FiXCircle className="h-5 w-5 text-rose-600" />
                             ) : (
-                                <AlertCircle className="h-5 w-5 text-amber-600" />
+                                <FiAlertCircle className="h-5 w-5 text-amber-600" />
                             )}
                             <span className="font-semibold text-slate-900">
                                 {result.memoryLimitExceeded
@@ -190,18 +179,18 @@ export default function CodeEditor({
                         <div className="flex items-center gap-3">
                             <div className="hidden items-center gap-3 text-xs text-slate-500 sm:flex">
                                 <span className="flex items-center gap-1">
-                                    <Clock className="h-3.5 w-3.5" />
+                                    <FiClock className="h-3.5 w-3.5" />
                                     {result.executionTimeMs} ms
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <Cpu className="h-3.5 w-3.5" />
+                                    <FiCpu className="h-3.5 w-3.5" />
                                     {result.memoryUsedMB} MB
                                 </span>
                             </div>
                             {showDetails ? (
-                                <ChevronUp className="h-4 w-4 text-slate-400" />
+                                <FiChevronUp className="h-4 w-4 text-slate-400" />
                             ) : (
-                                <ChevronDown className="h-4 w-4 text-slate-400" />
+                                <FiChevronDown className="h-4 w-4 text-slate-400" />
                             )}
                         </div>
                     </button>
@@ -210,7 +199,7 @@ export default function CodeEditor({
                         <div className="border-t border-slate-200 px-4 py-3">
                             {result.error && (
                                 <div className="mb-3 flex items-start gap-2 rounded-lg bg-rose-100 p-3 text-sm text-rose-800">
-                                    <Terminal className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <FiTerminal className="mt-0.5 h-4 w-4 shrink-0" />
                                     <pre className="whitespace-pre-wrap font-mono">{result.error}</pre>
                                 </div>
                             )}
@@ -219,7 +208,7 @@ export default function CodeEditor({
                                 {result.testCases.map((tc, idx) => (
                                     <div
                                         key={idx}
-                                        className={cn(
+                                        className={twMerge(
                                             "rounded-lg border p-3 text-sm",
                                             tc.passed
                                                 ? "border-emerald-200 bg-emerald-50"
@@ -269,3 +258,5 @@ export default function CodeEditor({
         </div>
     );
 }
+
+export default CodeEditor;

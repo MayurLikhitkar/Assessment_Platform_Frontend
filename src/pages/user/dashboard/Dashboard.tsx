@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
                     ) : upcomingAssessments?.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {upcomingAssessments.slice(0, 3).map((assessment: AssessmentInterface) => (
-                                <div key={assessment.id} className="bg-background-light border border-border-light rounded-lg hover:shadow-md transition-shadow overflow-hidden">
+                                <div key={assessment._id} className="bg-background-light border border-border-light rounded-lg hover:shadow-md transition-shadow overflow-hidden">
                                     <div className="p-4 cursor-pointer hover:bg-muted-light/50 transition-colors h-full">
                                         <div className="flex justify-between items-start mb-4">
                                             <h3 className="text-lg font-bold text-text-main">
