@@ -25,41 +25,34 @@ import {
 } from "../../services/axios/executionApi";
 
 const languageMap: Record<ProgrammingLanguage, string> = {
-    [ProgrammingLanguage.JAVASCRIPT]: "javascript",
-    [ProgrammingLanguage.TYPESCRIPT]: "typescript",
-    [ProgrammingLanguage.PYTHON]: "python",
-    [ProgrammingLanguage.JAVA]: "java",
-    [ProgrammingLanguage.CPP]: "cpp",
-    [ProgrammingLanguage.CSHARP]: "csharp",
-    [ProgrammingLanguage.R]: "r",
-    [ProgrammingLanguage.HTML]: "html",
-    [ProgrammingLanguage.CSS]: "css",
+    javascript: "javascript",
+    typescript: "typescript",
+    python: "python",
+    java: "java",
+    cpp: "cpp",
+    c: "c",
 };
 
 const dbLanguageMap: Record<DatabaseType, string> = {
-    [DatabaseType.MYSQL]: "sql",
-    [DatabaseType.POSTGRESQL]: "sql",
-    [DatabaseType.SQLITE]: "sql",
-    [DatabaseType.MONGODB]: "javascript",
+    mysql: "sql",
+    postgresql: "sql",
+    sqlite: "sql",
+    mongodb: "javascript",
 };
 
 const defaultStarters: Record<ProgrammingLanguage, string> = {
-    [ProgrammingLanguage.JAVASCRIPT]:
+    javascript:
         '// input: two numbers separated by a space, e.g. "2 3"\nconst [a, b] = input.split(" ").map(Number);\n// TODO: return the sum\nreturn a + b;',
-    [ProgrammingLanguage.TYPESCRIPT]:
+    typescript:
         '// input: two numbers separated by a space, e.g. "2 3"\nconst [a, b] = (input as string).split(" ").map(Number);\n// TODO: return the sum\nreturn a + b;',
-    [ProgrammingLanguage.PYTHON]:
+    python:
         'def solution(input):\n    a, b = map(int, input.split())\n    # TODO: return the result\n    return a + b',
-    [ProgrammingLanguage.JAVA]:
+    java:
         'public class Solution {\n    public static int solution(String input) {\n        String[] parts = input.split(" ");\n        int a = Integer.parseInt(parts[0]);\n        int b = Integer.parseInt(parts[1]);\n        // TODO: return the result\n        return a + b;\n    }\n}',
-    [ProgrammingLanguage.CPP]:
+    cpp:
         '#include <bits/stdc++.h>\nusing namespace std;\n\nint solution(string input) {\n    stringstream ss(input);\n    int a, b;\n    ss >> a >> b;\n    // TODO: return the result\n    return a + b;\n}',
-    [ProgrammingLanguage.CSHARP]:
-        'using System;\n\npublic class Solution {\n    public static int Solution(string input) {\n        var parts = input.Split(" ");\n        int a = int.Parse(parts[0]);\n        int b = int.Parse(parts[1]);\n        // TODO: return the result\n        return a + b;\n    }\n}',
-    [ProgrammingLanguage.R]:
-        'solution <- function(input) {\n  parts <- as.integer(strsplit(input, " ")[[1]])\n  # TODO: return the result\n  return(sum(parts))\n}',
-    [ProgrammingLanguage.HTML]: "<!-- TODO: write HTML -->\n<div></div>",
-    [ProgrammingLanguage.CSS]: "/* TODO: write CSS */\n.selector {\n  \n}",
+    c:
+        '#include <stdio.h>\n\nint solution(char* input) {\n    int a, b;\n    sscanf(input, "%d %d", &a, &b);\n    // TODO: return the result\n    return a + b;\n}',
 };
 
 type SimpleCodeEditorProps =
@@ -75,7 +68,7 @@ type SimpleCodeEditorProps =
         value?: string;
         onChange: (value: string) => void;
     };
-
+    
 function StatusBadge({ status }: { status: string }) {
     const styles: Record<string, string> = {
         passed: "bg-emerald-100 text-emerald-700 border-emerald-200",

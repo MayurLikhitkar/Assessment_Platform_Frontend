@@ -4,10 +4,7 @@ export enum ProgrammingLanguage {
     PYTHON = 'python',
     JAVA = 'java',
     CPP = 'cpp',
-    CSHARP = 'csharp',
-    R = 'r',
-    HTML = 'html',
-    CSS = 'css'
+    C = 'c'
 }
 
 export enum QuestionType {
