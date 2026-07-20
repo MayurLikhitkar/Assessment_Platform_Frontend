@@ -1,4 +1,4 @@
-import type { QuestionType } from "./questionTypes";
+import type { ProgrammingLanguage, QuestionType } from "./questionTypes";
 
 export enum AssessmentStatus {
     ASSIGNED = 'assigned',
@@ -21,7 +21,7 @@ export interface UserAssessmentAnswerInterface {
     questionType: QuestionType,
     timeSpentInSeconds: number,
     answerMCQ: string[],
-    answerCoding?: string,
+    answerCoding?: Record<ProgrammingLanguage, string>,
     answerQuery?: string,
     answerSubjective?: string,
     marksObtained: number,

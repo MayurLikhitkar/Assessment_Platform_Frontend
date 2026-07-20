@@ -57,17 +57,17 @@ export interface QueryExecutionResult {
     error?: string;
 }
 
-function sleep(ms: number) {
+const sleep = (ms: number) => {
     return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-function getCodeSizeMB(code: string) {
+const getCodeSizeMB = (code: string) => {
     return new Blob([code]).size / (1024 * 1024);
 }
 
-export async function executeCode(
+export const executeCode = async (
     payload: ExecuteCodePayload
-): Promise<CodeExecutionResult> {
+): Promise<CodeExecutionResult> => {
     await sleep(700);
 
     const { language, code, testCases, memoryLimitInMB } = payload;
@@ -197,9 +197,9 @@ export async function executeCode(
     };
 }
 
-export async function executeQuery(
+export const executeQuery = async (
     payload: ExecuteQueryPayload
-): Promise<QueryExecutionResult> {
+): Promise<QueryExecutionResult> => {
     await sleep(600);
 
     const {

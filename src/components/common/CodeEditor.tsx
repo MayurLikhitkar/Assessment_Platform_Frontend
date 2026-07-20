@@ -55,7 +55,7 @@ const defaultStarters: Record<ProgrammingLanguage, string> = {
         '#include <stdio.h>\n\nint solution(char* input) {\n    int a, b;\n    sscanf(input, "%d %d", &a, &b);\n    // TODO: return the result\n    return a + b;\n}',
 };
 
-type SimpleCodeEditorProps =
+type CodeEditorProps =
     | {
         type: QuestionType.CODING;
         question: QuestionInterface;
@@ -68,20 +68,20 @@ type SimpleCodeEditorProps =
         value?: string;
         onChange: (value: string) => void;
     };
-    
+
 function StatusBadge({ status }: { status: string }) {
     const styles: Record<string, string> = {
-        passed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        failed: "bg-rose-100 text-rose-700 border-rose-200",
-        error: "bg-rose-100 text-rose-700 border-rose-200",
-        memory_exceeded: "bg-amber-100 text-amber-700 border-amber-200",
+        passed: "bg-success-light/20 text-success-dark border-success-light",
+        failed: "bg-error-light/20 text-error-dark border-error-light",
+        error: "bg-error-light/20 text-error-dark border-error-light",
+        memory_exceeded: "bg-warn-light/20 text-warn-dark border-warn-light",
     };
 
     return (
         <span
             className={twMerge(
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border",
-                styles[status] ?? "bg-slate-100 text-slate-600 border-slate-200"
+                styles[status] ?? "bg-muted-light text-text-light border-border-light"
             )}
         >
             {status === "passed" ? (
@@ -96,7 +96,7 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
+const CodeEditor = (props: CodeEditorProps) => {
     const { type, question } = props;
 
     const [running, setRunning] = useState(false);
@@ -164,8 +164,8 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
         return (
             <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 text-sm text-slate-700">
-                        <FaCode className="text-indigo-600" />
+                    <div className="flex items-center gap-2 text-sm text-text-main">
+                        <FaCode className="text-secondary-main" />
                         <label htmlFor="language-select" className="font-medium">
                             Language
                         </label>
@@ -176,7 +176,7 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
                         onChange={(e) =>
                             setActiveLanguage(e.target.value as ProgrammingLanguage)
                         }
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="rounded-lg border border-border-light bg-background-light px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-main"
                     >
                         {languages.map((lang) => (
                             <option key={lang} value={lang}>
@@ -186,7 +186,7 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
                     </select>
 
                     {codingFields.memoryLimitInMB && (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                        <span className="inline-flex items-center gap-1.5 text-xs text-text-light">
                             <FaMemory />
                             Memory limit: {codingFields.memoryLimitInMB} MB
                         </span>
@@ -196,10 +196,10 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
                         type="button"
                         onClick={handleRun}
                         disabled={running}
-                        className="ml-auto inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        className="ml-auto inline-flex items-center gap-2 rounded-lg bg-secondary-main px-4 py-2 text-sm font-medium text-text-inverse shadow-sm hover:bg-secondary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                     >
                         {running ? (
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-background-light/30 border-t-background-light" />
                         ) : (
                             <FaPlay className="w-3.5 h-3.5" />
                         )}
@@ -207,7 +207,7 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
                     </button>
                 </div>
 
-                <div className="h-80 rounded-xl border border-slate-200 overflow-hidden">
+                <div className="h-80 rounded-xl border border-border-light overflow-hidden">
                     <Editor
                         height="100%"
                         language={monacoLanguage}
@@ -266,10 +266,10 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
-                    <FaDatabase className="text-indigo-600" />
+                <div className="flex items-center gap-2 text-sm text-text-main">
+                    <FaDatabase className="text-secondary-main" />
                     <span className="font-medium">Database</span>
-                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs uppercase tracking-wide">
+                    <span className="rounded-md bg-muted-light px-2 py-0.5 text-xs uppercase tracking-wide">
                         {queryFields.databaseType}
                     </span>
                 </div>
@@ -278,10 +278,10 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
                     type="button"
                     onClick={handleValidate}
                     disabled={running}
-                    className="ml-auto inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    className="ml-auto inline-flex items-center gap-2 rounded-lg bg-secondary-main px-4 py-2 text-sm font-medium text-text-inverse shadow-sm hover:bg-secondary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
                     {running ? (
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-background-light/30 border-t-background-light" />
                     ) : (
                         <FaPlay className="w-3.5 h-3.5" />
                     )}
@@ -289,7 +289,7 @@ export default function SimpleCodeEditor(props: SimpleCodeEditorProps) {
                 </button>
             </div>
 
-            <div className="h-80 rounded-xl border border-slate-200 overflow-hidden">
+            <div className="h-80 rounded-xl border border-border-light overflow-hidden">
                 <Editor
                     height="100%"
                     language={monacoLanguage}
@@ -317,24 +317,24 @@ function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
     const allPassed = result.passedTests === result.totalTests && result.success;
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
+        <div className="rounded-xl border border-border-light bg-background-light overflow-hidden">
+            <div className="border-b border-border-light bg-background-main px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h4 className="font-semibold text-slate-900">Test Results</h4>
+                    <h4 className="font-semibold text-text-dark">Test Results</h4>
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                         <span
                             className={twMerge(
                                 "font-medium",
-                                allPassed ? "text-emerald-700" : "text-amber-700"
+                                allPassed ? "text-success-dark" : "text-warn-dark"
                             )}
                         >
                             {result.passedTests}/{result.totalTests} passed
                         </span>
-                        <span className="inline-flex items-center gap-1.5 text-slate-500">
+                        <span className="inline-flex items-center gap-1.5 text-text-light">
                             <FaClock className="w-3.5 h-3.5" />
                             {result.executionTimeMs} ms
                         </span>
-                        <span className="inline-flex items-center gap-1.5 text-slate-500">
+                        <span className="inline-flex items-center gap-1.5 text-text-light">
                             <FaMemory className="w-3.5 h-3.5" />
                             {result.memoryUsedMB.toFixed(2)} MB
                         </span>
@@ -344,13 +344,13 @@ function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
 
             <div className="p-4 space-y-3">
                 {result.compileError && (
-                    <div className="rounded-lg bg-rose-50 border border-rose-100 p-3 text-sm text-rose-700">
+                    <div className="rounded-lg bg-error-light/20 border border-error-light p-3 text-sm text-error-dark">
                         <FaExclamationTriangle className="inline-block mr-1.5" />
                         {result.compileError}
                     </div>
                 )}
                 {result.runtimeError && (
-                    <div className="rounded-lg bg-rose-50 border border-rose-100 p-3 text-sm text-rose-700">
+                    <div className="rounded-lg bg-error-light/20 border border-error-light p-3 text-sm text-error-dark">
                         <FaExclamationTriangle className="inline-block mr-1.5" />
                         {result.runtimeError}
                     </div>
@@ -363,17 +363,17 @@ function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
                             className={twMerge(
                                 "rounded-lg border p-3 text-sm",
                                 tc.status === "passed"
-                                    ? "bg-emerald-50/50 border-emerald-100"
+                                    ? "bg-success-light/10 border-success-light"
                                     : tc.status === "memory_exceeded"
-                                        ? "bg-amber-50/50 border-amber-100"
-                                        : "bg-rose-50/50 border-rose-100"
+                                        ? "bg-warn-light/10 border-warn-light"
+                                        : "bg-error-light/10 border-error-light"
                             )}
                         >
                             <div className="flex items-center justify-between gap-3">
-                                <span className="font-medium text-slate-700">
+                                <span className="font-medium text-text-main">
                                     Test {idx + 1}
                                     {!tc.isPublic && (
-                                        <span className="ml-2 text-xs text-slate-400">(hidden)</span>
+                                        <span className="ml-2 text-xs text-text-light">(hidden)</span>
                                     )}
                                 </span>
                                 <StatusBadge status={tc.status} />
@@ -381,30 +381,30 @@ function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
 
                             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                 <div>
-                                    <span className="text-slate-500">Input</span>
-                                    <pre className="mt-1 rounded border border-slate-100 bg-white p-2 font-mono text-slate-700">
+                                    <span className="text-text-light">Input</span>
+                                    <pre className="mt-1 rounded border border-border-light bg-background-light p-2 font-mono text-text-main">
                                         {tc.input}
                                     </pre>
                                 </div>
                                 <div>
-                                    <span className="text-slate-500">Expected Output</span>
-                                    <pre className="mt-1 rounded border border-slate-100 bg-white p-2 font-mono text-slate-700">
+                                    <span className="text-text-light">Expected Output</span>
+                                    <pre className="mt-1 rounded border border-border-light bg-background-light p-2 font-mono text-text-main">
                                         {tc.expectedOutput}
                                     </pre>
                                 </div>
                                 {tc.actualOutput !== undefined && (
                                     <div className="md:col-span-2">
-                                        <span className="text-slate-500">Actual Output</span>
-                                        <pre className="mt-1 rounded border border-slate-100 bg-white p-2 font-mono text-slate-700">
+                                        <span className="text-text-light">Actual Output</span>
+                                        <pre className="mt-1 rounded border border-border-light bg-background-light p-2 font-mono text-text-main">
                                             {tc.actualOutput}
                                         </pre>
                                     </div>
                                 )}
                                 {tc.error && (
-                                    <div className="md:col-span-2 text-rose-600">{tc.error}</div>
+                                    <div className="md:col-span-2 text-error-main">{tc.error}</div>
                                 )}
                                 {tc.executionTimeMs !== undefined && (
-                                    <div className="md:col-span-2 text-slate-400">
+                                    <div className="md:col-span-2 text-text-light">
                                         {tc.executionTimeMs} ms
                                         {tc.memoryUsedMB !== undefined &&
                                             ` · ${tc.memoryUsedMB.toFixed(2)} MB`}
@@ -421,14 +421,14 @@ function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
 
 function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
     return (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
-                <h4 className="font-semibold text-slate-900">Query Validation</h4>
+        <div className="rounded-xl border border-border-light bg-background-light overflow-hidden">
+            <div className="border-b border-border-light bg-background-main px-4 py-3">
+                <h4 className="font-semibold text-text-dark">Query Validation</h4>
             </div>
 
             <div className="p-4 space-y-4">
                 {result.keywordViolations && result.keywordViolations.length > 0 && (
-                    <div className="rounded-lg bg-amber-50 border border-amber-100 p-3 text-sm text-amber-800">
+                    <div className="rounded-lg bg-warn-light/20 border border-warn-light p-3 text-sm text-warn-dark">
                         <FaExclamationTriangle className="inline-block mr-1.5" />
                         Keyword issues detected:
                         <ul className="list-disc ml-5 mt-1 space-y-0.5">
@@ -440,7 +440,7 @@ function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
                 )}
 
                 {result.error && (
-                    <div className="rounded-lg bg-rose-50 border border-rose-100 p-3 text-sm text-rose-700">
+                    <div className="rounded-lg bg-error-light/20 border border-error-light p-3 text-sm text-error-dark">
                         <FaExclamationTriangle className="inline-block mr-1.5" />
                         {result.error}
                     </div>
@@ -450,7 +450,7 @@ function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
                     <div
                         className={twMerge(
                             "inline-flex items-center gap-2 text-sm font-medium",
-                            result.matchesExpected ? "text-emerald-700" : "text-amber-700"
+                            result.matchesExpected ? "text-success-dark" : "text-warn-dark"
                         )}
                     >
                         {result.matchesExpected ? (
@@ -466,14 +466,14 @@ function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
                 )}
 
                 {result.rows && result.rows.length > 0 && (
-                    <div className="overflow-x-auto rounded-lg border border-slate-100">
+                    <div className="overflow-x-auto rounded-lg border border-border-light">
                         <table className="min-w-full text-xs">
-                            <thead className="bg-slate-50">
+                            <thead className="bg-background-main">
                                 <tr>
                                     {Object.keys(result.rows[0]).map((key) => (
                                         <th
                                             key={key}
-                                            className="border-b border-slate-100 px-3 py-2 text-left font-semibold text-slate-600"
+                                            className="border-b border-border-light px-3 py-2 text-left font-semibold text-text-light"
                                         >
                                             {key}
                                         </th>
@@ -482,11 +482,11 @@ function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
                             </thead>
                             <tbody>
                                 {result.rows.map((row, idx) => (
-                                    <tr key={idx} className="even:bg-slate-50/50">
+                                    <tr key={idx} className="even:bg-background-main/50">
                                         {Object.values(row).map((value, vidx) => (
                                             <td
                                                 key={vidx}
-                                                className="border-b border-slate-100 px-3 py-2 text-slate-700"
+                                                className="border-b border-border-light px-3 py-2 text-text-main"
                                             >
                                                 {String(value)}
                                             </td>
@@ -499,7 +499,7 @@ function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
                 )}
 
                 {result.executionTimeMs !== undefined && (
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-text-light">
                         Execution time: {result.executionTimeMs} ms
                         {result.rowCount !== undefined && ` · ${result.rowCount} rows`}
                     </div>
@@ -508,3 +508,5 @@ function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
         </div>
     );
 }
+
+export default CodeEditor;

@@ -23,6 +23,7 @@ import SuccessModal from '../../../components/assessment/SuccessScreen';
 import { LuClipboard } from 'react-icons/lu';
 import { TbArrowsMaximize } from 'react-icons/tb';
 import { useAuth } from '../../../hooks/useAuth';
+import CodeEditor from '../../../components/common/CodeEditor';
 
 type NavButtonProps = {
     index: number;
@@ -691,58 +692,35 @@ const TakeAssessment: React.FC = () => {
                                     )}
 
                                     {currentQuestion.type === QuestionType.CODING && (
-                                        <TextArea
-                                            id={currentQuestion._id}
-                                            name={currentQuestion._id}
-                                            rows={12}
-                                            placeholder="Write your code here..."
+                                        <CodeEditor
+                                            key={currentQuestion._id}
+                                            type={QuestionType.CODING}
+                                            question={currentQuestion}
+                                            value={currentAnswer?.answerCoding}
+                                            onChange={(value) =>
+                                                handleAnswerChange(
+                                                    currentQuestion._id,
+                                                    QuestionType.CODING,
+                                                    { answerCoding: value }
+                                                )
+                                            }
                                         />
                                     )}
 
                                     {currentQuestion.type === QuestionType.QUERY && (
-                                        <TextArea
-                                            id={currentQuestion._id}
-                                            name={currentQuestion._id}
-                                            className='border border-border-light'
-                                            rows={12}
-                                            placeholder="Write your Query here..."
+                                        <CodeEditor
+                                            key={currentQuestion._id}
+                                            type={QuestionType.QUERY}
+                                            question={currentQuestion}
+                                            value={currentAnswer?.answerQuery}
+                                            onChange={(value) =>
+                                                handleAnswerChange(
+                                                    currentQuestion._id,
+                                                    QuestionType.QUERY,
+                                                    { answerQuery: value }
+                                                )
+                                            }
                                         />
-                                    )}
-
-                                    {/* ── Coding ── */}
-                                    {currentQuestion?.type === "coding" && (
-                                        <div className="space-y-3">
-                                            {/* <SimpleCodeEditor
-                                                language={currentQuestion.language}
-                                                starterCode={
-                                                    currentQuestion.starterCode?.[
-                                                    currentQuestion.language ?? ""
-                                                    ]
-                                                }
-                                                value={
-                                                    typeof currentAnswer?.answer === "string"
-                                                        ? currentAnswer.answer
-                                                        : ""
-                                                }
-                                                onChange={(code) =>
-                                                    handleAnswerChange(currentQuestion.questionId, code)
-                                                }
-                                            />
-
-                                            {currentQuestion.constraints && (
-                                                <div className="flex items-start gap-2.5 p-4 rounded-xl bg-secondary-main/8 border border-secondary-main/20 text-sm text-text-main">
-                                                    <RiInformationLine className="w-4 h-4 mt-0.5 shrink-0 text-secondary-main" />
-                                                    <div>
-                                                        <p className="font-bold text-secondary-main text-xs uppercase tracking-wider mb-1">
-                                                            Constraints
-                                                        </p>
-                                                        <p className="whitespace-pre-line text-text-light">
-                                                            {currentQuestion.constraints}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )} */}
-                                        </div>
                                     )}
                                 </div>
                             </ContentBox>
