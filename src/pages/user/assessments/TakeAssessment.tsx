@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { getAssessment, getAssessmentQuestions, syncAssessmentAnswers } from '../../../services/axios/userApi';
 import { BsRecordCircle } from 'react-icons/bs';
-import { RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiCodeSSlashLine, RiDatabase2Line, RiFileTextLine, RiFlagFill, RiFlagLine, RiListCheck3, RiRefreshLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
+import { RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiCodeSSlashLine, RiDatabase2Line, RiFileTextLine, RiFlagFill, RiFlagLine, RiInformationLine, RiListCheck3, RiRefreshLine, RiSendPlaneLine, RiTimeLine } from 'react-icons/ri';
 import type { UserAssessmentAnswerInterface } from '../../../types/userAssessmentTypes';
 import moment from 'moment';
 import DataLoader from '../../../components/common/DataLoader';
@@ -298,6 +298,19 @@ const TakeAssessment: React.FC = () => {
         // syncAnswersMutation.mutate(payload);
     }, [dirtyIds, buildAnswersPayload, syncAnswersMutation]);
 
+    const hasActualContent = (answer: Omit<UserAssessmentAnswerInterface, 'marksObtained'> | undefined) => {
+        if (!answer) return false;
+        if (answer.answerCoding) {
+            return Object.values(answer.answerCoding).some((code: string) =>
+                code && code.trim().length > 10 && !code.includes('// TODO')
+            );
+        }
+        if (answer.answerQuery) {
+            return answer.answerQuery.trim().length > 5;
+        }
+        return true; // MCQ / subjective already handled by handleAnswerChange
+    };
+
     const handleAnswerChange = useCallback(
         (questionId: string, questionType: QuestionType, value: Partial<UserAssessmentAnswerInterface>) => {
             setAnswers((prev) => {
@@ -485,88 +498,78 @@ const TakeAssessment: React.FC = () => {
                 )}
 
                 <div className='space-y-4'>
-                    <ContentBox className="py-2">
-                        <div className="flex items-center justify-between h-16 gap-4">
-                            {/* Title */}
-                            <div className="min-w-0">
-                                <h1 className="text-sm sm:text-base truncate tracking-wide">
-                                    {assessment?.title}
-                                </h1>
-                                <p className="text-xs text-text-light">
-                                    Question {activeStep + 1} of {questions.length}
-                                </p>
-                            </div>
-
-                            {/* Right controls */}
-                            <div className="flex items-center gap-3 shrink-0">
-                                <div className="text-xs text-error-main font-bold">
-                                    Violations: {totalViolations}
-                                </div>
-
-                                {/* Recording badge */}
-                                {assessment?.enableRecording && (
-                                    <div className="hidden sm:flex items-center text-xs gap-2 px-2 py-1 rounded-md text-error-main bg-error-light/10 border border-error-light/20">
-                                        <BsRecordCircle className="w-4 h-4 animate-pulse" />
-                                        <span className="font-bold">REC</span>
-                                    </div>
-                                )}
-
-                                <Button
-                                    variant="custom"
-                                    onClick={handleSync}
-                                    disabled={syncAnswersMutation.isPending || dirtyIds.size === 0}
-                                    className="hidden sm:flex items-center gap-1 px-3 py-2 rounded-lg border border-border-light text-xs disabled:opacity-60 disabled:cursor-not-allowed"
-                                    title={
-                                        lastSyncedAt
-                                            ? `Last synced ${moment(lastSyncedAt).format('HH:mm:ss')}`
-                                            : 'Not synced yet'
-                                    }
-                                >
-                                    {syncAnswersMutation.isPending ? (
-                                        <RiRefreshLine className="w-4 h-4 animate-spin" />
-                                    ) : dirtyIds.size === 0 ? (
-                                        <RiCheckLine className="w-4 h-4 text-success-main" />
-                                    ) : (
-                                        <RiRefreshLine className="w-4 h-4" />
-                                    )}
-                                    {syncAnswersMutation.isPending
-                                        ? 'Syncing…'
-                                        : dirtyIds.size === 0
-                                            ? 'Synced'
-                                            : `Sync (${dirtyIds.size})`}
-                                </Button>
-
-                                {/* Answered count */}
-                                <div className="hidden sm:flex flex-col items-center leading-none">
-                                    <span className="text-sm font-bold">
-                                        {answers.length}/{questions.length}
-                                    </span>
-                                    <span className="text-xs text-text-light">
-                                        Answered
-                                    </span>
-                                </div>
-
-                                {/* Timer */}
-                                <div
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
-                                        ? "bg-error-light/20 border-error-light text-error-main"
-                                        : "bg-background-main border-border-light"
-                                        }`}
-                                >
-                                    <RiTimeLine
-                                        className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
-                                    />
-                                    {moment.utc((timeLeft ?? totalSeconds) * 1000).format('HH:mm:ss')}
-                                </div>
-                            </div>
+                    <ContentBox className="flex items-center justify-between h-16 gap-4">
+                        {/* Title */}
+                        <div className="min-w-0">
+                            <h1 className="text-sm sm:text-base truncate tracking-wide">
+                                {assessment?.title}
+                            </h1>
+                            <p className="text-xs text-text-light">
+                                Question {activeStep + 1} of {questions.length}
+                            </p>
                         </div>
 
-                        {/* Progress bar */}
-                        <div className="h-1 bg-muted-main rounded-full overflow-hidden">
+                        {/* Right controls */}
+                        <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-xs text-error-main font-bold">
+                                Violations: {totalViolations}
+                            </div>
+
+                            {/* Recording badge */}
+                            {assessment?.enableRecording && (
+                                <div className="hidden sm:flex items-center text-xs gap-2 px-2 py-1 rounded-md text-error-main bg-error-light/10 border border-error-light/20">
+                                    <BsRecordCircle className="w-4 h-4 animate-pulse" />
+                                    <span className="font-bold">REC</span>
+                                </div>
+                            )}
+
+                            <Button
+                                variant="custom"
+                                onClick={handleSync}
+                                disabled={syncAnswersMutation.isPending || dirtyIds.size === 0}
+                                className="hidden sm:flex items-center gap-1 px-3 py-2 rounded-lg border border-border-light text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                                title={
+                                    lastSyncedAt
+                                        ? `Last synced ${moment(lastSyncedAt).format('HH:mm:ss')}`
+                                        : 'Not synced yet'
+                                }
+                            >
+                                {syncAnswersMutation.isPending ? (
+                                    <RiRefreshLine className="w-4 h-4 animate-spin" />
+                                ) : dirtyIds.size === 0 ? (
+                                    <RiCheckLine className="w-4 h-4 text-success-main" />
+                                ) : (
+                                    <RiRefreshLine className="w-4 h-4" />
+                                )}
+                                {syncAnswersMutation.isPending
+                                    ? 'Syncing…'
+                                    : dirtyIds.size === 0
+                                        ? 'Synced'
+                                        : `Sync (${dirtyIds.size})`}
+                            </Button>
+
+                            {/* Answered count */}
+                            <div className="hidden sm:flex flex-col items-center leading-none">
+                                <span className="text-sm font-bold">
+                                    {answers.length}/{questions.length}
+                                </span>
+                                <span className="text-xs text-text-light">
+                                    Answered
+                                </span>
+                            </div>
+
+                            {/* Timer */}
                             <div
-                                className="h-full bg-accent-main rounded-full transition-all duration-500"
-                                style={{ width: `${(answers.length / questions.length) * 100}%` }}
-                            />
+                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-mono font-bold text-sm transition-colors ${timerCritical
+                                    ? "bg-error-light/20 border-error-light text-error-main"
+                                    : "bg-background-main border-border-light"
+                                    }`}
+                            >
+                                <RiTimeLine
+                                    className={`w-4 h-4 ${timerCritical ? "animate-pulse" : ""}`}
+                                />
+                                {moment.utc((timeLeft ?? totalSeconds) * 1000).format('HH:mm:ss')}
+                            </div>
                         </div>
                     </ContentBox>
 
@@ -691,6 +694,22 @@ const TakeAssessment: React.FC = () => {
                                         />
                                     )}
 
+                                    {currentQuestion.type === QuestionType.CODING && currentQuestion.codingFields?.constraints && (
+                                        <div className="flex items-start gap-2 p-3 rounded-lg bg-accent-light/10 border border-accent-light/10 text-xs text-accent-light">
+                                            <RiInformationLine className="text-lg text-accent-main shrink-0" />
+                                            <div className="flex-1 space-y-1">
+                                                <p className="font-bold uppercase tracking-wide">
+                                                    Constraints
+                                                </p>
+                                                <ul className="list-disc list-inside">
+                                                    {currentQuestion.codingFields.constraints.map((c, i) => (
+                                                        <li key={i}>{c}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {currentQuestion.type === QuestionType.CODING && (
                                         <CodeEditor
                                             key={currentQuestion._id}
@@ -735,9 +754,9 @@ const TakeAssessment: React.FC = () => {
 
                                 <div className="space-y-2">
                                     {questions.map((q, idx) => {
-                                        const isAnswered = answers.some(
-                                            (a) => a.questionId === q._id
-                                        );
+                                        const isAnswered = answers.some((a) => a.questionId === q._id) &&
+                                            (q.type !== QuestionType.CODING && q.type !== QuestionType.QUERY ||
+                                                hasActualContent(answers.find(a => a.questionId === q._id)));
                                         return <QuestionNavItem
                                             key={q._id}
                                             index={idx}

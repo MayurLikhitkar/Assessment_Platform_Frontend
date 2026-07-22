@@ -21,7 +21,7 @@ export interface UserAssessmentAnswerInterface {
     questionType: QuestionType,
     timeSpentInSeconds: number,
     answerMCQ: string[],
-    answerCoding?: Record<ProgrammingLanguage, string>,
+    answerCoding?: Partial<Record<ProgrammingLanguage, string>>;
     answerQuery?: string,
     answerSubjective?: string,
     marksObtained: number,

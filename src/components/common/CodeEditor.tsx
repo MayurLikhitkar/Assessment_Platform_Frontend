@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Editor from "@monaco-editor/react";
 import { twMerge } from "tailwind-merge";
 import {
@@ -23,6 +23,9 @@ import {
     type CodeExecutionResult,
     type QueryExecutionResult,
 } from "../../services/axios/executionApi";
+import Select from "../ui/Select";
+import { capitalizeFirstLetter } from "../../utils/utils";
+import Button from "../ui/Button";
 
 const languageMap: Record<ProgrammingLanguage, string> = {
     javascript: "javascript",
@@ -69,7 +72,7 @@ type CodeEditorProps =
         onChange: (value: string) => void;
     };
 
-function StatusBadge({ status }: { status: string }) {
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const styles: Record<string, string> = {
         passed: "bg-success-light/20 text-success-dark border-success-light",
         failed: "bg-error-light/20 text-error-dark border-error-light",
@@ -96,107 +99,145 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-const CodeEditor = (props: CodeEditorProps) => {
-    const { type, question } = props;
+const CodeEditor: React.FC<CodeEditorProps> = (props) => {
+    const { question } = props;
+    const [hasUserChanged, setHasUserChanged] = useState(false);
 
     const [running, setRunning] = useState(false);
     const [result, setResult] = useState<
         CodeExecutionResult | QueryExecutionResult | null
     >(null);
 
-    if (type === QuestionType.CODING) {
-        const codingFields = question.codingFields!;
-        const languages = codingFields.programmingLanguages;
-        const onChange = props.onChange;
-
-        const [activeLanguage, setActiveLanguage] = useState(languages[0]);
-        const [codeMap, setCodeMap] = useState<
-            Partial<Record<ProgrammingLanguage, string>>
-        >(() => {
-            const map: Partial<Record<ProgrammingLanguage, string>> = {};
-            languages.forEach((lang) => {
-                map[lang] =
-                    props.value?.[lang] ??
-                    codingFields.starterCode?.[lang] ??
-                    defaultStarters[lang] ??
-                    "";
-            });
-            return map;
+    // --- CODING-only state
+    const codingFields = question.codingFields;
+    const languages = codingFields?.programmingLanguages ?? [];
+    const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage | undefined>(
+        languages[0]
+    );
+    const activeLanguage: ProgrammingLanguage | undefined =
+        selectedLanguage && languages.includes(selectedLanguage)
+            ? selectedLanguage
+            : languages[0];
+    const [codeMap, setCodeMap] = useState<Partial<Record<ProgrammingLanguage, string>>>(() => {
+        const map: Partial<Record<ProgrammingLanguage, string>> = {};
+        languages.forEach((lang) => {
+            map[lang] = props.type === QuestionType.CODING
+                ? props.value?.[lang]
+                : undefined;
         });
+        return map;
+    });
 
-        useEffect(() => {
-            if (!languages.includes(activeLanguage)) {
-                setActiveLanguage(languages[0]);
+    // --- QUERY-only state
+    const queryFields = question.queryFields;
+    const [query, setQuery] = useState(
+        props.type === QuestionType.QUERY ? props.value ?? "" : ""
+    );
+
+    const currentCode = activeLanguage ? (codeMap[activeLanguage] ?? "") : "";
+
+    const getStarterCode = (lang: ProgrammingLanguage) => {
+        return codingFields?.starterCode?.[lang] ?? defaultStarters[lang] ?? "";
+    };
+
+    const displayCode = activeLanguage && !codeMap[activeLanguage]
+        ? getStarterCode(activeLanguage)
+        : currentCode;
+
+    const handleCodeChange = (next: string) => {
+        if (!activeLanguage) return;
+
+        const isFirstChange = !hasUserChanged &&
+            (props.type === QuestionType.CODING ?
+                !props.value?.[activeLanguage] : true);
+
+        setCodeMap((prev) => {
+            const updated = { ...prev, [activeLanguage]: next };
+            if (props.type === QuestionType.CODING) {
+                props.onChange(updated);
+                if (isFirstChange) setHasUserChanged(true);
             }
-        }, [languages, activeLanguage]);
+            return updated;
+        });
+    };
 
-        const currentCode = codeMap[activeLanguage] ?? "";
+    const handleQueryChange = (next: string) => {
+        const isFirstChange = !hasUserChanged && !props.value;
 
-        useEffect(() => {
-            onChange(codeMap);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, []);
+        setQuery(next);
+        if (props.type === QuestionType.QUERY) {
+            props.onChange(next);
+            if (isFirstChange) setHasUserChanged(true);
+        }
+    };
 
-        const handleCodeChange = (next: string) => {
-            setCodeMap((prev) => {
-                const updated = { ...prev, [activeLanguage]: next };
-                onChange(updated);
-                return updated;
-            });
-        };
+    const handleRun = async () => {
+        if (!activeLanguage || !codingFields) return;
+        setRunning(true);
+        setResult(null);
+        const code = codeMap[activeLanguage] ?? "";
+        const res = await executeCode({
+            language: activeLanguage,
+            code,
+            testCases: codingFields!.testCases,
+            memoryLimitInMB: codingFields!.memoryLimitInMB,
+        });
+        setResult(res);
+        setRunning(false);
+    };
 
-        const handleRun = async () => {
-            setRunning(true);
-            setResult(null);
-            const code = codeMap[activeLanguage] ?? "";
-            const res = await executeCode({
-                language: activeLanguage,
-                code,
-                testCases: codingFields.testCases,
-                memoryLimitInMB: codingFields.memoryLimitInMB,
-            });
-            setResult(res);
-            setRunning(false);
-        };
+    const handleValidate = async () => {
+        if (!queryFields) return;
+        setRunning(true);
+        setResult(null);
+        const res = await executeQuery({
+            databaseType: queryFields.databaseType,
+            query,
+            schema: queryFields.databaseSchema,
+            sampleData: queryFields.sampleData,
+            expectedQuery: queryFields.expectedQuery,
+            allowedKeywords: queryFields.allowedKeywords,
+            forbiddenKeywords: queryFields.forbiddenKeywords,
+        });
+        setResult(res);
+        setRunning(false);
+    };
 
-        const monacoLanguage = languageMap[activeLanguage] ?? "plaintext";
-
+    if (props.type === QuestionType.CODING) {
+        const monacoLanguage = activeLanguage ? languageMap[activeLanguage] : "plaintext";
         return (
             <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 text-sm text-text-main">
+                    <div className="flex items-center gap-2">
                         <FaCode className="text-secondary-main" />
                         <label htmlFor="language-select" className="font-medium">
                             Language
                         </label>
                     </div>
-                    <select
-                        id="language-select"
+                    <Select
+                        name="language"
                         value={activeLanguage}
-                        onChange={(e) =>
-                            setActiveLanguage(e.target.value as ProgrammingLanguage)
+                        onChange={(value) =>
+                            setSelectedLanguage(value as ProgrammingLanguage)
                         }
-                        className="rounded-lg border border-border-light bg-background-light px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-main"
-                    >
-                        {languages.map((lang) => (
-                            <option key={lang} value={lang}>
-                                {lang}
-                            </option>
-                        ))}
-                    </select>
+                        options={languages.map((lang) => ({
+                            value: lang,
+                            label: capitalizeFirstLetter(lang),
+                        }))}
+                    />
 
-                    {codingFields.memoryLimitInMB && (
+                    {codingFields?.memoryLimitInMB && (
                         <span className="inline-flex items-center gap-1.5 text-xs text-text-light">
                             <FaMemory />
                             Memory limit: {codingFields.memoryLimitInMB} MB
                         </span>
                     )}
 
-                    <button
-                        type="button"
+                    <Button
                         onClick={handleRun}
-                        disabled={running}
-                        className="ml-auto inline-flex items-center gap-2 rounded-lg bg-secondary-main px-4 py-2 text-sm font-medium text-text-inverse shadow-sm hover:bg-secondary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        variant="secondary"
+                        disabled={running || !activeLanguage}
+                        className="ml-auto"
                     >
                         {running ? (
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-background-light/30 border-t-background-light" />
@@ -204,16 +245,17 @@ const CodeEditor = (props: CodeEditorProps) => {
                             <FaPlay className="w-3.5 h-3.5" />
                         )}
                         {running ? "Running…" : "Run Test Cases"}
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="h-80 rounded-xl border border-border-light overflow-hidden">
                     <Editor
                         height="100%"
                         language={monacoLanguage}
-                        value={currentCode}
+                        defaultValue={`// Start coding from here!`}
+                        value={displayCode}
                         onChange={(value) => handleCodeChange(value ?? "")}
-                        theme="vs-light"
+                        theme="vs-dark"
                         options={{
                             minimap: { enabled: false },
                             scrollBeyondLastLine: false,
@@ -231,54 +273,26 @@ const CodeEditor = (props: CodeEditorProps) => {
         );
     }
 
-    const queryFields = question.queryFields!;
-    const onChange = props.onChange;
-    const [query, setQuery] = useState(props.value ?? "");
-
-    useEffect(() => {
-        onChange(query);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleQueryChange = (next: string) => {
-        setQuery(next);
-        onChange(next);
-    };
-
-    const handleValidate = async () => {
-        setRunning(true);
-        setResult(null);
-        const res = await executeQuery({
-            databaseType: queryFields.databaseType,
-            query,
-            schema: queryFields.databaseSchema,
-            sampleData: queryFields.sampleData,
-            expectedQuery: queryFields.expectedQuery,
-            allowedKeywords: queryFields.allowedKeywords,
-            forbiddenKeywords: queryFields.forbiddenKeywords,
-        });
-        setResult(res);
-        setRunning(false);
-    };
-
-    const monacoLanguage = dbLanguageMap[queryFields.databaseType] ?? "sql";
+    const monacoLanguage = queryFields?.databaseType
+        ? dbLanguageMap[queryFields.databaseType]
+        : "sql";
 
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-text-main">
+                <div className="flex items-center gap-2">
                     <FaDatabase className="text-secondary-main" />
-                    <span className="font-medium">Database</span>
-                    <span className="rounded-md bg-muted-light px-2 py-0.5 text-xs uppercase tracking-wide">
-                        {queryFields.databaseType}
+                    <span className="font-medium">Database :</span>
+                    <span className="uppercase tracking-wide text-sm">
+                        {queryFields?.databaseType}
                     </span>
                 </div>
 
-                <button
-                    type="button"
+                <Button
                     onClick={handleValidate}
-                    disabled={running}
-                    className="ml-auto inline-flex items-center gap-2 rounded-lg bg-secondary-main px-4 py-2 text-sm font-medium text-text-inverse shadow-sm hover:bg-secondary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    disabled={running || !queryFields}
+                    variant="secondary"
+                    className="ml-auto"
                 >
                     {running ? (
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-background-light/30 border-t-background-light" />
@@ -286,7 +300,7 @@ const CodeEditor = (props: CodeEditorProps) => {
                         <FaPlay className="w-3.5 h-3.5" />
                     )}
                     {running ? "Validating…" : "Validate Query"}
-                </button>
+                </Button>
             </div>
 
             <div className="h-80 rounded-xl border border-border-light overflow-hidden">
@@ -295,7 +309,7 @@ const CodeEditor = (props: CodeEditorProps) => {
                     language={monacoLanguage}
                     value={query}
                     onChange={(value) => handleQueryChange(value ?? "")}
-                    theme="vs-light"
+                    theme="vs-dark"
                     options={{
                         minimap: { enabled: false },
                         scrollBeyondLastLine: false,
@@ -313,7 +327,7 @@ const CodeEditor = (props: CodeEditorProps) => {
     );
 }
 
-function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
+const CodeOutputPanel: React.FC<{ result: CodeExecutionResult }> = ({ result }) => {
     const allPassed = result.passedTests === result.totalTests && result.success;
 
     return (
@@ -419,7 +433,7 @@ function CodeOutputPanel({ result }: { result: CodeExecutionResult }) {
     );
 }
 
-function QueryOutputPanel({ result }: { result: QueryExecutionResult }) {
+const QueryOutputPanel: React.FC<{ result: QueryExecutionResult }> = ({ result }) => {
     return (
         <div className="rounded-xl border border-border-light bg-background-light overflow-hidden">
             <div className="border-b border-border-light bg-background-main px-4 py-3">
